@@ -7,6 +7,9 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
 
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
@@ -17,7 +20,7 @@
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 // ログ
-void Log(const std::string& message);
+void Log(std::ostream& os,const std::string& message);
 std::wstring ConvertString(const std::string& str);
 std::string ConvertString(const std::wstring& str);
 
@@ -29,7 +32,9 @@ IDxcBlob* CompileShader(
 	// 初期化で生成したものを3つ
 	IDxcUtils* dxcUtils,
 	IDxcCompiler3* dxcCompiler,
-	IDxcIncludeHandler* includeHandler);
+	IDxcIncludeHandler* includeHandler,
+	// ログファイル
+	std::ostream& os);
 
 struct Vector4 {
 	float w;
@@ -40,6 +45,22 @@ struct Vector4 {
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+
+	// ログのディレクトリを用意
+	std::filesystem::create_directory("logs");
+	// 現在時刻を取得(UTC)
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	// ログファイルの名前にコンマ何秒はいらないので、削って秒にする
+	std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>
+		nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+	// 日本時間(PCの設定時間)に変換
+	std::chrono::zoned_time localTime{ std::chrono::current_zone(),nowSeconds };
+	// formatを使って年月日_時分秒の文字列に変換
+	std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
+	// 時刻を使ってファイル名を決定
+	std::string logFilePath = std::string("logs/") + dateString + ".log";
+	// ファイルを作って書き込み準備
+	std::ofstream logStream(logFilePath);
 
 	//-------------------------------------------------
 	// ウィンドウクラスの登録
@@ -132,7 +153,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ソフトウェアアダプタかチェック
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 			// 採用したアダプタの情報をログに出力(wstring)
-			Log(ConvertString(std::format(L"Use Adapter:{}\n", adapterDesc.Description)));
+			Log(logStream, ConvertString(std::format(L"Use Adapter : {}\n", adapterDesc.Description)));
 			break;
 		}
 		useAdapter = nullptr; // ソフトウェアアダプタの場合
@@ -160,7 +181,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 指定した機能レベルでデバイスが生成できたかを確認
 		if (SUCCEEDED(hr)) {
 			// 生成できたのでログ出力を行ってループを抜ける
-			Log(std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
+			Log(logStream,std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
 			break;
 		}
 	}
@@ -168,7 +189,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// デバイスの生成がうまくいかなかったので起動できない
 	assert(device != nullptr);
 	// 初期化完了のログを出す
-	Log("Complete create DeD12Device!!!\n");
+	Log(logStream,"Complete create DeD12Device!!!\n");
 
 
 #ifdef _DEBUG
@@ -302,7 +323,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 	if (FAILED(hr)) {
-		Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		Log(logStream,reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
 		assert(false);
 	}
 	// バイナリを元に生成
@@ -337,11 +358,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// Shaderをコンパイルする
 	IDxcBlob* vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler,logStream);
 	assert(vertexShaderBlob != nullptr);
 
 	IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler,logStream);
 	assert(pixelShaderBlob != nullptr);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
@@ -584,7 +605,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 //-------------------------------------------------
 // ログの表示
 //-------------------------------------------------
-void Log(const std::string& message) {
+void Log(std::ostream& os,const std::string& message) {
+	os << message << std::endl;
 	OutputDebugStringA(message.c_str());
 }
 
@@ -619,10 +641,10 @@ std::string ConvertString(const std::wstring& str) {
 }
 
 IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,
-	IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler)
+	IDxcUtils* dxcUtils,IDxcCompiler3* dxcCompiler,IDxcIncludeHandler* includeHandler, std::ostream& os)
 {
 	// これからシェーダーをコンパイルする旨をログに出す
-	Log(ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
+	Log(os,ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
 	// hlslファイルを読む
 	IDxcBlobEncoding* shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
@@ -667,7 +689,7 @@ IDxcBlob* CompileShader(const std::wstring& filePath,const wchar_t* profile,
 	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
 	assert(SUCCEEDED(hr));
 	// 成功したログを出す
-	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	Log(os,ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
 	// もう使わないリソースを解放
 	shaderSource->Release();
 	shaderResult->Release();
