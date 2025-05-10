@@ -13,6 +13,8 @@
 #include <dbghelp.h>
 #include <strsafe.h>
 #include <vector>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include "Matrix4x4.h"
 
@@ -568,41 +570,122 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
+	//// 実際に頂点リソースを作る
+	//ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	//// 頂点バッファビューを作成する
+	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	//// リソースの先頭のアドレスから使う
+	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	//// 使用するリソースのサイズは頂点6つ分のサイズ
+	//vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	//// 1頂点あたりのサイズ
+	//vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	//// 頂点リソースにデータを書き込む
+	//VertexData* vertexData = nullptr;
+	//// 書き込むためのアドレスを取得
+	//vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	//// 左下
+	//vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
+	//vertexData[0].texcoord = { 0.0f,1.0f };
+	//// 上
+	//vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
+	//vertexData[1].texcoord = { 0.5f,0.0f };
+	//// 右下
+	//vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
+	//vertexData[2].texcoord = { 1.0f,1.0f };
+	//// 三角形2つ目
+	//// 左下2
+	//vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
+	//vertexData[3].texcoord = { 0.0f,1.0f };
+	//// 上2
+	//vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
+	//vertexData[4].texcoord = { 0.5f,0.0f };
+	//// 右下2
+	//vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
+	//vertexData[5].texcoord = { 1.0f,1.0f };
+
 	// 実際に頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 16 * 16 * 6);
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点6つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	// 使用するリソースのサイズは頂点16x16x6つ分のサイズ
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 16 * 16 * 6;
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	// 左下
-	vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
-	vertexData[0].texcoord = { 0.0f,1.0f };
-	// 上
-	vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
-	vertexData[1].texcoord = { 0.5f,0.0f };
-	// 右下
-	vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
-	vertexData[2].texcoord = { 1.0f,1.0f };
-	// 三角形2つ目
-	// 左下2
-	vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-	vertexData[3].texcoord = { 0.0f,1.0f };
-	// 上2
-	vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexData[4].texcoord = { 0.5f,0.0f };
-	// 右下2
-	vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-	vertexData[5].texcoord = { 1.0f,1.0f };
 
+	// 分割数
+	const uint32_t kSubdivision = 16;
+	const float kLonEvery = 2.0f * float(M_PI) / float(kSubdivision);
+	const float kLatEvery = float(M_PI) / float(kSubdivision);
+
+	// 頂点データの書き込み
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		// 各バンドの南端緯度と北端緯度
+		float lat = -0.5f * float(M_PI) + kLatEvery * float(latIndex);
+		float latN = lat + kLatEvery;
+		// sin/cos を一度だけ計算
+		float cosLat = cos(lat);
+		float sinLat = sin(lat);
+		float cosLatN = cos(latN);
+		float sinLatN = sin(latN);
+
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = kLonEvery * float(lonIndex);
+			float cosLon = cos(lon);
+			float sinLon = sin(lon);
+			float cosNextLon = cos(lon + kLonEvery);
+			float sinNextLon = sin(lon + kLonEvery);
+
+			// テクスチャ座標
+			float u = float(lonIndex) / float(kSubdivision);
+			float nextU = float(lonIndex + 1) / float(kSubdivision);
+			float v = 1.0f - float(latIndex) / float(kSubdivision);
+			float nextV = 1.0f - float(latIndex + 1) / float(kSubdivision);
+
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+
+			// 頂点位置
+			// BL
+			vertexData[start].position = { cosLat * cosLon,  sinLat,  cosLat * sinLon, 1.0f };
+			vertexData[start].texcoord = { u,  v };
+			// TL
+			vertexData[start + 1].position = { cosLatN * cosLon,  sinLatN, cosLatN * sinLon, 1.0f };
+			vertexData[start + 1].texcoord = { u,  nextV };
+			// BR
+			vertexData[start + 2].position = { cosLat * cosNextLon, sinLat,  cosLat * sinNextLon, 1.0f };
+			vertexData[start + 2].texcoord = { nextU, v };
+			// TR 
+			vertexData[start + 3].position = { cosLatN * cosNextLon, sinLatN, cosLatN * sinNextLon, 1.0f };
+			vertexData[start + 3].texcoord = { nextU, nextV };
+
+			// 同じ座標の頂点を代入
+			vertexData[start + 4] = vertexData[start + 2]; // BR
+			vertexData[start + 5] = vertexData[start + 1]; // TL
+		}
+	}
+
+	// 頂点データをログに出力
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+			for (uint32_t i = 0; i < 6; ++i) {
+				const VertexData& vertex = vertexData[start + i];
+				Log(logStream, std::format(
+					"Vertex {}: Position({:.3f}, {:.3f}, {:.3f}, {:.3f}), TexCoord({:.3f}, {:.3f})\n",
+					start + i,
+					vertex.position.x, vertex.position.y, vertex.position.z, vertex.position.w,
+					vertex.texcoord.x, vertex.texcoord.y
+				));
+			}
+		}
+	}
 	// Sprite用の頂点リソースを作る
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 	// 頂点バッファビューを作成する
@@ -662,7 +745,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	// Imguiの初期化
@@ -704,6 +787,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 開発用UIの処理
 			ImGui::Begin("Triangle"); {
 				if (ImGui::BeginTabBar("Triangle")) {
+					if (ImGui::BeginTabItem("Camera")) {
+						ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&cameraTransform.scale), 0.01f);
+						ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&cameraTransform.rotate), 0.05f);
+						ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&cameraTransform.translate), 0.1f);
+						if (ImGui::Button("Reset")) {
+							cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+						}
+						ImGui::EndTabItem();
+					}
+
 					if (ImGui::BeginTabItem("Transform")) {
 						ImGui::ColorEdit4("Color", reinterpret_cast<float*>(materialData));
 						ImGui::SliderFloat3("Translate", reinterpret_cast<float*>(&transform.translate), -1.5f, 1.5f);
@@ -718,7 +811,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						ImGui::SliderFloat("TranslateX", reinterpret_cast<float*>(&transformSprite.translate.x), 0.0f, 640.0f);
 						ImGui::SliderFloat("TranslateY", reinterpret_cast<float*>(&transformSprite.translate.y), 0.0f, 360.0f);
 						if (ImGui::Button("Reset")) {
-							*materialData = { 1.0f,1.0f,1.0f,1.0f }; 
+							*materialData = { 1.0f,1.0f,1.0f,1.0f };
 							transformSprite.translate = { 0.0f,0.0f,0.0f };
 						}
 						ImGui::EndTabItem();
@@ -797,7 +890,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			// 描画!(DrawCall/ドローコール) 3頂点で1つのインスタンス。
-			commandList->DrawInstanced(6, 1, 0, 0);
+			commandList->DrawInstanced(16 * 16 * 6, 1, 0, 0);
 
 			// Spriteの描画。変更が必要なものだけ変更する
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);	// VBVを設定
