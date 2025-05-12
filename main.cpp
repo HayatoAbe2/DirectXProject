@@ -95,10 +95,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
 
 struct Vector4 {
-	float w;
 	float x;
 	float y;
 	float z;
+	float w;
 };
 
 struct Vector2 {
