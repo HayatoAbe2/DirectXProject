@@ -1,5 +1,7 @@
 #pragma once
+#include "Vector2.h"
 #include "Vector3.h"
+#include "Transform.h"
 #include <cassert>
 
 struct Matrix4x4 {
@@ -179,18 +181,20 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 /// <param name="vector">変換するベクトル</param>
 /// <param name="matrix">変換に使われる行列</param>
 /// <returns>変換後のベクトル</returns>
-//Vector3 Transform(const Vector3& vector, const Matrix4x4 matrix) {
-//	Vector3 result;
-//	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + matrix.m[3][0];
-//	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + matrix.m[3][1];
-//	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + matrix.m[3][2];
-//	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + matrix.m[3][3];
-//	assert(w != 0.0f);
-//	result.x /= w;
-//	result.y /= w;
-//	result.z /= w;
-//	return result;
-//};
+Vector3 TransformVector(const Vector3& vector, const Matrix4x4 matrix) {
+	Vector3 result;
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + matrix.m[3][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + matrix.m[3][1];
+	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + matrix.m[3][2];
+	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + matrix.m[3][3];
+	if (w == 0.0f) {
+		return { 0.0f,0.0f,0.0f };
+	}
+	result.x /= w;
+	result.y /= w;
+	result.z /= w;
+	return result;
+};
 
 /// <summary>
 /// 4x4平行移動行列の作成
@@ -258,21 +262,21 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 /// <param name="scale">拡大縮小</param>
 /// <param name="rotate">回転</param>
 /// <param name="translate">平行移動</param>
-Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+Matrix4x4 MakeAffineMatrix(const Transform& transform) {
 	Matrix4x4 result = { 0 };
-	Matrix4x4 rotateXTZMatrix = Multiply(MakeRotateXMatrix(rotate.x), Multiply(MakeRotateYMatrix(rotate.y), MakeRotateZMatrix(rotate.z)));
-	result.m[0][0] = scale.x * rotateXTZMatrix.m[0][0];
-	result.m[0][1] = scale.x * rotateXTZMatrix.m[0][1];
-	result.m[0][2] = scale.x * rotateXTZMatrix.m[0][2];
-	result.m[1][0] = scale.y * rotateXTZMatrix.m[1][0];
-	result.m[1][1] = scale.y * rotateXTZMatrix.m[1][1];
-	result.m[1][2] = scale.y * rotateXTZMatrix.m[1][2];
-	result.m[2][0] = scale.z * rotateXTZMatrix.m[2][0];
-	result.m[2][1] = scale.z * rotateXTZMatrix.m[2][1];
-	result.m[2][2] = scale.z * rotateXTZMatrix.m[2][2];
-	result.m[3][0] = translate.x;
-	result.m[3][1] = translate.y;
-	result.m[3][2] = translate.z;
+	Matrix4x4 rotateXYZMatrix = Multiply(MakeRotateXMatrix(transform.rotate.x), Multiply(MakeRotateYMatrix(transform.rotate.y), MakeRotateZMatrix(transform.rotate.z)));
+	result.m[0][0] = transform.scale.x * rotateXYZMatrix.m[0][0];
+	result.m[0][1] = transform.scale.x * rotateXYZMatrix.m[0][1];
+	result.m[0][2] = transform.scale.x * rotateXYZMatrix.m[0][2];
+	result.m[1][0] = transform.scale.y * rotateXYZMatrix.m[1][0];
+	result.m[1][1] = transform.scale.y * rotateXYZMatrix.m[1][1];
+	result.m[1][2] = transform.scale.y * rotateXYZMatrix.m[1][2];
+	result.m[2][0] = transform.scale.z * rotateXYZMatrix.m[2][0];
+	result.m[2][1] = transform.scale.z * rotateXYZMatrix.m[2][1];
+	result.m[2][2] = transform.scale.z * rotateXYZMatrix.m[2][2];
+	result.m[3][0] = transform.translate.x;
+	result.m[3][1] = transform.translate.y;
+	result.m[3][2] = transform.translate.z;
 	result.m[3][3] = 1.0f;
 	return result;
 };
@@ -343,4 +347,33 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	result.m[3][2] = minDepth;
 	result.m[3][3] = 1.0f;
 	return result;
+};
+
+/// <summary>
+/// viewProjection行列作成
+/// </summary>
+/// <param name="cameraTransform">カメラトランスフォーム(SRT)</param>
+/// <param name="windowSize">画面サイズ(横幅、縦幅)</param>
+/// <returns>viewProjection行列</returns>
+Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Vector2 windowSize) {
+	// カメラの移動や画角変更がある場合、毎フレーム一度だけ行えばいい
+	// カメラの変更がなければ変更する必要はない
+	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform);
+	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, windowSize.x / windowSize.y, 0.1f, 100.0f);
+	return Multiply(viewMatrix, projectionMatrix);
+};
+
+/// <summary>
+/// viewProjection行列作成
+/// </summary>
+/// <param name="cameraTransform">カメラトランスフォーム(SRT)</param>
+/// <param name="projectionMatrix">プロジェクション行列</param>
+/// <returns>viewProjection行列</returns>
+Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Matrix4x4 projectionMatrix) {
+	// カメラの移動や画角変更がある場合、毎フレーム一度だけ行えばいい
+	// カメラの変更がなければ変更する必要はない
+	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform);
+	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+	return Multiply(viewMatrix, projectionMatrix);
 };
