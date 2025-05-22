@@ -29,7 +29,11 @@ bld/
 #[Oo]bj/
 [Ll]og/
 [Ll]ogs/
-/Dumps/
+Dumps/
+TextFile1.txt/
+DirectXProject.vcxproj.filters/
+imgui.ini/
+
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
