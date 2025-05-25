@@ -16,7 +16,9 @@
 #include <numbers>
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
 
+#include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Vector2.h"
 
@@ -109,9 +111,11 @@ struct VertexData {
 	Vector3 normal;
 };
 
-struct MaterialData {
+struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
 	UINT useTexture;
 };
 
@@ -125,6 +129,18 @@ struct DirectionalLight {
 	Vector3 direction; // 向き(単位ベクトル)
 	float intensity; // 輝度
 };
+
+struct MaterialData {
+	std::string textureFilePath;
+};
+
+struct ModelData {
+	std::vector<VertexData> vertices;
+	MaterialData material;
+};
+
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -389,63 +405,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 2つ目を作る
 	device->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
 
-	// Textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
-	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
-	DirectX::ScratchImage mipImages2 = LoadTexture("Resources/monsterBall.png"); // 2枚目
-	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
-	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
-	ID3D12Resource* intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
-	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
-	commandList->Close();
-	ID3D12CommandList* commandLists[] = { commandList };
-	commandQueue->ExecuteCommandLists(1, commandLists);
-	// 実行を待つ
-	fenceValue++;
-	commandQueue->Signal(fence, fenceValue); // シグナルを送る
-	if (fence->GetCompletedValue() < fenceValue) {
-		fence->SetEventOnCompletion(fenceValue, fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE); // 待機
-	}
-	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
-	commandAllocator->Reset();
-	commandList->Reset(commandAllocator, nullptr);
-	// ここまできたら転送は終わっているので、intermediateResoureはReleaseしても良い
-	intermediateResource->Release();
-	intermediateResource2->Release();
-
-	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	// SRVの生成
-	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
-
-	// metaDataを基にSRVの設定2
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
-	srvDesc2.Format = metadata2.format;
-	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	// ImGui、texture1枚目の次を使う
-	textureSrvHandleCPU2.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
-	textureSrvHandleGPU2.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
-	// SRVの生成
-	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
-
 	// DepthStencilTextureをウィンドウのサイズで作成
 	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
 	// DSVの設定
@@ -513,23 +472,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(MaterialData));
+	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Material));
 	// マテリアルにデータを書き込む
-	MaterialData* materialData = nullptr;
+	Material* materialData = nullptr;
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// デフォルトの色を設定しておく
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->useTexture = true;
 	materialData->enableLighting = true;
+	materialData->uvTransform = MakeIdentity4x4();
 
 	// Sprite用のマテリアルリソースを作る
-	ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(MaterialData));
-	MaterialData* materialDataSprite = nullptr;
+	ID3D12Resource* materialResourceSprite = CreateBufferResource(device, sizeof(Material));
+	Material* materialDataSprite = nullptr;
 	materialResourceSprite->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
 	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialDataSprite->useTexture = true;
 	materialDataSprite->enableLighting = false;
+	materialDataSprite->uvTransform = MakeIdentity4x4();
+
+	// UVTransform
+	Transform uvTransformSprite{
+		{1.0f,1.0f,0.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 
 	// 用意する三角形の数
 	const UINT triangleCount = 2; // 三角形だけ描画する数
@@ -670,14 +638,73 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
+	// モデル読み込み
+	ModelData modelData = LoadObjFile("Resources", "axis.obj");
+
+	// Textureを読んで転送する
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
+	ID3D12Resource* intermediateResource = UploadTextureData(textureResource, mipImages, device, commandList);
+	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath); // 2枚目
+	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
+	ID3D12Resource* textureResource2 = CreateTextureResource(device, metadata2);
+	ID3D12Resource* intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
+	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+	commandList->Close();
+	ID3D12CommandList* commandLists[] = { commandList };
+	commandQueue->ExecuteCommandLists(1, commandLists);
+	// 実行を待つ
+	fenceValue++;
+	commandQueue->Signal(fence, fenceValue); // シグナルを送る
+	if (fence->GetCompletedValue() < fenceValue) {
+		fence->SetEventOnCompletion(fenceValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE); // 待機
+	}
+	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
+	commandAllocator->Reset();
+	commandList->Reset(commandAllocator, nullptr);
+	// ここまできたら転送は終わっているので、intermediateResoureはReleaseしても良い
+	intermediateResource->Release();
+	intermediateResource2->Release();
+
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	// 先頭はImGuiが使っているのでその次を使う
+	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	// SRVの生成
+	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
+
+	// metaDataを基にSRVの設定2
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+	srvDesc2.Format = metadata2.format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	// ImGui、texture1枚目の次を使う
+	textureSrvHandleCPU2.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
+	textureSrvHandleGPU2.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * 2;
+	// SRVの生成
+	device->CreateShaderResourceView(textureResource2, &srvDesc2, textureSrvHandleCPU2);
 	// 実際に頂点リソースを作る
-	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 3 * totalTriangleCount);
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	// 使用するリソースのサイズは頂点3つ分x三角形個数のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 3 * totalTriangleCount;
+	// 使用するリソースのサイズ
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -685,167 +712,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
-	// 左下
-	vertexData[0].position = { -0.5f,-0.5f,0.0f,1.0f };
-	vertexData[0].texcoord = { 0.0f,1.0f };
-	vertexData[0].normal = Normalize({ vertexData[0].position.x,vertexData[0].position.y,vertexData[0].position.z });
-	// 上
-	vertexData[1].position = { 0.0f,0.5f,0.0f,1.0f };
-	vertexData[1].texcoord = { 0.5f,0.0f };
-	vertexData[1].normal = Normalize({ vertexData[1].position.x,vertexData[1].position.y,vertexData[1].position.z });
-	// 右下
-	vertexData[2].position = { 0.5f,-0.5f,0.0f,1.0f };
-	vertexData[2].texcoord = { 1.0f,1.0f };
-	vertexData[2].normal = Normalize({ vertexData[2].position.x,vertexData[2].position.y,vertexData[2].position.z });
-	// 法線
-	// 3頂点の座標
-	Vector3 p0 = { vertexData[0].position.x, vertexData[0].position.y, vertexData[0].position.z };
-	Vector3 p1 = { vertexData[1].position.x, vertexData[1].position.y, vertexData[1].position.z };;
-	Vector3 p2 = { vertexData[2].position.x, vertexData[2].position.y, vertexData[2].position.z };;
-	// 2つの辺ベクトル
-	Vector3 v1 = Subtract(p1, p0);
-	Vector3 v2 = Subtract(p2, p0);
-	Vector3 normal = Normalize(Cross(v1, v2)); // 外積で法線を計算
-	// 3頂点すべてに同じ法線をセット
-	vertexData[0].normal = normal;
-	vertexData[1].normal = normal;
-	vertexData[2].normal = normal;
-
-	// 三角形2つ目
-	// 左下2
-	vertexData[3].position = { -0.5f,-0.5f,0.5f,1.0f };
-	vertexData[3].texcoord = { 0.0f,1.0f };
-	vertexData[3].normal = Normalize({ vertexData[3].position.x,vertexData[3].position.y,vertexData[3].position.z });
-	// 上2
-	vertexData[4].position = { 0.0f,0.0f,0.0f,1.0f };
-	vertexData[4].texcoord = { 0.5f,0.0f };
-	vertexData[4].normal = Normalize({ vertexData[4].position.x,vertexData[4].position.y,vertexData[4].position.z });
-	// 右下2
-	vertexData[5].position = { 0.5f,-0.5f,-0.5f,1.0f };
-	vertexData[5].texcoord = { 1.0f,1.0f };
-	vertexData[5].normal = Normalize({ vertexData[5].position.x,vertexData[5].position.y,vertexData[5].position.z });
-	// 法線
-	// 頂点座標
-	p0 = { vertexData[3].position.x, vertexData[3].position.y, vertexData[3].position.z };
-	p1 = { vertexData[4].position.x, vertexData[4].position.y, vertexData[4].position.z };;
-	p2 = { vertexData[5].position.x, vertexData[5].position.y, vertexData[5].position.z };;
-	// 辺ベクトル
-	v1 = Subtract(p1, p0);
-	v2 = Subtract(p2, p0);
-	normal = Normalize(Cross(v1, v2)); // 法線を計算
-	// 3頂点に法線をセット
-	vertexData[3].normal = normal;
-	vertexData[4].normal = normal;
-	vertexData[5].normal = normal;
-
-	// 四面体の頂点データを作成
-	for (UINT i = 0; i < tetrahedronCount; ++i) {
-		UINT index = i * 12 + triangleCount * 3; // すでにある6頂点分足す
-		// 1辺の長さが1のとき
-		float leftX = -1.0f / 2.0f;
-		float rightX = 1.0f / 2.0f;
-		float h = sqrtf(2.0f / 3.0f); // 高さ
-		float topY = 2.0f / 3.0f * h;
-		float bottomY = -1.0f / 3.0f * h;
-		float frontZ = -1.0f / sqrtf(3.0f);
-		float backZ = 1.0f / (2.0f * sqrtf(3.0f));
-
-		// 各四面体の頂点定義（4頂点）
-		Vector4 vertices[4] = {
-			{ 0.0f,bottomY,frontZ, 1.0f }, // 手前
-			{ leftX, bottomY, backZ, 1.0f }, // 左奥
-			{ rightX, bottomY, backZ, 1.0f }, // 右奥
-			{ 0.0f, 2.0f / 3.0f * h, 0.0f, 1.0f}, // 上
-
-		};
-
-		// 三角形ごとに書き込み
-		// 1枚目 (左)
-		vertexData[index].position = vertices[1];
-		vertexData[index + 1].position = vertices[3];
-		vertexData[index + 2].position = vertices[0];
-
-		// 2枚目 (右)
-		vertexData[index + 3].position = vertices[0];
-		vertexData[index + 4].position = vertices[3];
-		vertexData[index + 5].position = vertices[2];
-
-		// 3枚目 (奥)
-		vertexData[index + 6].position = vertices[2];
-		vertexData[index + 7].position = vertices[3];
-		vertexData[index + 8].position = vertices[1];
-
-		// 4枚目 (下)
-		vertexData[index + 9].position = vertices[1];
-		vertexData[index + 10].position = vertices[0];
-		vertexData[index + 11].position = vertices[2];
-
-		for (UINT i = 0; i < 12; ++i) {
-			vertexData[index + i].texcoord = { 0.0f,0.0f };
-			vertexData[index + i].normal = Normalize({ vertexData[index + i].position.x,vertexData[index + i].position.y,vertexData[index + i].position.z });
-		}
-	}
-
-	// 球の頂点データを作成
-	UINT ballStartIndex = triangleCount * 3 + tetrahedronCount * 12; // 球の頂点データの開始位置
-	for (UINT i = 0; i < ballCount; ++i) {
-		// 分割数
-		const uint32_t kSubdivision = 16;
-		const float kLonEvery = 2.0f * float(std::numbers::pi) / float(kSubdivision);
-		const float kLatEvery = float(std::numbers::pi) / float(kSubdivision);
-
-		// 頂点データの書き込み
-		for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-			// 各バンドの南端緯度と北端緯度
-			float lat = -0.5f * float(std::numbers::pi) + kLatEvery * float(latIndex);
-			float latN = lat + kLatEvery;
-			// sin/cos を一度だけ計算
-			float cosLat = cos(lat);
-			float sinLat = sin(lat);
-			float cosLatN = cos(latN);
-			float sinLatN = sin(latN);
-
-			for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-				float lon = kLonEvery * float(lonIndex);
-				float cosLon = cos(lon);
-				float sinLon = sin(lon);
-				float cosNextLon = cos(lon + kLonEvery);
-				float sinNextLon = sin(lon + kLonEvery);
-
-				// テクスチャ座標
-				float u = float(lonIndex) / float(kSubdivision);
-				float nextU = float(lonIndex + 1) / float(kSubdivision);
-				float v = 1.0f - float(latIndex) / float(kSubdivision);
-				float nextV = 1.0f - float(latIndex + 1) / float(kSubdivision);
-
-				uint32_t start = (latIndex * kSubdivision + lonIndex) * 6 + ballStartIndex;
-
-				// 頂点位置
-				// BL
-				vertexData[start].position = { cosLat * cosLon,  sinLat,  cosLat * sinLon, 1.0f };
-				vertexData[start].texcoord = { u,  v };
-				// BR
-				vertexData[start + 1].position = { cosLat * cosNextLon, sinLat,  cosLat * sinNextLon, 1.0f };
-				vertexData[start + 1].texcoord = { nextU, v };
-				// TL
-				vertexData[start + 2].position = { cosLatN * cosLon,  sinLatN, cosLatN * sinLon, 1.0f };
-				vertexData[start + 2].texcoord = { u,  nextV };
-				// TR 
-				vertexData[start + 3].position = { cosLatN * cosNextLon, sinLatN, cosLatN * sinNextLon, 1.0f };
-				vertexData[start + 3].texcoord = { nextU, nextV };
-
-				// 同じ座標の頂点を代入
-				vertexData[start + 4] = vertexData[start + 2]; // TL
-				vertexData[start + 5] = vertexData[start + 1]; // BR
-
-				// 法線
-				for (UINT i = 0; i < 6; ++i) {
-					vertexData[start + i].normal = Normalize({ vertexData[start + i].position.x, vertexData[start + i].position.y,vertexData[start + i].position.z });
-				}
-			}
-		}
-
-	}
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size()); // 頂点データをリソースにコピー
 
 	// Sprite用のインデックスリソースを作成する
 	ID3D12Resource* indexResourceSprite = CreateBufferResource(device, sizeof(uint32_t) * 6);
@@ -979,7 +846,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{1.0f,0.5f,0.5f,1.0f},
 		{0.0f,0.0f,0.0f,1.0f},
 	};
-	
+
 
 	//-------------------------------------------------
 	// メインループ
@@ -1005,140 +872,145 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 開発用UIの処理
 			ImGui::Begin("setting"); {
-				if (ImGui::BeginTabBar("option")) {
-					if (ImGui::BeginTabItem("Camera")) { // カメラ設定
-						ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&cameraTransform.scale), 0.01f);
-						ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&cameraTransform.rotate), 0.01f);
-						ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&cameraTransform.translate), 0.01f);
-						if (ImGui::Button("Reset")) {
+				if (ImGui::TreeNode("camera")) {
+
+					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&cameraTransform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&cameraTransform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&cameraTransform.translate), 0.01f);
+					if (ImGui::Button("Reset")) {
+						cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Triangle")) { // 三角形
+					ImGui::Text("triangle1"); // 三角形1
+					ImGui::Checkbox("visible", &showTriangle[0]);
+					ImGui::Checkbox("rotate", &rotateTriangle[0]);
+					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&triangle[0].transform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&triangle[0].transform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&triangle[0].transform.translate), 0.01f);
+					if (ImGui::Button("Reset")) {
+						triangle[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+						showTriangle[0] = true;
+						rotateTriangle[0] = false;
+					}
+
+					ImGui::Separator();
+					ImGui::Text("triangle2"); // 三角形2
+					ImGui::Checkbox("visible2", &showTriangle[1]);
+					ImGui::Checkbox("rotate2", &rotateTriangle[1]);
+					ImGui::DragFloat3("Scale2", reinterpret_cast<float*>(&triangle[1].transform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate2", reinterpret_cast<float*>(&triangle[1].transform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate2", reinterpret_cast<float*>(&triangle[1].transform.translate), 0.01f);
+					if (ImGui::Button("Reset ")) {
+						triangle[1].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+						showTriangle[1] = false;
+						rotateTriangle[1] = true;
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Tetrahedron")) { // 四面体
+					ImGui::Text("Tetrahedron");
+					ImGui::Checkbox("visible", &showTetrahedron);
+					ImGui::Checkbox("rotate", &rotateTetrahedron);
+					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&tetrahedron[0].transform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&tetrahedron[0].transform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&tetrahedron[0].transform.translate), 0.01f);
+					if (ImGui::Button("Reset")) {
+						tetrahedron[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+						showTetrahedron = true;
+						rotateTetrahedron = false;
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("ball")) { // 球
+					ImGui::Text("ball");
+					ImGui::Checkbox("visible", &showBall);
+					ImGui::Checkbox("rotate", &rotateBall);
+					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&ball[0].transform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&ball[0].transform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&ball[0].transform.translate), 0.01f);
+					if (ImGui::Button("Reset")) {
+						ball[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+						showBall = true;
+						rotateBall = false;
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Material")) { // マテリアル
+					ImGui::ColorEdit3("Color", reinterpret_cast<float*>(&materialData->color));
+					ImGui::Checkbox("UseMonsterBall", &useMonsterBall);
+					// テクスチャの有効/無効化
+					if (materialData->useTexture && ImGui::Button("OffTexture")) {
+						materialData->useTexture = false;
+					} else if (!materialData->useTexture && ImGui::Button("OnTexture")) {
+						materialData->useTexture = true;
+					}
+					if (materialDataSprite->useTexture && ImGui::Button("OffTextureSprite")) {
+						materialDataSprite->useTexture = false;
+					} else if (!materialDataSprite->useTexture && ImGui::Button("OnTextureSprite")) {
+						materialDataSprite->useTexture = true;
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Sprite")) { // スプライト
+					ImGui::DragFloat3("Scale ", reinterpret_cast<float*>(&transformSprite.scale), 0.01f);
+					ImGui::DragFloat3("Rotate ", reinterpret_cast<float*>(&transformSprite.rotate), 0.01f);
+					ImGui::DragFloat3("Translate ", reinterpret_cast<float*>(&transformSprite.translate), 0.5f);
+					ImGui::Checkbox("ShowSprite", &showSprite);
+					if (ImGui::Button("Reset")) {
+						transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+						showSprite = true;
+					}
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Light")) { // ライト
+					ImGui::DragFloat3("Direction", reinterpret_cast<float*>(&directionalLightData->direction.x), 0.01f);
+					Normalize(directionalLightData->direction);
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("UVTransform")) { // uvTransform
+					ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+					ImGui::TreePop();
+				}
+
+				if (ImGui::TreeNode("Effect")) { // 演出
+					if (!showEffect) {
+						if (ImGui::Button("Start")) {
+							// 開始
+							showEffect = true;
+							materialData->useTexture = false;
+							showTriangle[0] = false;
+							showTriangle[1] = false;
+							showSprite = false;
+							cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f } };
+						}
+					} else {
+						if (ImGui::Button("End")) {
+							isEffectStarted = false;
+							showEffect = false;
+							materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+							materialData->useTexture = true;
+							showTriangle[0] = true;
+							showSprite = true;
+							transformSprite = { { 1.0f,1.0f,1.0f },{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 							cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
 						}
-						ImGui::EndTabItem();
 					}
-
-					if (ImGui::BeginTabItem("Triangle")) { // 三角形
-						ImGui::Text("triangle1"); // 三角形1
-						ImGui::Checkbox("visible", &showTriangle[0]);
-						ImGui::Checkbox("rotate", &rotateTriangle[0]);
-						ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&triangle[0].transform.scale), 0.01f);
-						ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&triangle[0].transform.rotate), 0.01f);
-						ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&triangle[0].transform.translate), 0.01f);
-						if (ImGui::Button("Reset")) {
-							triangle[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-							showTriangle[0] = true;
-							rotateTriangle[0] = false;
-						}
-
-						ImGui::Separator();
-						ImGui::Text("triangle2"); // 三角形2
-						ImGui::Checkbox("visible2", &showTriangle[1]);
-						ImGui::Checkbox("rotate2", &rotateTriangle[1]);
-						ImGui::DragFloat3("Scale2", reinterpret_cast<float*>(&triangle[1].transform.scale), 0.01f);
-						ImGui::DragFloat3("Rotate2", reinterpret_cast<float*>(&triangle[1].transform.rotate), 0.01f);
-						ImGui::DragFloat3("Translate2", reinterpret_cast<float*>(&triangle[1].transform.translate), 0.01f);
-						if (ImGui::Button("Reset ")) {
-							triangle[1].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-							showTriangle[1] = false;
-							rotateTriangle[1] = true;
-						}
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("Tetrahedron")) { // 四面体
-						ImGui::Text("Tetrahedron");
-						ImGui::Checkbox("visible", &showTetrahedron);
-						ImGui::Checkbox("rotate", &rotateTetrahedron);
-						ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&tetrahedron[0].transform.scale), 0.01f);
-						ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&tetrahedron[0].transform.rotate), 0.01f);
-						ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&tetrahedron[0].transform.translate), 0.01f);
-						if (ImGui::Button("Reset")) {
-							tetrahedron[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-							showTetrahedron = true;
-							rotateTetrahedron = false;
-						}
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("ball")) { // 球
-						ImGui::Text("ball");
-						ImGui::Checkbox("visible", &showBall);
-						ImGui::Checkbox("rotate", &rotateBall);
-						ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&ball[0].transform.scale), 0.01f);
-						ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&ball[0].transform.rotate), 0.01f);
-						ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&ball[0].transform.translate), 0.01f);
-						if (ImGui::Button("Reset")) {
-							ball[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-							showBall = true;
-							rotateBall = false;
-						}
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("Material")) { // マテリアル
-						ImGui::ColorEdit3("Color", reinterpret_cast<float*>(&materialData->color));
-						ImGui::Checkbox("UseMonsterBall", &useMonsterBall);
-						// テクスチャの有効/無効化
-						if (materialData->useTexture && ImGui::Button("OffTexture")) {
-							materialData->useTexture = false;
-						} else if (!materialData->useTexture && ImGui::Button("OnTexture")) {
-							materialData->useTexture = true;
-						}
-						if (materialDataSprite->useTexture && ImGui::Button("OffTextureSprite")) {
-							materialDataSprite->useTexture = false;
-						} else if (!materialDataSprite->useTexture && ImGui::Button("OnTextureSprite")) {
-							materialDataSprite->useTexture = true;
-						}
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("Sprite")) { // スプライト
-						ImGui::DragFloat3("Scale ", reinterpret_cast<float*>(&transformSprite.scale), 0.01f);
-						ImGui::DragFloat3("Rotate ", reinterpret_cast<float*>(&transformSprite.rotate), 0.01f);
-						ImGui::DragFloat3("Translate ", reinterpret_cast<float*>(&transformSprite.translate), 0.5f);
-						ImGui::Checkbox("ShowSprite", &showSprite);
-						if (ImGui::Button("Reset")) {
-							transformSprite = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-							showSprite = true;
-						}
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("Light")) { // ライト
-						ImGui::DragFloat3("Direction", reinterpret_cast<float*>(&directionalLightData->direction.x), 0.01f);
-						Normalize(directionalLightData->direction);
-						ImGui::EndTabItem();
-					}
-
-					if (ImGui::BeginTabItem("Effect")) { // 演出
-						if (!showEffect) {
-							if (ImGui::Button("Start")) {
-								// 開始
-								showEffect = true;
-								materialData->useTexture = false;
-								showTriangle[0] = false;
-								showTriangle[1] = false;
-								showSprite = false;
-								cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f } };
-							}
-						} else {
-							if (ImGui::Button("End")) {
-								isEffectStarted = false;
-								showEffect = false;
-								materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-								materialData->useTexture = true;
-								showTriangle[0] = true;
-								showSprite = true;
-								transformSprite = { { 1.0f,1.0f,1.0f },{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-								cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
-							}
-						}
-						ImGui::EndTabItem();
-					}
-
-					ImGui::EndTabBar();
+					ImGui::TreePop();
 				}
+				ImGui::End();
 			}
-			ImGui::End();
 
 			for (UINT i = 0; i < triangleCount; ++i) {
 				if (rotateTriangle[i]) {
@@ -1191,6 +1063,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				transformationData[triangleCount + tetrahedronCount + i]->WVP = worldViewProjectionMatrix;
 				transformationData[triangleCount + tetrahedronCount + i]->World = worldMatrix;
 			}
+
+			// UVTransformの行列
+			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformMatrix;
 
 			// Sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite);
@@ -1245,32 +1123,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			// 三角形描画
-			for (UINT i = 0; i < triangleCount; ++i) {
-				if (showTriangle[i]) {
-					// wvp用のCBufferの場所を設定
-					commandList->SetGraphicsRootConstantBufferView(1, transformationResource[i]->GetGPUVirtualAddress());
-					// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
-					commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-					// ライト
-					commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-					// 描画!(DrawCall/ドローコール) 3頂点で1つのインスタンス。
-					commandList->DrawInstanced(3, 1, i * 3, 0);
-				}
-			}
-			// 四面体描画
-			if (showTetrahedron) {
-				for (UINT i = 0; i < tetrahedronCount; ++i) {
-					// wvp用のCBufferの場所を設定
-					commandList->SetGraphicsRootConstantBufferView(1, transformationResource[triangleCount + i]->GetGPUVirtualAddress());
-					// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
-					commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-					// ライト
-					commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-					// 描画!(DrawCall/ドローコール) 12頂点で1つのインスタンス。
-					commandList->DrawInstanced(12, 1, triangleCount * 3 + i * 12, 0);
-				}
-			}
+			//// 三角形描画
+			//for (UINT i = 0; i < triangleCount; ++i) {
+			//	if (showTriangle[i]) {
+			//		// wvp用のCBufferの場所を設定
+			//		commandList->SetGraphicsRootConstantBufferView(1, transformationResource[i]->GetGPUVirtualAddress());
+			//		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+			//		commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			//		// ライト
+			//		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			//		// 描画!(DrawCall/ドローコール) 3頂点で1つのインスタンス。
+			//		commandList->DrawInstanced(3, 1, i * 3, 0);
+			//	}
+			//}
+			//// 四面体描画
+			//if (showTetrahedron) {
+			//	for (UINT i = 0; i < tetrahedronCount; ++i) {
+			//		// wvp用のCBufferの場所を設定
+			//		commandList->SetGraphicsRootConstantBufferView(1, transformationResource[triangleCount + i]->GetGPUVirtualAddress());
+			//		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+			//		commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+			//		// ライト
+			//		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			//		// 描画!(DrawCall/ドローコール) 12頂点で1つのインスタンス。
+			//		commandList->DrawInstanced(12, 1, triangleCount * 3 + i * 12, 0);
+			//	}
+			//}
 			// 球描画
 			if (showBall) {
 				for (UINT i = 0; i < ballCount; ++i) {
@@ -1280,26 +1158,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 					// ライト
 					commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-					// 描画!(DrawCall/ドローコール) 頂点で1つのインスタンス。
-					commandList->DrawInstanced(16 * 16 * 6, 1, triangleCount * 3 + tetrahedronCount * 12 + i * 16 * 16 * 6, 0);
+					// ドローコール
+					commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 				}
 			}
 
-			if (showSprite) {
-				// マテリアルCBufferの場所を設定
-				commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-				// Spriteの描画。変更が必要なものだけ変更する
-				commandList->IASetIndexBuffer(&indexBufferViewSprite);	// IBVを設定
-				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);	// VBVを設定
-				// TransformationMatrixCBufferの場所を設定
-				commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-				// SRVの設定
-				commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-				// ライト
-				commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-				// 描画!(DrawCall/ドローコール)
-				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-			}
+			//if (showSprite) {
+			//	// マテリアルCBufferの場所を設定
+			//	commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+			//	// Spriteの描画。変更が必要なものだけ変更する
+			//	commandList->IASetIndexBuffer(&indexBufferViewSprite);	// IBVを設定
+			//	commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);	// VBVを設定
+			//	// TransformationMatrixCBufferの場所を設定
+			//	commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+			//	// SRVの設定
+			//	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//	// ライト
+			//	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+			//	// 描画!(DrawCall/ドローコール)
+			//	commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			//}
 
 			// 実際のcommandListのImGuiの描画コマンドを読む
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1698,4 +1576,99 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
+}
+
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename)
+{
+	// 変数の宣言
+	ModelData modelData; // 構築するModeldata
+	std::vector<Vector4> positions; // 位置
+	std::vector<Vector3> normals; // 法線
+	std::vector<Vector2> texcoords; // テクスチャ座標
+	std::string line; // ファイルから読んだ1行を格納するもの
+
+	// ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // 開けなかったらエラー
+
+	// ファイルを読み、ModelDataを構築
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier; // 先頭の識別子を読む
+		// 識別子に応じた処理
+		if (identifier == "v") { // 頂点座標
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.x *= -1.0f; // 右手座標系から左手座標系への変換
+			position.w = 1.0f;
+			positions.push_back(position);
+		} else if (identifier == "vt") { // テクスチャ座標
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoord.y = 1.0f - texcoord.y; // 左下原点から左上原点への変換
+			texcoords.push_back(texcoord);
+		} else if (identifier == "vn") { // 法線
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normal.x *= -1.0f; // 右手座標系から左手座標系への変換
+			normals.push_back(normal);
+		} else if (identifier == "f") {
+			VertexData triangle[3];
+			// 面は三角形限定。その他は未対応
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; ++element) {
+					std::string index;
+					std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
+					elementIndices[element] = std::stoi(index);
+				}
+				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1]; // 1始まりなので-1
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				triangle[faceVertex] = { position, texcoord, normal };
+			}
+			// 頂点を逆順で登録することで、周り順を逆にする
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+		} else if (identifier == "mtllib") {
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		}
+	}
+
+	return modelData;
+}
+
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename){
+	// 変数の宣言
+	MaterialData materialData; // 構築するMaterialData
+	std::string line; // ファイルから読んだ1行を格納するもの
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // 開けなかったらエラー
+
+	// ファイルを読み、MaterialDataを構築
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+	return materialData;
 }
