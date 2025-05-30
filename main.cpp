@@ -21,7 +21,6 @@
 
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
-#include "Vector2.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -512,36 +511,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f}
 	};
 
-	// 用意する三角形の数
-	const UINT triangleCount = 2; // 三角形だけ描画する数
-	const UINT tetrahedronCount = 1; // 四面体の数
-	const UINT ballCount = 1; // 球の数
-	const UINT totalTriangleCount = triangleCount + tetrahedronCount * 4 + ballCount * 16 * 16 * 6; // 描画する三角形の合計数
-	const UINT shapeCount = triangleCount + tetrahedronCount + ballCount; // 図形の数
-
-	struct Triangle {
+	// モデル
+	const UINT modelCount = 1;
+	struct Model {
 		Transform transform;
 	};
-	struct Tetrahedron {
-		Transform transform;
-	};
-	struct Ball {
-		Transform transform;
-	};
-
-	// 図形を生成
-	Triangle triangle[triangleCount];
-	Tetrahedron tetrahedron[tetrahedronCount];
-	Ball ball[ballCount];
+	Model model[modelCount] = {};
+	// トランスフォームの初期化
+	for (UINT i = 0; i < modelCount; ++i) {
+		model[i].transform = Transform{
+			{1.0f,1.0f,1.0f},
+			{0.0f,0.0f,0.0f},
+			{0.0f,0.0f,0.0f}
+		};
+	}
 
 	// transformation用のリソースを作る。TransformationMatrix 1つ分のサイズを用意する
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource[shapeCount];
-	for (UINT i = 0; i < shapeCount; ++i) {
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource[modelCount];
+	for (UINT i = 0; i < modelCount; ++i) {
 		transformationResource[i] = CreateBufferResource(device, sizeof(TransformationMatrix));
 	}
 	// データを書き込む
-	TransformationMatrix* transformationData[shapeCount];
-	for (UINT i = 0; i < shapeCount; ++i) {
+	TransformationMatrix* transformationData[modelCount];
+	for (UINT i = 0; i < modelCount; ++i) {
 		// 書き込むためのアドレスを取得
 		transformationResource[i]->Map(0, nullptr, reinterpret_cast<void**>(&transformationData[i]));
 		// 単位行列を書き込んでおく
@@ -652,7 +644,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(hr));
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("Resources", "axis.obj");
+	ModelData modelData = LoadObjFile("Resources", "plane.obj");
 
 	// Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
@@ -800,19 +792,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	scissorRect.bottom = kClientHeight;
 
 	// Transform
-	// 三角形
-	for (UINT i = 0; i < triangleCount; ++i) {
-		triangle[i].transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,0.5f,0.0f } };
-	}
-	// 四面体
-	for (UINT i = 0; i < tetrahedronCount; ++i) {
-		tetrahedron[i].transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { 1.0f,-0.65f,0.0f } };
-	}
-	// 球
-	for (UINT i = 0; i < ballCount; ++i) {
-		ball[i].transform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { -1.5f,-0.8f,3.0f } };
-	}
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 	// Imguiの初期化
@@ -829,37 +809,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	);
 
 	// 表示設定
-	bool showSprite = true;
-	bool isEffectStarted = false;
-	bool showTriangle[2] = { true,true };
-	bool rotateTriangle[2] = { true,true };
+	bool showSprite = false;
+	bool useMonsterBall = false;
 
-	bool showTetrahedron = true;
-	bool rotateTetrahedron = true;
-
-	bool showBall = true;
-	bool rotateBall = { true };
-	bool useMonsterBall = true;
-
-	// 演出に必要な設定
-	bool showEffect = false;
-	Vector3 rotateAmount[tetrahedronCount] = {};
-	srand((unsigned)time(0));
-	UINT colorSet = 0;
-	Vector4 backGroundColor[4] = {
-		{1.0f,1.0f,1.0f,1.0f},
-		{0.1f,0.1f,0.3f,1.0f},
-		{0.1f,0.2f,0.1f,1.0f},
-		{0.4f,0.1f,0.1f,1.0f},
-	};
-
-	Vector4 tetrahedronColor[4] = {
-		{0.5f,0.5f,1.0f,1.0f},
-		{0.5f,1.0f,0.5f,1.0f},
-		{1.0f,0.5f,0.5f,1.0f},
-		{0.0f,0.0f,0.0f,1.0f},
-	};
-
+	bool showModel = true;
+	bool rotateModel = false;
 
 	//-------------------------------------------------
 	// メインループ
@@ -896,60 +850,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
-				if (ImGui::TreeNode("Triangle")) { // 三角形
-					ImGui::Text("triangle1"); // 三角形1
-					ImGui::Checkbox("visible", &showTriangle[0]);
-					ImGui::Checkbox("rotate", &rotateTriangle[0]);
-					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&triangle[0].transform.scale), 0.01f);
-					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&triangle[0].transform.rotate), 0.01f);
-					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&triangle[0].transform.translate), 0.01f);
+				if (ImGui::TreeNode("model")) { // モデル
+					ImGui::Checkbox("visible", &showModel);
+					ImGui::Checkbox("rotate", &rotateModel);
+					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&model[0].transform.scale), 0.01f);
+					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&model[0].transform.rotate), 0.01f);
+					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&model[0].transform.translate), 0.01f);
 					if (ImGui::Button("Reset")) {
-						triangle[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-						showTriangle[0] = true;
-						rotateTriangle[0] = false;
-					}
-
-					ImGui::Separator();
-					ImGui::Text("triangle2"); // 三角形2
-					ImGui::Checkbox("visible2", &showTriangle[1]);
-					ImGui::Checkbox("rotate2", &rotateTriangle[1]);
-					ImGui::DragFloat3("Scale2", reinterpret_cast<float*>(&triangle[1].transform.scale), 0.01f);
-					ImGui::DragFloat3("Rotate2", reinterpret_cast<float*>(&triangle[1].transform.rotate), 0.01f);
-					ImGui::DragFloat3("Translate2", reinterpret_cast<float*>(&triangle[1].transform.translate), 0.01f);
-					if (ImGui::Button("Reset ")) {
-						triangle[1].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-						showTriangle[1] = false;
-						rotateTriangle[1] = true;
-					}
-					ImGui::TreePop();
-				}
-
-				if (ImGui::TreeNode("Tetrahedron")) { // 四面体
-					ImGui::Text("Tetrahedron");
-					ImGui::Checkbox("visible", &showTetrahedron);
-					ImGui::Checkbox("rotate", &rotateTetrahedron);
-					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&tetrahedron[0].transform.scale), 0.01f);
-					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&tetrahedron[0].transform.rotate), 0.01f);
-					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&tetrahedron[0].transform.translate), 0.01f);
-					if (ImGui::Button("Reset")) {
-						tetrahedron[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-						showTetrahedron = true;
-						rotateTetrahedron = false;
-					}
-					ImGui::TreePop();
-				}
-
-				if (ImGui::TreeNode("ball")) { // 球
-					ImGui::Text("ball");
-					ImGui::Checkbox("visible", &showBall);
-					ImGui::Checkbox("rotate", &rotateBall);
-					ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&ball[0].transform.scale), 0.01f);
-					ImGui::DragFloat3("Rotate", reinterpret_cast<float*>(&ball[0].transform.rotate), 0.01f);
-					ImGui::DragFloat3("Translate", reinterpret_cast<float*>(&ball[0].transform.translate), 0.01f);
-					if (ImGui::Button("Reset")) {
-						ball[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
-						showBall = true;
-						rotateBall = false;
+						model[0].transform = { {1.0f, 1.0f, 1.0f}, {0.0f,0.0f,0.0f}, {0.0f,0.0f,0.0f} };
+						showModel = true;
+						rotateModel = false;
 					}
 					ImGui::TreePop();
 				}
@@ -997,47 +907,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
-				if (ImGui::TreeNode("Effect")) { // 演出
-					if (!showEffect) {
-						if (ImGui::Button("Start")) {
-							// 開始
-							showEffect = true;
-							materialData->useTexture = false;
-							showTriangle[0] = false;
-							showTriangle[1] = false;
-							showSprite = false;
-							cameraTransform = { { 1.0f, 1.0f, 1.0f }, { 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f } };
-						}
-					} else {
-						if (ImGui::Button("End")) {
-							isEffectStarted = false;
-							showEffect = false;
-							materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-							materialData->useTexture = true;
-							showTriangle[0] = true;
-							showSprite = true;
-							transformSprite = { { 1.0f,1.0f,1.0f },{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-							cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
-						}
-					}
-					ImGui::TreePop();
-				}
 				ImGui::End();
 			}
 
-			for (UINT i = 0; i < triangleCount; ++i) {
-				if (rotateTriangle[i]) {
-					triangle[i].transform.rotate.y += 0.03f;
-				}
-			}
-			for (UINT i = 0; i < tetrahedronCount; ++i) {
-				if (rotateTetrahedron) {
-					tetrahedron[i].transform.rotate.y += 0.03f;
-				}
-			}
-			for (UINT i = 0; i < ballCount; ++i) {
-				if (rotateBall) {
-					ball[i].transform.rotate.y += 0.03f;
+			for (UINT i = 0; i < modelCount; ++i) {
+				if (rotateModel) {
+					model[i].transform.rotate.y += 0.03f;
 				}
 			}
 
@@ -1048,33 +923,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 三角形のviewProjectionを先に計算
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
-			// 三角形(3頂点)単位の操作
-			for (UINT i = 0; i < triangleCount; ++i) {
-				Matrix4x4 worldMatrix = MakeAffineMatrix(triangle[i].transform);
+		
+			// モデルのトランスフォーム
+			for (UINT i = 0; i < modelCount; ++i) {
+				Matrix4x4 worldMatrix = MakeAffineMatrix(model[i].transform);
 				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
-
 				// WVPMatrixを作る
 				transformationData[i]->WVP = worldViewProjectionMatrix;
 				transformationData[i]->World = worldMatrix;
-			}
-			// 四面体
-			if (showTetrahedron) {
-				for (UINT i = 0; i < tetrahedronCount; ++i) {
-					Matrix4x4 worldMatrix = MakeAffineMatrix(tetrahedron[i].transform);
-					Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
-
-					// WVPMatrixを作る
-					transformationData[triangleCount + i]->WVP = worldViewProjectionMatrix;
-					transformationData[triangleCount + i]->World = worldMatrix;
-				}
-			}
-			// 球
-			for (UINT i = 0; i < ballCount; ++i) {
-				Matrix4x4 worldMatrix = MakeAffineMatrix(ball[i].transform);
-				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
-				// WVPMatrixを作る
-				transformationData[triangleCount + tetrahedronCount + i]->WVP = worldViewProjectionMatrix;
-				transformationData[triangleCount + tetrahedronCount + i]->World = worldMatrix;
 			}
 
 			// UVTransformの行列
@@ -1113,11 +969,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
 			// 指定した色で画面全体をクリアする
 			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f }; // 青っぽい色。RGBAの順
-			if (showEffect) {
-				clearColor[0] = backGroundColor[colorSet].x;
-				clearColor[1] = backGroundColor[colorSet].y;
-				clearColor[2] = backGroundColor[colorSet].z;
-			};
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 			// 指定した深度で画面全体をクリアする
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
@@ -1136,37 +987,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			//// 三角形描画
-			//for (UINT i = 0; i < triangleCount; ++i) {
-			//	if (showTriangle[i]) {
-			//		// wvp用のCBufferの場所を設定
-			//		commandList->SetGraphicsRootConstantBufferView(1, transformationResource[i]->GetGPUVirtualAddress());
-			//		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
-			//		commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-			//		// ライト
-			//		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			//		// 描画!(DrawCall/ドローコール) 3頂点で1つのインスタンス。
-			//		commandList->DrawInstanced(3, 1, i * 3, 0);
-			//	}
-			//}
-			//// 四面体描画
-			//if (showTetrahedron) {
-			//	for (UINT i = 0; i < tetrahedronCount; ++i) {
-			//		// wvp用のCBufferの場所を設定
-			//		commandList->SetGraphicsRootConstantBufferView(1, transformationResource[triangleCount + i]->GetGPUVirtualAddress());
-			//		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
-			//		commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-			//		// ライト
-			//		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			//		// 描画!(DrawCall/ドローコール) 12頂点で1つのインスタンス。
-			//		commandList->DrawInstanced(12, 1, triangleCount * 3 + i * 12, 0);
-			//	}
-			//}
-			// 球描画
-			if (showBall) {
-				for (UINT i = 0; i < ballCount; ++i) {
+		
+			// モデル描画
+			if (showModel) {
+				for (UINT i = 0; i < modelCount; ++i) {
 					// wvp用のCBufferの場所を設定
-					commandList->SetGraphicsRootConstantBufferView(1, transformationResource[triangleCount + tetrahedronCount + i]->GetGPUVirtualAddress());
+					commandList->SetGraphicsRootConstantBufferView(1, transformationResource[i]->GetGPUVirtualAddress());
 					// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
 					commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 					// ライト
