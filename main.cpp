@@ -905,6 +905,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DIMOUSESTATE mouseState = {};
 	SoundData soundData1 = SoundLoad(L"Resources/Alarm01.wav");
 	DebugCamera debugCamera;
+	debugCamera.Initialize();
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------

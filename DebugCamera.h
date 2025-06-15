@@ -46,10 +46,17 @@ private:
 	// カメラ回転速度
 	const float kRotateSpeed_ = 0.001f;
 
-	Matrix4x4 rotateMatrix_ = {};
+	// 累積回転行列
+	Matrix4x4 matRot_;
 
-	// ローカル回転角
-	Vector3 rotation_ = { 0,0,0 };
+	// 注視点（ワールド原点スタート）
+	Vector3 target_ = { 0, 0, 0 };
+	// 注視点からの距離
+	float   distance_ = 50.0f;
+	// オービット角度（ラジアン）
+	float   yaw_ = 0.0f;  // 水平（Y軸回転）
+	float   pitch_ = 0.0f;  // 垂直（ローカルX軸回転）
+
 	// ローカル座標
 	Vector3 translation_ = { 0,0,-50 };
 	// ビュー行列
