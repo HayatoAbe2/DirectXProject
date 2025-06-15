@@ -15,10 +15,22 @@
 #include <ctime>
 #include <sstream>
 #include <wrl.h>
+#include <fstream>
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
+#include <mfobjects.h>
+#include <xaudio2.h>
+
+#pragma comment(lib, "dinput8.lib")
+
 
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Logger.h"
+//#include "DebugCamera.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -33,6 +45,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"Dbghelp.lib")
+#pragma comment(lib,"xaudio2.lib")
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mf.lib")
+#pragma comment(lib, "mfuuid.lib")
+#pragma comment(lib, "xaudio2.lib")
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -147,8 +165,40 @@ struct D3DResourceLeakChecker {
 	}
 };
 
+// チャンクヘッダ
+struct ChunkHeader {
+	char id[4]; // チャンク用のID
+	int32_t size; // チャンクサイズ
+};
+
+// RIFFヘッダチャンク
+struct RiffHeader {
+	ChunkHeader chunk; // "RIFF"
+	char type[4]; // "WAVE"
+};
+
+// FMTチャンク
+struct FormatChunk {
+	ChunkHeader chunk; // "fmt "
+	WAVEFORMATEX fmt; // 波形フォーマット
+};
+
+// 音声データ
+struct SoundData {
+	// 波形フォーマット
+	WAVEFORMATEX wfex;
+	// バッファの先頭アドレス
+	BYTE* pBuffer;
+	// バッファのサイズ
+	unsigned int bufferSize;
+};
+
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
+SoundData SoundLoad(const wchar_t* filename);
+void SoundUnload(SoundData* soundData);
+void SoundPlay(IXAudio2* xAudio2, const SoundData& soundData);
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -157,6 +207,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// COMの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
+
+	// MFの初期化
+	MFStartup(MF_VERSION);
 
 	SetUnhandledExceptionFilter(ExportDump);
 
@@ -262,6 +315,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(useAdapter != nullptr);
 
 	//-------------------------------------------------
+	// XAudio2変数宣言
+	//-------------------------------------------------
+
+	// XAudio2の初期化
+	Microsoft::WRL::ComPtr<IXAudio2>xAudio2;
+	XAudio2Create(&xAudio2, 0);
+
+	IXAudio2MasteringVoice* masterVoice;
+
+	//-------------------------------------------------
+	// DirectInputの初期化
+	//-------------------------------------------------
+	// オブジェクト生成
+	IDirectInput8* directInput = nullptr;
+	hr = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		(void**)&directInput, nullptr);
+	assert(SUCCEEDED(hr));
+	// キーボードデバイスの生成
+	IDirectInputDevice8* keyboard = (nullptr);
+	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+	assert(SUCCEEDED(hr));
+	// 入力データ形式のセット
+	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
+	assert(SUCCEEDED(hr));
+	// 排他制御レベルのセット
+	hr = keyboard->SetCooperativeLevel(
+		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(hr));
+
+	//// マウスデバイス生成
+	//IDirectInputDevice8* mouse = nullptr;
+	//hr = directInput->CreateDevice(GUID_SysMouse, &mouse, NULL);
+	//assert(SUCCEEDED(hr));
+	//// 入力データ形式のセット
+	//hr = mouse->SetDataFormat(&c_dfDIMouse);
+	//assert(SUCCEEDED(hr));
+	//// 排他制御レベルのセット
+	//hr = mouse->SetCooperativeLevel(
+	//	hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	//assert(SUCCEEDED(hr));
+
+	//-------------------------------------------------
 	// D3D12Deviceの生成
 	//-------------------------------------------------
 	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;
@@ -283,6 +378,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		}
 	}
+
+
+	// XAudioエンジンのインスタンスを生成する
+	hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	assert(SUCCEEDED(hr));
+	// マスターボイスを生成する
+	hr = xAudio2->CreateMasteringVoice(&masterVoice);
 
 	// デバイスの生成がうまくいかなかったので起動できない
 	assert(device != nullptr);
@@ -795,6 +897,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool showModel = true;
 	bool rotateModel = false;
 
+	BYTE preKey[256] = {};
+	BYTE key[256] = {};
+	DIMOUSESTATE mouseState[3] = {};
+	SoundData soundData1 = SoundLoad(L"Resources/Alarm01.wav");
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------
@@ -808,6 +914,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		} else {
+
+			// キーボード情報の取得開始
+			keyboard->Acquire();
+			// 前フレームのキー入力状態
+			for (int i = 0; i < 256; ++i) {
+				preKey[i] = key[i];
+			}
+			// 全キーの入力状態を取得
+			keyboard->GetDeviceState(sizeof(key), key);
+
+			// マウス情報の取得開始
+			//mouse->Acquire();
+			//// クリック状態
+			//mouse->GetDeviceState(sizeof(mouseState), &mouseState);
+
+			//DebugCamera debugCamera;
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -887,6 +1009,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
+				if (ImGui::TreeNode("Sound")) { // サウンド
+					if (ImGui::Button("Play")) {
+						// サウンドの再生
+						SoundPlay(xAudio2.Get(), soundData1);
+					}
+					ImGui::TreePop();
+				}
+
 				ImGui::End();
 			}
 
@@ -896,13 +1026,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
+			//debugCamera.Update(key,mouseState);
+
+
 			// (更新処理終了後)
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
 
-			// 三角形のviewProjectionを先に計算
+			// viewProjectionを先に計算
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
+			Matrix4x4 viewProjectionMatrix;
+			//if (debugCamera.IsEnable()) {
+			//	// デバッグカメラのビュー行列を使う
+			//	viewProjectionMatrix = Multiply(debugCamera.GetViewMatrix(), projectionMatrix);
+			//} else {
+			//	viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
+			//}			
 		
 			// モデルのトランスフォーム
 			for (UINT i = 0; i < modelCount; ++i) {
@@ -1057,8 +1196,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
 
+	xAudio2.Reset();
+	SoundUnload(&soundData1);
+	MFShutdown();
+
 	CloseWindow(hwnd);
+
 	CoUninitialize();
+
 
 	return 0;
 }
@@ -1413,4 +1558,90 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 		}
 	}
 	return materialData;
+}
+
+SoundData SoundLoad(const wchar_t* filename){
+	HRESULT hr;
+	// ソースリーダー作成
+	IMFSourceReader* pMFSourceReader = nullptr;
+	hr = MFCreateSourceReaderFromURL(filename, NULL, &pMFSourceReader);
+	assert(SUCCEEDED(hr));
+
+	// メディアタイプの取得
+	IMFMediaType* pMFMediaType = nullptr;
+	MFCreateMediaType(&pMFMediaType);
+	pMFMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	pMFMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+	pMFSourceReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pMFMediaType);
+
+	pMFMediaType->Release();
+	pMFMediaType = nullptr;
+	pMFSourceReader->GetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pMFMediaType);
+
+	// データ形式
+	WAVEFORMATEX* waveFormat = nullptr;
+	MFCreateWaveFormatExFromMFMediaType(pMFMediaType, &waveFormat, nullptr);
+
+	std::vector<BYTE> mediaData;
+	while (true)
+	{
+		IMFSample* pMFSample{ nullptr };
+		DWORD dwStreamFlags{ 0 };
+		pMFSourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &dwStreamFlags, nullptr, &pMFSample);
+
+		if (dwStreamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
+		{
+			break;
+		}
+
+		IMFMediaBuffer* pMFMediaBuffer{ nullptr };
+		pMFSample->ConvertToContiguousBuffer(&pMFMediaBuffer);
+
+		BYTE* pBuffer{ nullptr };
+		DWORD cbCurrentLength{ 0 };
+		pMFMediaBuffer->Lock(&pBuffer, nullptr, &cbCurrentLength);
+
+		mediaData.resize(mediaData.size() + cbCurrentLength);
+		memcpy(mediaData.data() + mediaData.size() - cbCurrentLength, pBuffer, cbCurrentLength);
+
+		pMFMediaBuffer->Unlock();
+
+		pMFMediaBuffer->Release();
+		pMFSample->Release();
+	}
+
+	// returnするための音声データ
+	SoundData soundData;
+	soundData.wfex = *waveFormat;
+	soundData.bufferSize = static_cast<UINT>(mediaData.size());
+	soundData.pBuffer = new BYTE[soundData.bufferSize];
+	memcpy(soundData.pBuffer, mediaData.data(), soundData.bufferSize);
+
+	return soundData;
+}
+
+void SoundUnload(SoundData* soundData){
+	// バッファのメモリを解放
+	delete[] soundData->pBuffer;
+	soundData->pBuffer = nullptr;
+}
+
+void SoundPlay(IXAudio2* xAudio2, const SoundData& soundData){
+	HRESULT result;
+
+	// 波形フォーマットを元にSourceVoiceの生成
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(result));
+
+	// 再生する波形データの設定
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.Flags = XAUDIO2_END_OF_STREAM; // 波形データの終端を示すフラグ
+
+	// 波形データの再生
+	result = pSourceVoice->SubmitSourceBuffer(&buf);
+	result = pSourceVoice->Start();
+
 }

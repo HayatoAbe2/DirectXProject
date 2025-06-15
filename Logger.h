@@ -1,6 +1,10 @@
 #pragma once
 #include <ostream>
 #include <fstream>
+
+/// <summary>
+/// ログ出力
+/// </summary>
 class Logger{
 public:
 
