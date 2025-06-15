@@ -23,10 +23,6 @@
 #include <mfreadwrite.h>
 #include <mfobjects.h>
 #include <xaudio2.h>
-
-#pragma comment(lib, "dinput8.lib")
-
-
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Logger.h"
@@ -51,6 +47,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "mfuuid.lib")
 #pragma comment(lib, "xaudio2.lib")
+#pragma comment(lib, "dinput8.lib")
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
@@ -344,17 +341,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(hr));
 
-	//// マウスデバイス生成
-	//IDirectInputDevice8* mouse = nullptr;
-	//hr = directInput->CreateDevice(GUID_SysMouse, &mouse, NULL);
-	//assert(SUCCEEDED(hr));
-	//// 入力データ形式のセット
-	//hr = mouse->SetDataFormat(&c_dfDIMouse);
-	//assert(SUCCEEDED(hr));
-	//// 排他制御レベルのセット
-	//hr = mouse->SetCooperativeLevel(
-	//	hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	//assert(SUCCEEDED(hr));
+	// マウスデバイス生成
+	IDirectInputDevice8* mouse = nullptr;
+	hr = directInput->CreateDevice(GUID_SysMouse, &mouse, NULL);
+	assert(SUCCEEDED(hr));
+	// 入力データ形式のセット
+	hr = mouse->SetDataFormat(&c_dfDIMouse);
+	assert(SUCCEEDED(hr));
+	// 排他制御レベルのセット
+	hr = mouse->SetCooperativeLevel(
+		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(hr));
 
 	//-------------------------------------------------
 	// D3D12Deviceの生成
@@ -897,9 +894,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool showModel = true;
 	bool rotateModel = false;
 
-	BYTE preKey[256] = {};
+	// キー入力
+	BYTE prevKey[256] = {};
 	BYTE key[256] = {};
-	DIMOUSESTATE mouseState[3] = {};
+
+	// マウス入力
+	DIMOUSESTATE prevMouseState = {};
+	DIMOUSESTATE mouseState = {};
 	SoundData soundData1 = SoundLoad(L"Resources/Alarm01.wav");
 	//-------------------------------------------------
 	// メインループ
@@ -919,15 +920,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			keyboard->Acquire();
 			// 前フレームのキー入力状態
 			for (int i = 0; i < 256; ++i) {
-				preKey[i] = key[i];
+				prevKey[i] = key[i];
 			}
 			// 全キーの入力状態を取得
 			keyboard->GetDeviceState(sizeof(key), key);
 
 			// マウス情報の取得開始
-			//mouse->Acquire();
-			//// クリック状態
-			//mouse->GetDeviceState(sizeof(mouseState), &mouseState);
+			mouse->Acquire();
+			// 前フレームのマウス入力状態
+			prevMouseState = mouseState;
+			// クリック状態
+			mouse->GetDeviceState(sizeof(mouseState), &mouseState);
 
 			//DebugCamera debugCamera;
 
@@ -1009,13 +1012,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
-				if (ImGui::TreeNode("Sound")) { // サウンド
-					if (ImGui::Button("Play")) {
-						// サウンドの再生
-						SoundPlay(xAudio2.Get(), soundData1);
-					}
-					ImGui::TreePop();
-				}
+				ImGui::Text("[Right click] to play sample sound");
 
 				ImGui::End();
 			}
@@ -1026,6 +1023,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
+			if (prevMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80) { // 右クリックの瞬間
+				// サウンドの再生
+				SoundPlay(xAudio2.Get(), soundData1);
+			}
 			//debugCamera.Update(key,mouseState);
 
 
@@ -1042,7 +1043,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//} else {
 			//	viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
 			//}			
-		
+
 			// モデルのトランスフォーム
 			for (UINT i = 0; i < modelCount; ++i) {
 				Matrix4x4 worldMatrix = MakeAffineMatrix(model[i].transform);
@@ -1106,7 +1107,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			// マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-		
+
 			// モデル描画
 			if (showModel) {
 				for (UINT i = 0; i < modelCount; ++i) {
@@ -1228,8 +1229,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 }
 
 IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile,
-	IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, std::ostream& os)
-{
+	IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, std::ostream& os) {
 	// これからシェーダーをコンパイルする旨をログに出す
 	logger.Log(os, logger.ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
 	// hlslファイルを読む
@@ -1451,22 +1451,19 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(const M
 	return resource;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
 }
 
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename)
-{
+ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
 	// 変数の宣言
 	ModelData modelData; // 構築するModeldata
 	std::vector<Vector4> positions; // 位置
@@ -1560,7 +1557,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 	return materialData;
 }
 
-SoundData SoundLoad(const wchar_t* filename){
+SoundData SoundLoad(const wchar_t* filename) {
 	HRESULT hr;
 	// ソースリーダー作成
 	IMFSourceReader* pMFSourceReader = nullptr;
@@ -1620,13 +1617,13 @@ SoundData SoundLoad(const wchar_t* filename){
 	return soundData;
 }
 
-void SoundUnload(SoundData* soundData){
+void SoundUnload(SoundData* soundData) {
 	// バッファのメモリを解放
 	delete[] soundData->pBuffer;
 	soundData->pBuffer = nullptr;
 }
 
-void SoundPlay(IXAudio2* xAudio2, const SoundData& soundData){
+void SoundPlay(IXAudio2* xAudio2, const SoundData& soundData) {
 	HRESULT result;
 
 	// 波形フォーマットを元にSourceVoiceの生成
