@@ -23,10 +23,12 @@
 #include <mfreadwrite.h>
 #include <mfobjects.h>
 #include <xaudio2.h>
+
+#include "Vector3.h"
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Logger.h"
-//#include "DebugCamera.h"
+#include "DebugCamera.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -892,16 +894,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool useMonsterBall = false;
 
 	bool showModel = true;
-	bool rotateModel = false;
+	bool rotateModel = true;
 
 	// キー入力
-	BYTE prevKey[256] = {};
+	BYTE preKey[256] = {};
 	BYTE key[256] = {};
 
 	// マウス入力
-	DIMOUSESTATE prevMouseState = {};
+	DIMOUSESTATE preMouseState = {};
 	DIMOUSESTATE mouseState = {};
 	SoundData soundData1 = SoundLoad(L"Resources/Alarm01.wav");
+	DebugCamera debugCamera;
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------
@@ -916,23 +919,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
+			// 前フレームのキー入力状態
+			memcpy(preKey, key, sizeof(key));
 			// キーボード情報の取得開始
 			keyboard->Acquire();
-			// 前フレームのキー入力状態
-			for (int i = 0; i < 256; ++i) {
-				prevKey[i] = key[i];
-			}
 			// 全キーの入力状態を取得
 			keyboard->GetDeviceState(sizeof(key), key);
 
 			// マウス情報の取得開始
 			mouse->Acquire();
 			// 前フレームのマウス入力状態
-			prevMouseState = mouseState;
+			preMouseState = mouseState;
 			// クリック状態
 			mouse->GetDeviceState(sizeof(mouseState), &mouseState);
-
-			//DebugCamera debugCamera;
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -1013,6 +1012,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 
 				ImGui::Text("[Right click] to play sample sound");
+				ImGui::Text("Debug Camera: %s", debugCamera.IsEnable() ? "ON" : "OFF");
+
 
 				ImGui::End();
 			}
@@ -1023,12 +1024,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
-			if (prevMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80) { // 右クリックの瞬間
+			if (preMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80) { // 右クリックの瞬間
 				// サウンドの再生
 				SoundPlay(xAudio2.Get(), soundData1);
 			}
-			//debugCamera.Update(key,mouseState);
 
+			debugCamera.Update(preKey,key,mouseState);
 
 			// (更新処理終了後)
 			// ImGuiの内部コマンドを生成する
@@ -1037,12 +1038,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// viewProjectionを先に計算
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 viewProjectionMatrix;
-			//if (debugCamera.IsEnable()) {
-			//	// デバッグカメラのビュー行列を使う
-			//	viewProjectionMatrix = Multiply(debugCamera.GetViewMatrix(), projectionMatrix);
-			//} else {
-			//	viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
-			//}			
+
+			if (debugCamera.IsEnable()) {
+				// デバッグカメラのビュー行列を使う
+				viewProjectionMatrix = Multiply(debugCamera.GetViewMatrix(), projectionMatrix);
+			} else {
+				viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
+			}			
 
 			// モデルのトランスフォーム
 			for (UINT i = 0; i < modelCount; ++i) {
@@ -1200,7 +1202,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	xAudio2.Reset();
 	SoundUnload(&soundData1);
 	MFShutdown();
-
+	
 	CloseWindow(hwnd);
 
 	CoUninitialize();
