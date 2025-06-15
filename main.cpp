@@ -1012,9 +1012,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
-				ImGui::Text("[Right click] to play sample sound");
 				ImGui::Text("Debug Camera: %s", debugCamera.IsEnable() ? "ON" : "OFF");
-
+				if (debugCamera.IsEnable()) {
+					ImGui::Text("arrow/pgup/pgdn : move");
+					ImGui::Text("right click : rotate");
+				} else {
+					ImGui::Text("[Right click] to play sample sound");
+					ImGui::Text("[Right shift] to toggle debug camera");
+				}
 
 				ImGui::End();
 			}
@@ -1025,7 +1030,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
-			if (preMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80) { // 右クリックの瞬間
+			
+			if (preMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80
+				&& !debugCamera.IsEnable()) { // 右クリックの瞬間
 				// サウンドの再生
 				SoundPlay(xAudio2.Get(), soundData1);
 			}
