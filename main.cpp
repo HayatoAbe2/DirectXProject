@@ -1203,6 +1203,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	xAudio2.Reset();
 	SoundUnload(&soundData1);
 	MFShutdown();
+
+	if (mouse)        mouse->Release();
+	if (keyboard)     keyboard->Release();
+	if (directInput)  directInput->Release();
 	
 	CloseWindow(hwnd);
 
@@ -1643,5 +1647,4 @@ void SoundPlay(IXAudio2* xAudio2, const SoundData& soundData) {
 	// 波形データの再生
 	result = pSourceVoice->SubmitSourceBuffer(&buf);
 	result = pSourceVoice->Start();
-
 }
