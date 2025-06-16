@@ -24,6 +24,8 @@
 #include <mfobjects.h>
 #include <xaudio2.h>
 
+#include "Input.h"
+
 #include "Vector3.h"
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
@@ -326,34 +328,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//-------------------------------------------------
 	// DirectInputの初期化
 	//-------------------------------------------------
-	// オブジェクト生成
-	IDirectInput8* directInput = nullptr;
-	hr = DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
-	assert(SUCCEEDED(hr));
-	// キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = (nullptr);
-	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(hr));
-	// 入力データ形式のセット
-	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
-	assert(SUCCEEDED(hr));
-	// 排他制御レベルのセット
-	hr = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(hr));
-
-	// マウスデバイス生成
-	IDirectInputDevice8* mouse = nullptr;
-	hr = directInput->CreateDevice(GUID_SysMouse, &mouse, NULL);
-	assert(SUCCEEDED(hr));
-	// 入力データ形式のセット
-	hr = mouse->SetDataFormat(&c_dfDIMouse);
-	assert(SUCCEEDED(hr));
-	// 排他制御レベルのセット
-	hr = mouse->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(hr));
+	Input *input = new Input(wc, hwnd);
+	assert(&input);
+	logger.Log(logger.GetStream(), std::format("DirectInput Initialized.\n"));
 
 	//-------------------------------------------------
 	// D3D12Deviceの生成
@@ -896,16 +873,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool showModel = true;
 	bool rotateModel = true;
 
-	// キー入力
-	BYTE preKey[256] = {};
-	BYTE key[256] = {};
-
-	// マウス入力
-	DIMOUSESTATE preMouseState = {};
-	DIMOUSESTATE mouseState = {};
 	SoundData soundData1 = SoundLoad(L"Resources/Alarm01.wav");
-	DebugCamera debugCamera;
-	debugCamera.Initialize();
+	DebugCamera *debugCamera = new DebugCamera;
+	debugCamera->Initialize();
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------
@@ -920,19 +890,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DispatchMessage(&msg);
 		} else {
 
-			// 前フレームのキー入力状態
-			memcpy(preKey, key, sizeof(key));
-			// キーボード情報の取得開始
-			keyboard->Acquire();
-			// 全キーの入力状態を取得
-			keyboard->GetDeviceState(sizeof(key), key);
-
-			// マウス情報の取得開始
-			mouse->Acquire();
-			// 前フレームのマウス入力状態
-			preMouseState = mouseState;
-			// クリック状態
-			mouse->GetDeviceState(sizeof(mouseState), &mouseState);
+			// キーボード・マウス入力の更新
+			input->Update();
 
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -1012,8 +971,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					ImGui::TreePop();
 				}
 
-				ImGui::Text("Debug Camera: %s", debugCamera.IsEnable() ? "ON" : "OFF");
-				if (debugCamera.IsEnable()) {
+				ImGui::Text("Debug Camera: %s", debugCamera->IsEnable() ? "ON" : "OFF");
+				if (debugCamera->IsEnable()) {
 					ImGui::Text("arrow/pgup/pgdn : move");
 					ImGui::Text("right click : rotate");
 				} else {
@@ -1031,13 +990,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			
-			if (preMouseState.rgbButtons[1] == 0 && mouseState.rgbButtons[1] & 0x80
-				&& !debugCamera.IsEnable()) { // 右クリックの瞬間
+			if (input->isTriggerRight()
+				&& !debugCamera->IsEnable()) { // 右クリックの瞬間
 				// サウンドの再生
 				SoundPlay(xAudio2.Get(), soundData1);
 			}
 
-			debugCamera.Update(preKey,key,mouseState);
+			debugCamera->Update(input);
 
 			// (更新処理終了後)
 			// ImGuiの内部コマンドを生成する
@@ -1047,9 +1006,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			Matrix4x4 viewProjectionMatrix;
 
-			if (debugCamera.IsEnable()) {
+			if (debugCamera->IsEnable()) {
 				// デバッグカメラのビュー行列を使う
-				viewProjectionMatrix = Multiply(debugCamera.GetViewMatrix(), projectionMatrix);
+				viewProjectionMatrix = Multiply(debugCamera->GetViewMatrix(), projectionMatrix);
 			} else {
 				viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
 			}			
@@ -1211,9 +1170,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	SoundUnload(&soundData1);
 	MFShutdown();
 
-	if (mouse)        mouse->Release();
-	if (keyboard)     keyboard->Release();
-	if (directInput)  directInput->Release();
+	delete input;
+	delete debugCamera;
 	
 	CloseWindow(hwnd);
 

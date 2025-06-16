@@ -1,7 +1,9 @@
 #pragma once
+#define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 #include "Vector3.h"
 #include "Matrix4x4.h"
+#include "Input.h"
 /// <summary>
 /// デバッグカメラ
 /// </summary>
@@ -16,7 +18,7 @@ public:
 	/// 更新
 	/// </summary>
 	/// <param name="key">キー入力</param>
-	void Update(const BYTE* preKey,const BYTE* key, const DIMOUSESTATE& mouse);
+	void Update(Input* input);
 
 	/// <summary>
 	/// ビュー行列
@@ -31,7 +33,7 @@ private:
 	/// カメラの移動・回転
 	/// </summary>
 	/// <param name="key">キー入力</param>
-	void ControlCamera(const BYTE* key, const DIMOUSESTATE& mouse);
+	void ControlCamera(Input* input);
 
 	/// <summary>
 	/// ビュー行列の更新
@@ -44,7 +46,7 @@ private:
 	// カメラ移動速度
 	const float kMoveSpeed_ = 0.1f;
 	// カメラ回転速度
-	const float kRotateSpeed_ = 0.001f;
+	const float kRotateSpeed_ = 0.003f;
 
 	// 累積回転行列
 	Matrix4x4 matRot_;
