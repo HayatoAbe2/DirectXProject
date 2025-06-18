@@ -2,10 +2,10 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
 #include <cstdint>
-#include "Vector3.h"
+#include "Math.h"
 class Input {
 public:
-	Input(WNDCLASS wc, HWND hwnd);
+	Input(HINSTANCE hInstance, HWND hwnd);
 	~Input();
 	void Update();
 

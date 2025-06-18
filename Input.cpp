@@ -1,8 +1,8 @@
 #include "Input.h"
 
-Input::Input(WNDCLASS wc,HWND hwnd) {
+Input::Input(HINSTANCE hInstance,HWND hwnd) {
 	// オブジェクト生成
-	DirectInput8Create(wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+	DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput_, nullptr);
 	// キーボードデバイスの生成
 	directInput_->CreateDevice(GUID_SysKeyboard, &keyboard_, NULL);

@@ -1,8 +1,7 @@
 #pragma once
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-#include "Vector3.h"
-#include "Matrix4x4.h"
+#include "Math.h"
 #include "Input.h"
 /// <summary>
 /// デバッグカメラ
