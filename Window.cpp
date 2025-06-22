@@ -1,6 +1,4 @@
 #include "Window.h"
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_win32.h"
 
 void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 	// ウィンドウプロシージャ

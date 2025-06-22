@@ -15,7 +15,6 @@ public:
 private:
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-	//static LRESULT CALLBACK WindowProc
 	HWND hwnd_ = nullptr;
 	WNDCLASS wc_ = {};
 
