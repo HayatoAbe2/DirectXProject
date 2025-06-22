@@ -10,6 +10,8 @@
 #include <dxcapi.h>
 #include "ModelData.h"
 #include "DictionalLight.h"
+#include "Transform.h"
+#include "VertexData.h"
 
 
 class Graphics {
@@ -18,16 +20,6 @@ private:
 	struct TransformationMatrix {
 		Matrix4x4 WVP;
 		Matrix4x4 World;
-	};
-	
-	struct VertexData {
-		Vector4 position;
-		Vector2 texcoord;
-		Vector3 normal;
-	};
-
-	struct MaterialData {
-		std::string textureFilePath;
 	};
 
 public:
@@ -83,6 +75,12 @@ public:
 	void SetViewportAndScissor();
 
 	uint32_t LoadTextureAndCreateSRV(const std::string& path);
+
+	ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+
+	MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
+
+	void LoadTestTriangle();
 
 	void CreateTransformBuffers();
 
@@ -204,7 +202,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite_ = nullptr;
 	ID3D12PipelineState* graphicsPipelineState_;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_ = {};
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
 	DirectionalLight* directionalLightData_;

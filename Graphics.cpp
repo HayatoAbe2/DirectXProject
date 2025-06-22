@@ -109,48 +109,48 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	materialDataSprite_->enableLighting = false;
 	materialDataSprite_->uvTransform = MakeIdentity4x4();
 
-	CreateTransformBuffers();
-	
-		transformationMatrixResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-		transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
-		transformationMatrixData_->WVP = MakeIdentity4x4();
-		transformationMatrixData_->World = MakeIdentity4x4();
-		transformationMatrixResourceSprite_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-		transformationMatrixResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite_));
-		transformationMatrixDataSprite_->WVP = MakeIdentity4x4();
-		transformationMatrixDataSprite_->World = MakeIdentity4x4();
+	transformationMatrixResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+	transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
+	transformationMatrixData_->WVP = MakeIdentity4x4();
+	transformationMatrixData_->World = MakeIdentity4x4();
+	transformationMatrixResourceSprite_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+	transformationMatrixResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite_));
+	transformationMatrixDataSprite_->WVP = MakeIdentity4x4();
+	transformationMatrixDataSprite_->World = MakeIdentity4x4();
 
 	CreateLightBuffer();
 
 
 	currentSRVIndex_ = 1; // 0はImGui
-	LoadTextureAndCreateSRV("Resources/uvChecker.png");
+	//LoadTextureAndCreateSRV("Resources/uvChecker.png");
 
 	SetViewportAndScissor();
 }
 
 void Graphics::UpdateCamera(const Transform& cameraTransform, DebugCamera& debugCamera) {
 	// viewProjectionを先に計算
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(clientWidth_) / float(clientHeight_), 0.1f, 100.0f);
-	Matrix4x4 viewProjectionMatrix;
-
+	Matrix4x4 projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(clientWidth_) / float(clientHeight_), 0.1f, 100.0f);
 	if (debugCamera.IsEnable()) {
 		// デバッグカメラのビュー行列を使う
-		viewProjectionMatrix = Multiply(debugCamera.GetViewMatrix(), projectionMatrix);
+		viewMatrix_ = debugCamera.GetViewMatrix();
 	} else {
-		viewProjectionMatrix = MakeViewProjectionMatrix(cameraTransform, projectionMatrix); // 先に計算しておく
+		viewMatrix_ = MakeAffineMatrix(cameraTransform); // 先に計算しておく
+		//viewMatrix_ = Inverse(MakeAffineMatrix(cameraTransform)); // 先に計算しておく
 	}
+	// UpdateCamera の中など適当な場所で
+	projectionMatrix_ = MakeOrthographicMatrix(0, 0, float(clientWidth_), float(clientHeight_), 0.0f, 100.0f);
+	viewMatrix_ = MakeIdentity4x4();
+	// model をスクリーン座標に置いてみる
+
 }
 
 void Graphics::UpdateModel(UINT modelIndex, const Transform& modelTransform) {
 	// モデルのトランスフォーム
-	for (UINT i = 0; i < modelCount_; ++i) {
-		Matrix4x4 worldMatrix = MakeAffineMatrix(modelTransform);
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix_, projectionMatrix_));
-		// WVPMatrixを作る
-		transformationData_[i]->WVP = worldViewProjectionMatrix;
-		transformationData_[i]->World = worldMatrix;
-	}
+	Matrix4x4 worldMatrix = MakeAffineMatrix(modelTransform);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix_, projectionMatrix_));
+	// WVPMatrixを作る
+	transformationData_[modelIndex]->WVP = worldViewProjectionMatrix;
+	transformationData_[modelIndex]->World = worldMatrix;
 }
 
 
@@ -179,8 +179,8 @@ void Graphics::UpdateSprite(const Transform& spriteTransform, const Transform& u
 }
 
 void Graphics::prepareDraw() {
+	CreateTransformBuffers();
 
-	
 	// 描画用のDescriptorHeapの設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
@@ -190,7 +190,6 @@ void Graphics::prepareDraw() {
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->SetPipelineState(graphicsPipelineState_);		// PSOを設定
-	commandList_->IASetVertexBuffers(0, 1, &vertexBufferView_);	// VBVを設定
 	// 形状を設定。PSOに設定しているものとはまた別
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
@@ -198,8 +197,11 @@ void Graphics::prepareDraw() {
 }
 
 void Graphics::DrawModel(ModelData model) {
+
 	// モデル描画
 	for (UINT i = 0; i < modelCount_; ++i) {
+		
+		commandList_->IASetVertexBuffers(0, 1, &model.vertexBufferView);	// VBVを設定
 		// wvp用のCBufferの場所を設定
 		commandList_->SetGraphicsRootConstantBufferView(1, transformationResource_[i]->GetGPUVirtualAddress());
 		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
@@ -713,9 +715,9 @@ void Graphics::CreatePipelineState() {
 
 	// ラスタライザ設定
 	// 裏面(時計回り)を表示しない
-	rasterizerDesc_.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc_.CullMode = D3D12_CULL_MODE_NONE;
 	// 三角形の中を塗りつぶす
-	rasterizerDesc_.FillMode = D3D12_FILL_MODE_SOLID;
+	rasterizerDesc_.FillMode = D3D12_FILL_MODE_WIREFRAME;
 
 	// DepthStencil設定
 	// Depthの機能を有効化する
@@ -880,4 +882,120 @@ uint32_t Graphics::LoadTextureAndCreateSRV(const std::string& path) {
 	auto cpu = GetCPUDescriptorHandle(srvDescriptorHeap_, descriptorSizeSRV_, idx);
 	device_->CreateShaderResourceView(tex.Get(), &srvDesc, cpu);
 	return idx;
+}
+#include <sstream>
+ModelData Graphics::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	// 変数の宣言
+	ModelData modelData; // 構築するModeldata
+	std::vector<Vector4> positions; // 位置
+	std::vector<Vector3> normals; // 法線
+	std::vector<Vector2> texcoords; // テクスチャ座標
+	std::string line; // ファイルから読んだ1行を格納するもの
+
+	// ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // 開けなかったらエラー
+
+	// ファイルを読み、ModelDataを構築
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier; // 先頭の識別子を読む
+		// 識別子に応じた処理
+		if (identifier == "v") { // 頂点座標
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.x *= -1.0f; // 右手座標系から左手座標系への変換
+			position.w = 1.0f;
+			positions.push_back(position);
+		} else if (identifier == "vt") { // テクスチャ座標
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoord.y = 1.0f - texcoord.y; // 左下原点から左上原点への変換
+			texcoords.push_back(texcoord);
+		} else if (identifier == "vn") { // 法線
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normal.x *= -1.0f; // 右手座標系から左手座標系への変換
+			normals.push_back(normal);
+		} else if (identifier == "f") {
+			VertexData triangle[3];
+			// 面は三角形限定。その他は未対応
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; ++element) {
+					std::string index;
+					std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
+					elementIndices[element] = std::stoi(index);
+				}
+				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1]; // 1始まりなので-1
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				triangle[faceVertex] = { position, texcoord, normal };
+			}
+			// 頂点を逆順で登録することで、周り順を逆にする
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+		} else if (identifier == "mtllib") {
+			// materialTemplateLibraryファイルの名前を取得する
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+		}
+	}
+	modelCount_++; // モデルの数を増やす
+
+	// VertexBuffer作成
+	size_t vc = modelData.vertices.size();
+	size_t size = sizeof(VertexData) * vc;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vb = CreateBufferResource(device_, size);
+	VertexData* dst = nullptr;
+	vb->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+	memcpy(dst, modelData.vertices.data(), size);
+	vb->Unmap(0, nullptr);
+
+	// VBV作成
+	D3D12_VERTEX_BUFFER_VIEW vbv{};
+	vbv.BufferLocation = vb->GetGPUVirtualAddress();
+	vbv.SizeInBytes = UINT(size);
+	vbv.StrideInBytes = sizeof(VertexData);
+
+	// ModelDataに格納
+	modelData.vertexBuffer = vb;
+	modelData.vertexBufferView = vbv;
+
+
+	return modelData;
+}
+
+MaterialData Graphics::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+	// 変数の宣言
+	MaterialData materialData; // 構築するMaterialData
+	std::string line; // ファイルから読んだ1行を格納するもの
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // 開けなかったらエラー
+
+	// ファイルを読み、MaterialDataを構築
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+	return materialData;
 }
