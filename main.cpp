@@ -31,6 +31,7 @@
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
+#include "GameScene.h"
 
 #pragma comment(lib,"d3d12.lib")	
 #pragma comment(lib,"dxgi.lib")
@@ -112,16 +113,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	}
 #endif
 
-	//-------------------------------------------------
-	// XAudio2変数宣言
-	//-------------------------------------------------
+	// XAudio2
 	Audio audio = Audio();
 	audio.Initialize();
 	logger.Log(logger.GetStream(), std::format("XAudio Initialized.\n"));
 
-	//-------------------------------------------------
 	// DirectInputの初期化
-	//-------------------------------------------------
 	Input *input = new Input(window.GetInstance(), window.GetHwnd());
 	assert(&input);
 	logger.Log(logger.GetStream(), std::format("DirectInput Initialized.\n"));
@@ -152,22 +149,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		};
 	}
 
-	graphics.Initialize(kClientWidth, kClientHeight, window.GetHwnd());
-	// モデル読み込み
-	ModelData axisModel = graphics.LoadObjFile("Resources", "axis.obj");
-	//ModelData planeModel= graphics.LoadObjFile("Resources", "plane.obj");
-
-	// テクスチャを読み込みSRV生成
-	graphics.CreateSRV("Resources/uvChecker.png");
-	graphics.CreateSRV(axisModel.material.textureFilePath);
-
-	// Transform
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
-	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-
+	GameScene *gameScene{};
+	gameScene->Initialize(input,window.GetHwnd());
 	
-	wchar_t sound1[] = L"Resources/Alarm01.wav";
-	audio.SoundLoad(sound1);
 	DebugCamera *debugCamera = new DebugCamera;
 	debugCamera->Initialize();
 	//-------------------------------------------------
@@ -193,40 +177,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ゲームの処理
 			//-------------------------------------------------
 
-			for (UINT i = 0; i < modelCount; ++i) {
-				model[i].transform.rotate.y += 0.03f;
-			}
-
-			
-			if (input->isTriggerRight()
-				&& !debugCamera->IsEnable()) { // 右クリックの瞬間
-				// サウンドの再生
-				audio.SoundPlay(sound1);
-			}
+			gameScene->Update();
 
 			// (更新処理終了後) 
 
-			graphics.prepareDraw();
-			graphics.BeginFrame();
-			graphics.UpdateCamera(cameraTransform,*debugCamera);
-			graphics.UpdateModel(0,model[0].transform);
-
-			Material mat;
-			mat.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-			mat.enableLighting = true;
-			mat.useTexture = true;
-			mat.uvTransform = MakeIdentity4x4();
-			graphics.UpdateMaterial(mat);
-
-			graphics.UpdateSprite(transformSprite, uvTransformSprite, cameraTransform);
-			graphics.DrawModel(axisModel);
-			
-			graphics.EndFrame();
+			gameScene->Draw();
 			
 		}
 	}
 	
-	audio.SoundUnload(sound1);
 	audio.Finalize();
 	MFShutdown();
 
