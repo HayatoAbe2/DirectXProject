@@ -2,7 +2,7 @@
 #include "numbers"
 #include <cmath>
 
-void Enemy::Initialize(ModelData* model, const Vector3& position) {
+void Enemy::Initialize(Model* model, const Vector3& position) {
 	// NULLポインタチェック
 	assert(model);
 	// 引数として受け取ったデータを記録

@@ -1,6 +1,6 @@
 #pragma once
 #include "Math.h"
-
+class Camera;
 class Player;
 /// <summary>
 /// カメラコントローラ
@@ -18,7 +18,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(Transform* camera);
+	void Initialize(Camera* camera);
 
 	/// <summary>
 	/// 更新
@@ -44,7 +44,7 @@ private:
 	static inline const Rect moveLimit = {-500, 500, -500, 500};
 
 	// ビュープロジェクション
-	Transform *camera_;
+	Camera *camera_;
 
 	Player* target_ = nullptr;
 	Vector3 targetOffset_ = {0, 0, -23.0f}; // カメラのオフセット

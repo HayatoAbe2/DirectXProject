@@ -1,5 +1,5 @@
 #pragma once
-#include "ModelData.h"
+#include "Model.h"
 #include "Math.h"
 #include <vector>
 #include "AABB.h"
@@ -13,7 +13,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(ModelData* model, const Vector3& position);
+	void Initialize(Model* model, const Vector3& position);
 	/// <summary>
 	/// 更新
 	/// </summary>
@@ -30,7 +30,7 @@ public:
 
 private:
 	Transform worldTransform_; // ワールドトランスフォーム
-	ModelData* model_ = nullptr;        // モデル
+	Model* model_ = nullptr;        // モデル
 
 	static inline const float kWalkSpeed = 0.01f; // 歩行速度
 	Vector3 velocity_ = {}; // 速度

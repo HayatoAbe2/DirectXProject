@@ -1,5 +1,5 @@
 #pragma once
-#include "ModelData.h"
+#include "Model.h"
 
 /// <summary>
 /// 天球
@@ -9,7 +9,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(ModelData* model);
+	void Initialize(Model* model);
 
 	/// <summary>
 	/// 更新
@@ -27,5 +27,5 @@ private:
 	// ワールド変換データ
 	Transform worldTransform_;
 	// モデル
-	ModelData* model_ = nullptr;
+	Model* model_ = nullptr;
 };

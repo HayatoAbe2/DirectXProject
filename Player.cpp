@@ -9,7 +9,7 @@
 #include "cmath"
 #include "array"
 
-void Player::Initialize(ModelData* model, const Vector3& position,Input* input) {
+void Player::Initialize(Model* model, const Vector3& position,Input* input) {
 	// NULLポインタチェック
 	assert(model);
 

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "Graphics.h"
 
-void DeathParticles::Initialize(ModelData* model,const Vector3 &position) {
+void DeathParticles::Initialize(Model* model,const Vector3 &position) {
 	// NULLポインタチェック
 	assert(model);
 	

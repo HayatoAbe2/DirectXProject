@@ -4,8 +4,7 @@
 #include <map>
 #include <sstream>
 #include <string>
-#include <minwindef.h>
-
+#include <wrl.h>
 namespace {
 std::map<std::string, MapChipType> mapChipTable = {
     {"0", MapChipType::kBlank},

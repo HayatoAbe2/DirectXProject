@@ -2,12 +2,12 @@
 #include <array>
 #include <numbers>
 #include "Math.h"
-#include "ModelData.h"
+#include "Model.h"
 #include "Transform.h"
 class DeathParticles {
 public:
 
-	void Initialize(ModelData* model, const Vector3& position);
+	void Initialize(Model* model, const Vector3& position);
 	void Update();
 	void Draw();
 
@@ -15,7 +15,7 @@ public:
 
 private:
 	Transform worldTransform_; // ワールドトランスフォーム
-	ModelData* model_ = nullptr;        // モデル
+	Model* model_ = nullptr;        // モデル
 	
 	// パーティクルの個数
 	static inline const uint32_t kNumParticles = 8;

@@ -1,7 +1,7 @@
 #include "Skydome.h"
 #include "Transform.h"
 
-void Skydome::Initialize(ModelData* model) {
+void Skydome::Initialize(Model* model) {
 
 	model_ = model;
 

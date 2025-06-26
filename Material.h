@@ -3,11 +3,6 @@
 #include "Matrix4x4.h"
 #include <cstdint>
 #include <d3d12.h>
-#include <string>
-
-struct MaterialData {
-	std::string textureFilePath;
-};
 
 struct Material {
 	Vector4 color;

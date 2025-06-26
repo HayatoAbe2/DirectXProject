@@ -26,20 +26,17 @@ GameScene::~GameScene() {
 void GameScene::Initialize(Input *input,HWND hwnd) {
 	input_ = input;
 
+	// 描画機能の初期化
+	const int32_t kClientWidth = 1280;
+	const int32_t kClientHeight = 720;
+	graphics_.Initialize(kClientWidth, kClientHeight, hwnd);
+
 	// 3Dモデルの生成
-	playerModel_ = new ModelData(graphics.LoadObjFile("Resources", "player"));
-	enemyModel_ = new ModelData(graphics.LoadObjFile("Resources", "player")); // あとで変更
-	blockModel_ = new ModelData(graphics.LoadObjFile("Resources", "block"));
-	skydomeModel_ = new ModelData(graphics.LoadObjFile("Resources", "skydome"));
-	deathParticleModel_ = new ModelData(graphics.LoadObjFile("Resources", "ball"));
-
-
-	// テクスチャ読み込み&SRV生成
-	graphics.CreateSRV(playerModel_->material.textureFilePath);
-	graphics.CreateSRV(enemyModel_->material.textureFilePath);
-	graphics.CreateSRV(blockModel_->material.textureFilePath);
-	graphics.CreateSRV(skydomeModel_->material.textureFilePath);
-	graphics.CreateSRV(deathParticleModel_->material.textureFilePath);
+	playerModel_ = Model::LoadObjFile("Resources/player", "player.obj",graphics_.GetDevice(),graphics_);
+	enemyModel_ = Model::LoadObjFile("Resources/player", "player.obj",graphics_.GetDevice(),graphics_); // あとで変更
+	blockModel_ = Model::LoadObjFile("Resources/block", "block.obj",graphics_.GetDevice(),graphics_);
+	skydomeModel_ = Model::LoadObjFile("Resources/skydome", "skydome.obj",graphics_.GetDevice(),graphics_);
+	deathParticleModel_ = Model::LoadObjFile("Resources/sphere", "sphere.obj",graphics_.GetDevice(),graphics_);
 
 	phase_ = Phase::kPlay;
 
@@ -88,14 +85,10 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera();
-
-	// 描画機能の初期化
-	const int32_t kClientWidth = 1280;
-	const int32_t kClientHeight = 720;
-	graphics.Initialize(kClientWidth, kClientHeight, hwnd);
 }
 
 void GameScene::Update() {
+
 	switch (phase_) {
 	case Phase::kPlay:
 
@@ -161,7 +154,7 @@ void GameScene::Update() {
 		}
 
 		// カメラの処理
-		
+		camera_.UpdateCamera(graphics_,*debugCamera_);
 
 		// ブロックの更新
 		for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -189,52 +182,26 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
-	graphics.prepareDraw();
-	graphics.BeginFrame();
+
+	graphics_.prepareDraw();
+	graphics_.BeginFrame();
 
 	// カメラの更新
-	graphics.UpdateCamera(camera_, *debugCamera_);
-
-	// モデルの読み込み
-	graphics.UpdateModel(0, player_->GetTransform()); // 自キャラ
-	for (Enemy* enemy : enemies_) { // 敵
-		if (enemy) {
-			graphics.UpdateModel(0, enemy->GetTransform()); 
-		}
-	}
-	graphics.UpdateModel(0, deathParticles_->GetTransform()); // パーティクル
-	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) { // ブロック
-		for (Transform* worldTransformBlock : worldTransformBlockLine) {
-			if (!worldTransformBlock) {
-				continue;
-			}
-			graphics.UpdateModel(0, *worldTransformBlock);
-		}
-	}
-
-	graphics.UpdateModel(0, skydome_->GetTransform()); // 天球 
-	
-	Material mat;
-	mat.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	mat.enableLighting = true;
-	mat.useTexture = true;
-	mat.uvTransform = MakeIdentity4x4();
-	graphics.UpdateMaterial(mat);
-
+	camera_.UpdateCamera(graphics_, *debugCamera_);
 
 	// 自キャラの描画
-	graphics.DrawModel(*playerModel_);
+	playerModel_->Draw(camera_,graphics_);
 
 	// 敵キャラの描画
 	for (Enemy* enemy : enemies_) {
 		if (enemy) {
-			graphics.DrawModel(*enemyModel_);
+			graphics_.DrawModel(*enemyModel_);
 		}
 	}
 
 	// パーティクル描画
 	if (deathParticles_) {
-		graphics.DrawModel(*deathParticleModel_);
+		graphics_.DrawModel(*deathParticleModel_);
 	}
 
 	// ブロックの描画
@@ -243,14 +210,14 @@ void GameScene::Draw() {
 			if (!worldTransformBlock) {
 				continue;
 			}
-			graphics.DrawModel(*blockModel_);
+			graphics_.DrawModel(*blockModel_);
 		}
 	}
 
 	// 天球の描画
-	graphics.DrawModel(*skydomeModel_);	
+	graphics_.DrawModel(*skydomeModel_);
 
-	graphics.EndFrame();
+	graphics_.EndFrame();
 }
 
 void GameScene::GenerateBlocks() {
@@ -269,7 +236,7 @@ void GameScene::GenerateBlocks() {
 	for (uint32_t i = 0; i < numBlockVirtical; ++i) {
 		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
 			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
-				Transform* worldTransform = nullptr;
+				Transform* worldTransform = new Transform;
 				worldTransform->scale ={1.0f, 1.0f, 1.0f};
 				worldTransform->rotate = { 0.0f, 0.0f, 0.0f };
 				worldTransform->translate = { 0.0f, 0.0f, 0.0f };

@@ -23,7 +23,7 @@
 #include "Window.h"
 #include "Graphics.h"
 #include "Material.h"
-#include "ModelData.h"
+#include "Model.h"
 #include "VertexData.h"
 
 #include "externals/imgui/imgui.h"
@@ -46,11 +46,6 @@
 Logger logger;
 
 static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception);
-
-struct TransformationMatrix {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-};
 
 struct D3DResourceLeakChecker {
 	~D3DResourceLeakChecker() {
@@ -149,7 +144,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		};
 	}
 
-	GameScene *gameScene{};
+	GameScene* gameScene = new GameScene;
 	gameScene->Initialize(input,window.GetHwnd());
 	
 	DebugCamera *debugCamera = new DebugCamera;
@@ -189,9 +184,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	audio.Finalize();
 	MFShutdown();
 
+	graphics.Finalize();
 	delete input;
 	delete debugCamera;
-	graphics.Finalize();
+	delete gameScene;
 	
 	CloseWindow(window.GetHwnd());
 

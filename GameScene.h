@@ -5,12 +5,13 @@
 #include "MapChipField.h"
 #include "CameraController.h"
 #include "DeathParticles.h"
-#include "ModelData.h"
+#include "Model.h"
 #include <list>
 #include "Transform.h"
 #include "DebugCamera.h"
 #include "Graphics.h"
 #include "Input.h"
+#include "Camera.h"
 
 // ゲームシーン
 class GameScene {
@@ -42,20 +43,20 @@ private:
 	uint32_t textureHandle_ = 0;
 
 	// 3Dモデル
-	ModelData* playerModel_ = nullptr;
-	ModelData* enemyModel_ = nullptr;
-	ModelData* blockModel_ = nullptr;
-	ModelData* skydomeModel_ = nullptr;
-	ModelData* deathParticleModel_ = nullptr; 
+	Model* playerModel_ = nullptr;
+	Model* enemyModel_ = nullptr;
+	Model* blockModel_ = nullptr;
+	Model* skydomeModel_ = nullptr;
+	Model* deathParticleModel_ = nullptr; 
 
 	// 描画情報
-	Graphics graphics;
+	Graphics graphics_;
 
 
 	// カメラコントローラ
 	CameraController* cameraController_;
 	// カメラ
-	Transform camera_;
+	Camera camera_;
 
 	// 自キャラ
 	Player* player_ = nullptr;

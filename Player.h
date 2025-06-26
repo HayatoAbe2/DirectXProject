@@ -2,7 +2,7 @@
 #include <vector>
 #include "AABB.h"
 #include "Math.h"
-#include "ModelData.h"
+#include "Model.h"
 #include "Input.h"
 
 class MapChipField;
@@ -32,7 +32,7 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(ModelData* model, const Vector3& position, Input* input);
+	void Initialize(Model* model, const Vector3& position, Input* input);
 
 	/// <summary>
 	/// 更新
@@ -146,7 +146,7 @@ private:
 	// ワールドトランスフォーム
 	Transform worldTransform_;
 	// モデル
-	ModelData* model_ = nullptr;
+	Model* model_ = nullptr;
 	
 	// マップチップによるフィールド
 	MapChipField* mapChipField_ = nullptr;
