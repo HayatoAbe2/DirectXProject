@@ -3,7 +3,8 @@
 #include "Math.h"
 #include <vector>
 #include "AABB.h"
-
+class Camera;
+class Graphics;
 class Player;
 /// <summary>
 /// 敵キャラ
@@ -18,10 +19,13 @@ public:
 	/// 更新
 	/// </summary>
 	void Update();
+	
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	/// <param name="camera"></param>
+	/// <param name="graphics"></param>
+	void Draw(Camera& camera, Graphics& graphics);
 
 	void OnCollision(const Player* player);
 

@@ -9,7 +9,7 @@ public:
 
 	void Initialize(Model* model, const Vector3& position);
 	void Update();
-	void Draw();
+	void Draw(Camera& camera, Graphics& graphics);
 
 	const Transform& GetTransform() { return worldTransform_; };
 

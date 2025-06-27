@@ -12,3 +12,9 @@ void Skydome::Initialize(Model* model) {
 void Skydome::Update() { 
 	
 }
+
+void Skydome::Draw(Camera& camera, Graphics& graphics) {
+	model_->SetTransform(worldTransform_);
+	model_->UpdateModel(camera);
+	model_->Draw(graphics);
+}

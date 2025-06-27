@@ -182,26 +182,24 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
-
-	graphics_.prepareDraw();
 	graphics_.BeginFrame();
-
+	
 	// カメラの更新
 	camera_.UpdateCamera(graphics_, *debugCamera_);
 
 	// 自キャラの描画
-	playerModel_->Draw(camera_,graphics_);
+	player_->Draw(camera_,graphics_);
 
 	// 敵キャラの描画
 	for (Enemy* enemy : enemies_) {
 		if (enemy) {
-			graphics_.DrawModel(*enemyModel_);
+			enemy->Draw(camera_,graphics_);
 		}
 	}
 
 	// パーティクル描画
 	if (deathParticles_) {
-		graphics_.DrawModel(*deathParticleModel_);
+		deathParticles_->Draw(camera_, graphics_);
 	}
 
 	// ブロックの描画
@@ -210,12 +208,14 @@ void GameScene::Draw() {
 			if (!worldTransformBlock) {
 				continue;
 			}
-			graphics_.DrawModel(*blockModel_);
+			blockModel_->SetTransform(*worldTransformBlock);
+			blockModel_->UpdateModel(camera_);
+			blockModel_->Draw(graphics_);
 		}
 	}
 
 	// 天球の描画
-	graphics_.DrawModel(*skydomeModel_);
+	skydome_->Draw(camera_, graphics_);
 
 	graphics_.EndFrame();
 }

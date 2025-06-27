@@ -7,6 +7,8 @@
 
 class MapChipField;
 class Enemy;
+class Camera;
+class Graphics;
 /// <summary>
 /// 自キャラ
 /// </summary>
@@ -117,6 +119,8 @@ public:
 	/// </summary>
 	/// <param name="enemy">敵</param>
 	void OnCollision(const Enemy* enemy);
+
+	void Draw(Camera& camera, Graphics& graphics);
 
 	/// <summary>
 	/// ワールドトランスフォームを取得

@@ -37,7 +37,6 @@ public:
 	void UpdateSprite(const Transform& spriteTransform, const Transform& uvTransform, const Transform& cameraTransform);
 
 	// 描画処理
-	void prepareDraw();
 	void DrawModel(Model &model);
 	void DrawSprite();
 

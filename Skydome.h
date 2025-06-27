@@ -16,6 +16,8 @@ public:
 	/// </summary>
 	void Update();
 
+	void Draw(Camera& camera, Graphics& graphics);
+
 	/// <summary>
 	/// 描画
 	/// </summary>

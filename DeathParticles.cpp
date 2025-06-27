@@ -37,6 +37,7 @@ void DeathParticles::Update() {
 		worldTransforms_[i].translate.x += velocity.x;
 		worldTransforms_[i].translate.y += velocity.y;
 		worldTransforms_[i].translate.z += velocity.z;
+
 	}
 	
 	// カウンターを1フレーム分進める
@@ -50,4 +51,13 @@ void DeathParticles::Update() {
 
 	color_.w = std::clamp((kDuration - counter_) / kDuration, 0.0f, 1.0f);
 
+	
+}
+
+void DeathParticles::Draw(Camera &camera,Graphics& graphics) {
+	for (uint32_t i = 0; i < kNumParticles; ++i) {
+		model_->SetTransform(worldTransforms_[i]);
+		model_->UpdateModel(camera);
+		model_->Draw(graphics);
+	}
 }

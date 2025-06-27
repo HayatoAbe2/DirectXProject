@@ -32,8 +32,15 @@ void Enemy::Update() {
 	    {worldTransform_.translate.x - kBlank, worldTransform_.translate.y - kBlank, worldTransform_.translate.z - kBlank},
 	    {worldTransform_.translate.x + kBlank, worldTransform_.translate.y + kBlank, worldTransform_.translate.z + kBlank}
     };
+
 }
 
 void Enemy::OnCollision(const Player* player) { 
 	(void)player; 
+}
+
+void Enemy::Draw(Camera& camera, Graphics& graphics) {
+	model_->SetTransform(worldTransform_);
+	model_->UpdateModel(camera);
+	model_->Draw(graphics);
 }

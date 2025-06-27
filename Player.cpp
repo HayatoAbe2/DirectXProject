@@ -8,6 +8,8 @@
 #include "math.h"
 #include "cmath"
 #include "array"
+#include "Camera.h"
+#include "Graphics.h"
 
 void Player::Initialize(Model* model, const Vector3& position,Input* input) {
 	// NULLポインタチェック
@@ -456,4 +458,11 @@ void Player::OnHitWall(const CollisionMapInfo& info) {
 void Player::OnCollision(const Enemy* enemy) {
 	(void)enemy; // 今は使わない
 	SetIsDead(true);
+}
+
+void Player::Draw(Camera& camera, Graphics& graphics) {
+	model_->SetTransform(worldTransform_);
+	model_->UpdateModel(camera);
+	model_->Draw(graphics);
+
 }

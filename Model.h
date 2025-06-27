@@ -16,7 +16,17 @@ public:
 	static Model* LoadObjFile(const std::string& directoryPath, const std::string& filename,
 		Microsoft::WRL::ComPtr<ID3D12Device> device, Graphics& graphics);
 
-	void Draw(Camera& camera, Graphics& graphics);
+	/// <summary>
+	/// 描画のため、モデルのトランスフォームデータを更新
+	/// </summary>
+	/// <param name="camera"></param>
+	void UpdateModel(Camera& camera);
+
+	/// <summary>
+	/// 描画
+	/// </summary>
+	/// <param name="graphics"></param>
+	void Draw(Graphics& graphics);
 
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV()const { return vertexBufferView_; };
 	const std::vector<VertexData>& GetVertices() const{ return vertices_; };
@@ -34,6 +44,10 @@ public:
 		textureResource_ = textureResource;
 	}
 
+	void SetTransform(const Transform& transform) {
+		transform_ = transform;
+	}
+
 
 private:
 
@@ -44,12 +58,6 @@ private:
 	/// <param name="filename">ファイル名</param>
 	/// <returns>マテリアルデータ</returns>
 	static std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-
-	/// <summary>
-	/// 描画のため、モデルのトランスフォームデータを更新
-	/// </summary>
-	/// <param name="camera"></param>
-	void UpdateModel(Camera& camera);
 
 	// モデルデータ
 	std::vector<VertexData> vertices_;

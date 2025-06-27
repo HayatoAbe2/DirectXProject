@@ -141,7 +141,6 @@ void Model::UpdateModel(Camera &camera) {
 	transformationData_->World = worldMatrix;
 }
 
-void Model::Draw(Camera &camera,Graphics &graphics) {
-	UpdateModel(camera);
+void Model::Draw(Graphics &graphics) {
 	graphics.DrawModel(*this);
 }

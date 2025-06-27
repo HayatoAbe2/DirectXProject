@@ -153,35 +153,7 @@ void Graphics::UpdateSprite(const Transform& spriteTransform, const Transform& u
 
 }
 
-void Graphics::prepareDraw() {
-	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
-	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
-
-	commandList_->RSSetViewports(1, &viewport_);					// Viewportを設定
-	commandList_->RSSetScissorRects(1, &scissorRect_);			// Scissorを設定
-	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
-	commandList_->SetPipelineState(graphicsPipelineState_.Get());		// PSOを設定
-	// 形状を設定。PSOに設定しているものとはまた別
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// マテリアルCBufferの場所を設定
-	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
-
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-	ImGui::Begin("window"); {
-
-		ImGui::End();
-	}
-}
-
-void Graphics::DrawModel(Model &model) {
-	ID3D12DescriptorHeap* heaps[] = { srvDescriptorHeap_.Get() };
-	commandList_->SetDescriptorHeaps(1, heaps);  // 再バインド
-
+void Graphics::DrawModel(Model& model) {
 	// モデル描画
 	commandList_->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
 	// wvp用のCBufferの場所を設定
@@ -190,6 +162,7 @@ void Graphics::DrawModel(Model &model) {
 	commandList_->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
 	// ライト
 	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
 	// ドローコール
 	commandList_->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
 }
@@ -224,7 +197,6 @@ void Graphics::BeginFrame() {
 
 	commandList_->ResourceBarrier(1, &barrier_);
 
-	
 
 	// 描画先のRTVとDSVを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap_, descriptorSizeDSV_, 0);
@@ -234,6 +206,30 @@ void Graphics::BeginFrame() {
 	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex_], clearColor, 0, nullptr);
 	// 指定した深度で画面全体をクリアする
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	// 描画用のDescriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
+
+
+	commandList_->RSSetViewports(1, &viewport_);					// Viewportを設定
+	commandList_->RSSetScissorRects(1, &scissorRect_);			// Scissorを設定
+	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
+	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
+	commandList_->SetPipelineState(graphicsPipelineState_.Get());		// PSOを設定
+	// 形状を設定。PSOに設定しているものとはまた別
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// マテリアルCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::Begin("window"); {
+
+		ImGui::End();
+	}
 }
 
 void Graphics::EndFrame() {
@@ -520,8 +516,6 @@ Model* Graphics::CreateSRV(Model* model) {
 	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
 	commandAllocator_->Reset();
 	commandList_->Reset(commandAllocator_.Get(), nullptr);
-	// ここまできたら転送は終わっているので、intermediateResoureはReleaseしても良い
-	intermediateResource->Release();
 
 	// metaDataを基にSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
