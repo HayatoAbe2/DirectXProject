@@ -179,6 +179,8 @@ void GameScene::Update() {
 		break;
 	}
 
+	// 条件を満たしていればフェーズ変更
+	ChangePhase();
 }
 
 void GameScene::Draw() {

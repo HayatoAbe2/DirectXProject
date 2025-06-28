@@ -726,7 +726,7 @@ void Graphics::CreatePipelineState() {
 	vertexShaderBlob_->GetBufferSize() };							// VertexShader
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob_->GetBufferPointer(),
 	pixelShaderBlob_->GetBufferSize() };								// PixelShader
-	graphicsPipelineStateDesc.BlendState = /*blendDesc_*/{};				// BlendState
+	graphicsPipelineStateDesc.BlendState = blendDesc_;				// BlendState
 	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc_;		// RasterizerState
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc_;	// DepthStencilState
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
