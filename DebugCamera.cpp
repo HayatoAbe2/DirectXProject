@@ -35,25 +35,36 @@ void DebugCamera::ControlCamera(Input* input) { // 球面座標系での移動
 	// カメラ前方向（ローカルZ+）をワールドに
 	Vector3 forward = TransformVector({ 0,0,1 }, rot);
 	Vector3 right = TransformVector({ 1,0,0 }, rot);
+	Vector3 up = TransformVector({ 0,1,0 }, rot);
 
-	if (input->IsPress(DIK_UP)) { target_ = Add(target_, Multiply(kMoveSpeed_, forward)); }
-	if (input->IsPress(DIK_DOWN)) { target_ = Add(target_, Multiply(-kMoveSpeed_, forward)); }
-	if (input->IsPress(DIK_LEFT)) { target_ = Add(target_, Multiply(-kMoveSpeed_, right)); }
-	if (input->IsPress(DIK_RIGHT)) { target_ = Add(target_, Multiply(kMoveSpeed_, right)); }
-	if (input->IsPress(DIK_PGUP)) { target_.y += kMoveSpeed_; }
-	if (input->IsPress(DIK_PGDN)) { target_.y -= kMoveSpeed_; }
+	// shift+マウスホイール押し込み中,ドラッグで視点移動
+	if (input->IsPress(DIK_LSHIFT) && input->isClickWheel()) {
 
-	if (input->isClickRight()) {  // 右クリック中
-		// マウスの移動量に回転速度を掛ける
-		float deltaYaw = input->GetMouseMove().x * kRotateSpeed_;   // マウスXでY軸回転（左右）
-		float deltaPitch = input->GetMouseMove().y *kRotateSpeed_; // マウスYでX軸回転（上下）
+		float moveX = input->GetMouseMove().x * kMoveSpeed_;
+		float moveY = input->GetMouseMove().y * kMoveSpeed_;
 
-		Matrix4x4 matRotDelta = MakeIdentity4x4();
-		matRotDelta = Multiply(MakeRotateYMatrix(deltaYaw),matRotDelta);
-		matRotDelta = Multiply(matRotDelta,MakeRotateXMatrix(deltaPitch));
+		target_ = Add(target_, Multiply(moveX, -right));
+		target_ = Add(target_, Multiply(moveY, up));
 
-		matRot_ = Multiply(matRotDelta,matRot_);
+	} else {
+
+		// マウスホイール押し込み中,ドラッグで視点回転
+		if (input->isClickWheel()) {
+			// マウスの移動量に回転速度を掛ける
+			float deltaYaw = input->GetMouseMove().x * kRotateSpeed_;   // マウスXでY軸回転（左右）
+			float deltaPitch = input->GetMouseMove().y * kRotateSpeed_; // マウスYでX軸回転（上下）
+
+			Matrix4x4 matRotDelta = MakeIdentity4x4();
+			matRotDelta = Multiply(MakeRotateYMatrix(deltaYaw), matRotDelta);
+			matRotDelta = Multiply(matRotDelta, MakeRotateXMatrix(deltaPitch));
+
+			matRot_ = Multiply(matRotDelta, matRot_);
+		}
 	}
+
+	// マウスホイールでズームイン・ズームアウト
+	float moveZ = input->GetMouseMove().z * kMoveSpeed_;
+	distance_ += -moveZ;
 
 	// カメラは注視点から後ろ向きにdistance_移動した位置
 	Vector3 back = TransformVector({ 0,0,-distance_ }, rot);
@@ -66,7 +77,7 @@ void DebugCamera::UpdateView() {
 	Matrix4x4 translateMatrix = MakeTranslateMatrix(translation_);
 
 	// ワールド行列を計算
-	Matrix4x4 worldMatrix = Multiply(translateMatrix,matRot_ );
+	Matrix4x4 worldMatrix = Multiply(translateMatrix, matRot_);
 
 	// ワールド行列の逆行列をビュー行列に代入
 	viewMatrix_ = Inverse(worldMatrix);

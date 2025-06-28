@@ -58,7 +58,7 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 	// 自キャラの生成
 	player_ = new Player();
 	// 自キャラの初期化
-	player_->Initialize(playerModel_, playerPosition,input_);
+	player_->Initialize(playerModel_, playerPosition);
 	player_->SetMapChipField(mapChipField_);
 
 	// 敵キャラの生成
@@ -84,7 +84,8 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 	cameraController_->Reset();
 
 	// デバッグカメラの生成
-	debugCamera_ = new DebugCamera();
+	debugCamera_ = new DebugCamera;
+	debugCamera_->Initialize();
 }
 
 void GameScene::Update() {
@@ -96,8 +97,7 @@ void GameScene::Update() {
 		skydome_->Update();
 
 		// 自キャラの更新
-		player_->Update();
-
+		player_->Update(input_, !debugCamera_->IsEnable());
 		// 敵キャラの更新
 		for (Enemy* enemy : enemies_) {
 

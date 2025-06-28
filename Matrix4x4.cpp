@@ -4,10 +4,7 @@
 #include "Transform.h"
 #include <cassert>
 #include <cmath>
-
-struct Matrix4x4 {
-	float m[4][4];
-};
+#include "Matrix4x4.h"
 
 // 4x4行列の加法
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
@@ -289,7 +286,7 @@ Matrix4x4 MakeAffineMatrix(const Transform& transform) {
 /// <param name="aspectRatio">アスペクト比</param>
 /// <param name="nearClip">近平面</param>
 /// <param name="farClip">遠平面</param>
-Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip = 0.1f, float farClip = 1000.0f) {
+Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
 	// 0除算の回避
 	assert(aspectRatio != 0);
 	assert(farClip != nearClip);
@@ -312,7 +309,7 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 /// <param name="bottom">下端</param>
 /// <param name="nearClip">近平面</param>
 /// <param name="farClip">遠平面</param>
-Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip = 0.0f, float farClip = 1000.0f) {
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
 	// 0除算の回避
 	assert(right != left);
 	assert(top != bottom);
@@ -338,7 +335,7 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 /// <param name="height">画面縦幅</param>
 /// <param name="minDepth">最小深度</param>
 /// <param name="maxDepth">最大深度</param>
-Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth = 0.0f, float maxDepth = 1.0f) {
+Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
 	Matrix4x4 result = { 0 };
 	result.m[0][0] = width / 2.0f;
 	result.m[1][1] = -height / 2.0f;
@@ -377,4 +374,16 @@ Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Matrix4x4 projecti
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 	return Multiply(viewMatrix, projectionMatrix);
-};
+}
+
+Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) {
+	return Add(m1, m2);
+}
+
+Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2) {
+	return Subtract(m1, m2);
+}
+
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) {
+	return Multiply(m1, m2);
+}

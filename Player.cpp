@@ -11,13 +11,12 @@
 #include "Camera.h"
 #include "Graphics.h"
 
-void Player::Initialize(Model* model, const Vector3& position,Input* input) {
+void Player::Initialize(Model* model, const Vector3& position) {
 	// NULLポインタチェック
 	assert(model);
 
 	// 引数として受け取ったデータを記録
 	model_ = model;
-	input_ = input;
 
 	// ワールドトランスフォームの初期化
 	worldTransform_ = { {1.0f,1.0f,1.0f} };
@@ -26,9 +25,9 @@ void Player::Initialize(Model* model, const Vector3& position,Input* input) {
 	worldTransform_.scale = {0.5f, 0.5f, 0.5f};
 }
 
-void Player::Update() {
+void Player::Update(Input* input,bool isControlEnable) {
 	// 移動入力
-	InputMove();
+	InputMove(input,isControlEnable);
 	// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	// 移動量に速度の値をコピー
@@ -72,54 +71,56 @@ void Player::Update() {
 	}
 }
 
-void Player::InputMove() {
+void Player::InputMove(Input *input, bool isControlEnable) {
 	// 移動入力
 	if (onGround_) {
 
-		if (input_->IsPress(DIK_RIGHT) || input_->IsPress(DIK_LEFT)) {
-			Vector3 acceleration = {};
+		if (isControlEnable) { // 操作可能状態かチェック
+			if (input->IsPress(DIK_RIGHT) || input->IsPress(DIK_LEFT)) {
+				Vector3 acceleration = {};
 
-			if (input_->IsPress(DIK_RIGHT)) {
-				// 左移動中の右入力
-				if (velocity_.x < 0.0f) {
-					// 速度と逆方向に入力中は急ブレーキ
-					velocity_.x *= (1.0f - kAttenuation);
-				}
-				acceleration.x += kAcceleration;
+				if (input->IsPress(DIK_RIGHT)) {
+					// 左移動中の右入力
+					if (velocity_.x < 0.0f) {
+						// 速度と逆方向に入力中は急ブレーキ
+						velocity_.x *= (1.0f - kAttenuation);
+					}
+					acceleration.x += kAcceleration;
 
-				if (lrDirection_ != LRDirection::kRight) {
-					lrDirection_ = LRDirection::kRight;
-					turnFirstRotationY_ = worldTransform_.rotate.y;
-					turnTimer_ = kTimeTurn;
-				}
-			} else if (input_->IsPress(DIK_LEFT)) {
-				// 右移動中の左入力
-				if (velocity_.x > 0.0f) {
-					// 速度と逆方向に入力中は急ブレーキ
-					velocity_.x *= (1.0f - kAttenuation);
-				}
-				acceleration.x -= kAcceleration;
+					if (lrDirection_ != LRDirection::kRight) {
+						lrDirection_ = LRDirection::kRight;
+						turnFirstRotationY_ = worldTransform_.rotate.y;
+						turnTimer_ = kTimeTurn;
+					}
+				} else if (input->IsPress(DIK_LEFT)) {
+					// 右移動中の左入力
+					if (velocity_.x > 0.0f) {
+						// 速度と逆方向に入力中は急ブレーキ
+						velocity_.x *= (1.0f - kAttenuation);
+					}
+					acceleration.x -= kAcceleration;
 
-				if (lrDirection_ != LRDirection::kLeft) {
-					lrDirection_ = LRDirection::kLeft;
-					turnFirstRotationY_ = worldTransform_.rotate.y;
-					turnTimer_ = kTimeTurn;
+					if (lrDirection_ != LRDirection::kLeft) {
+						lrDirection_ = LRDirection::kLeft;
+						turnFirstRotationY_ = worldTransform_.rotate.y;
+						turnTimer_ = kTimeTurn;
+					}
 				}
+				// 加速/減速
+				velocity_.x += acceleration.x;
+
+				// 最大速度
+				velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
+
+			} else {
+				// 非入力時は移動減衰をかける
+				velocity_.x *= (1.0f - kAttenuation);
 			}
-			// 加速/減速
-			velocity_.x += acceleration.x;
 
-			// 最大速度
-			velocity_.x = std::clamp(velocity_.x, -kLimitRunSpeed, kLimitRunSpeed);
-
-		} else {
-			// 非入力時は移動減衰をかける
-			velocity_.x *= (1.0f - kAttenuation);
-		}
-
-		if (input_->IsPress(DIK_UP) && onGround_) {
-			// ジャンプ初速
-			velocity_.y += kJumpAcceleration;
+			if (input->IsPress(DIK_UP) && onGround_) {
+				// ジャンプ初速
+				velocity_.y += kJumpAcceleration;
+			}
 		}
 
 	} else {

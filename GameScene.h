@@ -19,8 +19,6 @@ public:
 
 	~GameScene();
 
-	
-
 	// 初期化
 	void Initialize(Input* input, HWND hwnd);
 
@@ -52,7 +50,6 @@ private:
 	// 描画情報
 	Graphics graphics_;
 
-
 	// カメラコントローラ
 	CameraController* cameraController_;
 	// カメラ
@@ -60,6 +57,7 @@ private:
 
 	// 自キャラ
 	Player* player_ = nullptr;
+
 	// 敵キャラ
 	std::list<Enemy*> enemies_;
 	uint32_t enemyCount_ = 1;
@@ -67,6 +65,7 @@ private:
 	// パーティクル
 	DeathParticles* deathParticles_ = nullptr;
 
+	// ブロック(のワールドトランスフォーム)
 	std::vector<std::vector<Transform*>> worldTransformBlocks_;
 
 	// 天球
@@ -86,5 +85,6 @@ private:
 	};
 	Phase phase_; // 現在フェーズ
 
+	// 入力
 	Input* input_;
 };

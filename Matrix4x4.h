@@ -128,3 +128,10 @@ Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Vector2 windowSize
 /// <param name="projectionMatrix">プロジェクション行列</param>
 /// <returns>viewProjection行列</returns>
 Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Matrix4x4 projectionMatrix);
+
+// 演算子オーバーロード
+Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2);
+
+Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2);
+
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);

@@ -34,12 +34,12 @@ public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(Model* model, const Vector3& position, Input* input);
+	void Initialize(Model* model, const Vector3& position);
 
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update(Input* input,bool isControlEnable = true);
 
 	/// <summary>
 	/// 描画
@@ -49,7 +49,7 @@ public:
 	/// <summary>
 	// 入力の受付
 	/// </summary>
-	void InputMove();
+	void InputMove(Input* input, bool isControlEnable = true);
 
 	/// <summary>
 	/// マップとの衝突判定

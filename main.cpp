@@ -146,9 +146,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	GameScene* gameScene = new GameScene;
 	gameScene->Initialize(input,window.GetHwnd());
-	
-	DebugCamera *debugCamera = new DebugCamera;
-	debugCamera->Initialize();
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------
@@ -165,8 +162,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// キーボード・マウス入力の更新
 			input->Update();
-			// デバッグカメラの更新
-			debugCamera->Update(input);
 
 			//-------------------------------------------------
 			// ゲームの処理
@@ -186,7 +181,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	graphics.Finalize();
 	delete input;
-	delete debugCamera;
 	delete gameScene;
 	
 	CloseWindow(window.GetHwnd());

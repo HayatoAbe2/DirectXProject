@@ -43,7 +43,7 @@ private:
 	bool isEnable_ = false;
 
 	// カメラ移動速度
-	const float kMoveSpeed_ = 0.1f;
+	const float kMoveSpeed_ = 0.015f;
 	// カメラ回転速度
 	const float kRotateSpeed_ = 0.003f;
 

@@ -47,7 +47,7 @@ public:
 	}
 
 	Vector3 GetMouseMove() { return { float(mouseState_.lX),float(mouseState_.lY),float(mouseState_.lZ) }; };
-
+	
 private:
 	IDirectInput8* directInput_;
 	IDirectInputDevice8* keyboard_;
