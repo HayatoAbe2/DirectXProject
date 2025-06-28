@@ -157,7 +157,7 @@ void Graphics::DrawModel(Model& model) {
 	// モデル描画
 	commandList_->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
 	// wvp用のCBufferの場所を設定
-	commandList_->SetGraphicsRootConstantBufferView(1, model.GetTransformationResource()->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(1, model.GetCBV());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
 	commandList_->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
 	// ライト

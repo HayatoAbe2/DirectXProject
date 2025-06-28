@@ -34,5 +34,6 @@ private:
 	// 色
 	Vector4 color_;
 
+	// ワールドトランスフォーム
 	std::array<Transform, kNumParticles> worldTransforms_;
 };

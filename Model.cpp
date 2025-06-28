@@ -132,7 +132,7 @@ std::string Model::LoadMaterialTemplateFile(const std::string& directoryPath, co
 	return mtlFilePath;
 }
 
-void Model::UpdateModel(Camera &camera) {
+void Model::UpdateTransformation(Camera &camera) {
 	// モデルのトランスフォーム
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
@@ -144,3 +144,43 @@ void Model::UpdateModel(Camera &camera) {
 void Model::Draw(Graphics &graphics) {
 	graphics.DrawModel(*this);
 }
+
+void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
+	const UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
+	instanceCBVStride_ = kCBSize;
+
+	instanceCBVResource_ = graphics.CreateBufferResource(
+		graphics.GetDevice(), kCBSize * maxInstances
+	);
+	instanceCBVResource_->Map(0, nullptr, reinterpret_cast<void**>(&instanceCBVMappedPtr_));
+}
+
+void Model::SetExternalCBV(D3D12_GPU_VIRTUAL_ADDRESS address) {
+	externalCBVAddress_ = address;
+	useExternalCBV_ = true;
+}
+void Model::ClearExternalCBV() {
+	useExternalCBV_ = false;
+	externalCBVAddress_ = 0;
+}
+
+void Model::UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index) {
+	// 行列計算
+	Matrix4x4 world = MakeAffineMatrix(transform);
+	Matrix4x4 wvp = Multiply(world, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
+
+	// データ準備
+	TransformationMatrix data = { wvp, world };
+
+	// インスタンスCBVへ書き込み
+	assert(instanceCBVMappedPtr_ != nullptr);
+	std::memcpy(
+		instanceCBVMappedPtr_ + index * instanceCBVStride_,
+		&data,
+		sizeof(data)
+	);
+
+	// 外部CBVの指定
+	SetExternalCBV(instanceCBVResource_->GetGPUVirtualAddress() + index * instanceCBVStride_);
+}
+

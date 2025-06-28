@@ -205,16 +205,30 @@ void GameScene::Draw() {
 	}
 
 	// ブロックの描画
+	uint32_t index = 0;
+	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (Transform* worldTransformBlock : worldTransformBlockLine) {
+			if (worldTransformBlock) { index++; } // ブロック数をカウント
+		}
+	}
+	// ブロック数分のCBV作成
+	blockModel_->EnableInstanceCBV(graphics_,index);
+	index = 0;
 	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (Transform* worldTransformBlock : worldTransformBlockLine) {
 			if (!worldTransformBlock) {
 				continue;
 			}
-			blockModel_->SetTransform(*worldTransformBlock);
-			blockModel_->UpdateModel(camera_);
+			// 外部CBV更新設定
+			blockModel_->UpdateInstanceTransform(*worldTransformBlock, camera_, index);
+
+			// 描画
 			blockModel_->Draw(graphics_);
+
+			++index;
 		}
 	}
+	blockModel_->ClearExternalCBV();
 
 	// 天球の描画
 	skydome_->Draw(camera_, graphics_);

@@ -41,6 +41,6 @@ void Enemy::OnCollision(const Player* player) {
 
 void Enemy::Draw(Camera& camera, Graphics& graphics) {
 	model_->SetTransform(worldTransform_);
-	model_->UpdateModel(camera);
+	model_->UpdateTransformation(camera);
 	model_->Draw(graphics);
 }
