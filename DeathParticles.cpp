@@ -58,7 +58,7 @@ void DeathParticles::Draw(Camera &camera,Graphics& graphics) {
 	model_->EnableInstanceCBV(graphics, kNumParticles);
 	for (uint32_t i = 0; i < kNumParticles; ++i) {
 		model_->UpdateInstanceTransform(worldTransforms_[i], camera, i);
-		model_->Draw(graphics);
+		model_->Draw(graphics,color_);
 	}
 	model_->ClearExternalCBV();
 }

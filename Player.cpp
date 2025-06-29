@@ -462,8 +462,9 @@ void Player::OnCollision(const Enemy* enemy) {
 }
 
 void Player::Draw(Camera& camera, Graphics& graphics) {
-	model_->SetTransform(worldTransform_);
-	model_->UpdateTransformation(camera);
-	model_->Draw(graphics);
-
+	if (!isDead_) {
+		model_->SetTransform(worldTransform_);
+		model_->UpdateTransformation(camera);
+		model_->Draw(graphics);
+	}
 }

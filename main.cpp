@@ -26,12 +26,14 @@
 #include "Model.h"
 #include "VertexData.h"
 
+#include "TitleScene.h"
+#include "GameScene.h"
+
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 #include "externals/DirectXTex/DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
-#include "GameScene.h"
 
 #pragma comment(lib,"d3d12.lib")	
 #pragma comment(lib,"dxgi.lib")
@@ -77,6 +79,20 @@ struct FormatChunk {
 	WAVEFORMATEX fmt; // 波形フォーマット
 };
 
+// シーン
+TitleScene* titleScene = nullptr;
+GameScene* gameScene = nullptr;
+
+enum class Scene {
+	kUnknown = 0,
+	kTitle,
+	kGame,
+};
+
+Scene scene = Scene::kUnknown; // 初期状態
+void ChangeScene(Input* input,HWND hwnd);
+void UpdateScene();
+void DrawScene();
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -90,12 +106,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MFStartup(MF_VERSION);
 
 	SetUnhandledExceptionFilter(ExportDump);
-	
+
 	// ウィンドウの生成
 	Window window;
 	const int32_t kClientWidth = 1280;
 	const int32_t kClientHeight = 720;
-	window.Initialize(kClientWidth,kClientHeight);
+	window.Initialize(kClientWidth, kClientHeight);
 	logger.Log(logger.GetStream(), logger.ConvertString(std::format(L"Window Initialized.\n")));
 
 #ifdef _DEBUG
@@ -114,38 +130,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	logger.Log(logger.GetStream(), std::format("XAudio Initialized.\n"));
 
 	// DirectInputの初期化
-	Input *input = new Input(window.GetInstance(), window.GetHwnd());
+	Input* input = new Input(window.GetInstance(), window.GetHwnd());
 	assert(&input);
 	logger.Log(logger.GetStream(), std::format("DirectInput Initialized.\n"));
 
 	// 描画のための設定
-	Graphics graphics = Graphics();
+	Graphics graphics = Graphics(); // 初期化と終了は各シーンで行う
+	// シーン初期化
+	scene = Scene::kTitle;
+	titleScene = new TitleScene;
+	titleScene->Initialize(input, window.GetHwnd());
 
-	
-	// UVTransform
-	Transform uvTransformSprite{
-		{1.0f,1.0f,0.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
-
-	// モデル
-	const UINT modelCount = 1;
-	struct Model {
-		Transform transform;
-	};
-	Model model[modelCount] = {};
-	// トランスフォームの初期化
-	for (UINT i = 0; i < modelCount; ++i) {
-		model[i].transform = Transform{
-			{1.0f,1.0f,1.0f},
-			{0.0f,0.0f,0.0f},
-			{0.0f,0.0f,0.0f}
-		};
-	}
-
-	GameScene* gameScene = new GameScene;
-	gameScene->Initialize(input,window.GetHwnd());
 	//-------------------------------------------------
 	// メインループ
 	//-------------------------------------------------
@@ -167,22 +162,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// ゲームの処理
 			//-------------------------------------------------
 
-			gameScene->Update();
+			ChangeScene(input, window.GetHwnd());
+			UpdateScene();
 
-			// (更新処理終了後) 
+			// 更新処理終わり
 
-			gameScene->Draw();
-			
+			DrawScene();
+
 		}
 	}
-	
+
 	audio.Finalize();
 	MFShutdown();
 
-	graphics.Finalize();
 	delete input;
+	delete titleScene;
 	delete gameScene;
-	
+
 	CloseWindow(window.GetHwnd());
 
 	CoUninitialize();
@@ -211,4 +207,56 @@ static LONG WINAPI ExportDump(EXCEPTION_POINTERS* exception) {
 	MiniDumpWriteDump(GetCurrentProcess(), processId, dumpFileHandle, MiniDumpNormal, &minidumpInformation, nullptr, nullptr);
 	// 他に関連付けられているSEH例外ハンドラがあれば実行。通常はプロセスを終了する
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void ChangeScene(Input *input,HWND hwnd) {
+	switch (scene) {
+	case Scene::kTitle:
+		if (titleScene->isFinished()) {
+			// シーン変更
+			scene = Scene::kGame;
+			// 旧シーン
+			delete titleScene;
+			titleScene = nullptr;
+			// 新シーン
+			gameScene = new GameScene;
+			gameScene->Initialize(input, hwnd);
+		}
+		break;
+
+	case Scene::kGame:
+		if (gameScene->isFinished()) {
+			// シーン変更
+			scene = Scene::kTitle;
+			// 旧シーン
+			delete gameScene;
+			gameScene = nullptr;
+			// 新シーン
+			titleScene = new TitleScene;
+			titleScene->Initialize(input, hwnd);
+		}
+		break;
+	}
+}
+
+void UpdateScene() {
+	switch (scene) {
+	case Scene::kTitle:
+		titleScene->Update();
+		break;
+	case Scene::kGame:
+		gameScene->Update();
+		break;
+	}
+}
+
+void DrawScene() {
+	switch (scene) {
+	case Scene::kTitle:
+		titleScene->Draw();
+		break;
+	case Scene::kGame:
+		gameScene->Draw();
+		break;
+	}
 }

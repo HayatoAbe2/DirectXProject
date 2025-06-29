@@ -70,7 +70,7 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 			std::string materialFilename;
 			s >> materialFilename;
 			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			model->material_ = LoadMaterialTemplateFile(directoryPath, materialFilename);
+			model->mtlFilePath = LoadMaterialTemplateFile(directoryPath, materialFilename);
 
 			// マテリアルからSRVを作成
 			model = graphics.CreateSRV(model);
@@ -94,6 +94,14 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 	// Modelに格納
 	model->vertexBuffer_ = vertexBuffer;
 	model->vertexBufferView_ = vertexBufferView;
+
+	// マテリアル初期化
+	model->materialResource_ = graphics.CreateBufferResource(graphics.GetDevice(), sizeof(Material));
+	model->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&model->materialData_));
+	model->material_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	model->material_.useTexture = true;
+	model->material_.enableLighting = true;
+	model->material_.uvTransform = MakeIdentity4x4();
 
 	// transformを初期化
 	model->transform_ = { { 1.0f, 1.0f, 1.0f } };
@@ -141,7 +149,21 @@ void Model::UpdateTransformation(Camera &camera) {
 	transformationData_->World = worldMatrix;
 }
 
-void Model::Draw(Graphics &graphics) {
+void Model::ResetMaterial() {
+	// マテリアル初期化
+	material_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	material_.useTexture = true;
+	material_.enableLighting = true;
+	material_.uvTransform = MakeIdentity4x4();
+}
+
+void Model::Draw(Graphics &graphics,const Vector4 &color) {
+
+	ResetMaterial();
+	// マテリアルの適用
+	material_.color = color;
+	*materialData_ = material_;
+
 	graphics.DrawModel(*this);
 }
 

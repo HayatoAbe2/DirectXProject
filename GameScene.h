@@ -36,6 +36,9 @@ public:
 	// フェーズの切り替え
 	void ChangePhase();
 
+	// 終了チェック
+	bool isFinished() const { return finished_; };
+
 private:
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
@@ -87,4 +90,7 @@ private:
 
 	// 入力
 	Input* input_;
+
+	// シーンの終了
+	bool finished_ = false;
 };

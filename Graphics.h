@@ -14,7 +14,7 @@
 #include "TransformationMatrix.h"
 #include "VertexData.h"
 
-
+class Sprite;
 class Graphics {
 public:
 
@@ -27,18 +27,15 @@ public:
 	/// SRV作成
 	/// </summary>
 	Model* CreateSRV(Model* model);
+	Sprite* CreateSRV(Sprite* sprite);
 
 	// 更新処理
-	void BeginImGuiFrame();
-	void EndImGuiFrame(HWND hwnd);
-	void RenderImGui();
 
-	void UpdateMaterial(const Material& mat);
 	void UpdateSprite(const Transform& spriteTransform, const Transform& uvTransform, const Transform& cameraTransform);
 
 	// 描画処理
-	void DrawModel(Model &model);
-	void DrawSprite();
+	void DrawModel(Model& model);
+	void DrawSprite(Sprite& sprite);
 
 	// 解放
 	void Finalize();
@@ -134,7 +131,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
 	// コマンドリスト
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
-	
+
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
@@ -142,28 +139,28 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[2] = { nullptr, nullptr };
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
 	UINT backBufferIndex_;
-	
+
 	// RTV
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
-	
+
 	// SRV
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
 	UINT currentSRVIndex_ = 0; // SRVのインデックス
-	
+
 	// DSV
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_ = nullptr;
-	
+
 	// 各DescriptorHeapのサイズ
 	uint32_t descriptorSizeSRV_;
 	uint32_t descriptorSizeRTV_;
 	uint32_t descriptorSizeDSV_;
-	
+
 	// 深度ステンシルリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_ = nullptr;
-	
+
 	// 遷移バリア
 	D3D12_RESOURCE_BARRIER barrier_ = {};
-	
+
 	// inputLayout
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_;
 

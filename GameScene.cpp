@@ -21,6 +21,7 @@ GameScene::~GameScene() {
 		}
 	}
 	worldTransformBlocks_.clear();
+	graphics_.Finalize();
 }
 
 void GameScene::Initialize(Input *input,HWND hwnd) {
@@ -176,6 +177,11 @@ void GameScene::Update() {
 
 		// プレイヤー、カメラコントローラの更新はしない
 
+		// シーンの終了
+		if (deathParticles_ && deathParticles_->IsFinished()) {
+			finished_ = true;
+		}
+
 		break;
 	}
 
@@ -185,9 +191,12 @@ void GameScene::Update() {
 
 void GameScene::Draw() {
 	graphics_.BeginFrame();
-	
+
 	// カメラの更新
 	camera_.UpdateCamera(graphics_, *debugCamera_);
+
+	// 天球の描画
+	skydome_->Draw(camera_, graphics_);
 
 	// 自キャラの描画
 	player_->Draw(camera_,graphics_);
@@ -229,9 +238,6 @@ void GameScene::Draw() {
 		}
 	}
 	blockModel_->ClearExternalCBV();
-
-	// 天球の描画
-	skydome_->Draw(camera_, graphics_);
 
 	graphics_.EndFrame();
 }

@@ -1,5 +1,9 @@
 #pragma once
-#include "ModelData.h"
+#include "Material.h"
+#include <vector>
+#include "VertexData.h"
+#include <d3d12.h>
+#include <wrl.h>
 #include "TransformationMatrix.h"
 #include <string>
 class Graphics;
@@ -22,6 +26,8 @@ public:
 	/// <param name="camera"></param>
 	void UpdateTransformation(Camera& camera);
 
+	void ResetMaterial();
+
 	// 1つのモデルの、複数のトランスフォームを更新する
 	void UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index);
 
@@ -29,7 +35,7 @@ public:
 	/// 描画
 	/// </summary>
 	/// <param name="graphics"></param>
-	void Draw(Graphics& graphics);
+	void Draw(Graphics& graphics, const Vector4& color = {1,1,1,1});
 
 	void EnableInstanceCBV(Graphics& graphics, int maxInstances);
 
@@ -51,7 +57,8 @@ public:
 		if (useExternalCBV_) {
 			return externalCBVAddress_;
 		} else { return transformationResource_->GetGPUVirtualAddress(); } };
-	const std::string& GetMaterial()const { return material_; };
+	const std::string& GetMaterial()const { return mtlFilePath; };
+	const D3D12_GPU_VIRTUAL_ADDRESS GetMaterialAddress()const { return materialResource_->GetGPUVirtualAddress(); };
 
 	/// <summary>
 	/// SRVのGPUハンドル設定
@@ -80,9 +87,12 @@ private:
 
 	// モデルデータ
 	std::vector<VertexData> vertices_;
-	std::string material_;
+	std::string mtlFilePath;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
+	Material* materialData_;
+	Material material_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Transform transform_;
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU_ = {};
 

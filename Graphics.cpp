@@ -5,6 +5,7 @@
 #include <dxcapi.h>
 #include "externals/DirectXTex/d3dx12.h"
 #include <mfobjects.h>
+#include "Sprite.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -121,19 +122,11 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 
 	CreateLightBuffer();
 
-
 	currentSRVIndex_ = 1;
 
 	SetViewportAndScissor();
 
 	InitializeImGui(hwnd);
-}
-
-void Graphics::UpdateMaterial(const Material& mat) {
-	materialData_->color = mat.color;
-	materialData_->useTexture = mat.useTexture;
-	materialData_->enableLighting = mat.enableLighting;
-	materialData_->uvTransform = mat.uvTransform;
 }
 
 void Graphics::UpdateSprite(const Transform& spriteTransform, const Transform& uvTransform, const Transform& cameraTransform) {
@@ -154,6 +147,8 @@ void Graphics::UpdateSprite(const Transform& spriteTransform, const Transform& u
 }
 
 void Graphics::DrawModel(Model& model) {
+	// マテリアルCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(0, model.GetMaterialAddress());
 	// モデル描画
 	commandList_->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
 	// wvp用のCBufferの場所を設定
@@ -165,6 +160,23 @@ void Graphics::DrawModel(Model& model) {
 
 	// ドローコール
 	commandList_->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
+}
+
+void Graphics::DrawSprite(Sprite& sprite) {
+
+	// マテリアルCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(0, sprite.GetMaterialAddress());
+	// Spriteの描画。変更が必要なものだけ変更する
+	commandList_->IASetIndexBuffer(&sprite.GetIBV());	// IBVを設定
+	commandList_->IASetVertexBuffers(0, 1, &sprite.GetVBV());	// VBVを設定
+	// TransformationMatrixCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite_->GetGPUVirtualAddress());
+	// SRVの設定
+	commandList_->SetGraphicsRootDescriptorTable(2, sprite.GetTextureSRVHandle());
+	// ライト
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// 描画!(DrawCall/ドローコール)
+	commandList_->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
 void Graphics::Finalize() {
@@ -219,15 +231,14 @@ void Graphics::BeginFrame() {
 	commandList_->SetPipelineState(graphicsPipelineState_.Get());		// PSOを設定
 	// 形状を設定。PSOに設定しているものとはまた別
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// マテリアルCBufferの場所を設定
-	commandList_->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
 	ImGui::Begin("window"); {
-
+		ImGui::Text("Press SPACE to start GameScene.");
+		ImGui::Text("Press RSHIFT to toggle DebugCamera.");
 		ImGui::End();
 	}
 }
@@ -541,6 +552,52 @@ Model* Graphics::CreateSRV(Model* model) {
 	return model;
 }
 
+Sprite* Graphics::CreateSRV(Sprite* sprite) {
+	// Textureを読んで転送する
+	DirectX::ScratchImage mipImages = LoadTexture(sprite->GetMaterial());
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device_, metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device_, commandList_);
+
+	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+	commandList_->Close();
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
+	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
+	// 実行を待つ
+	fenceValue_++;
+	commandQueue_->Signal(fence_.Get(), fenceValue_); // シグナルを送る
+	if (fence_->GetCompletedValue() < fenceValue_) {
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+		WaitForSingleObject(fenceEvent_, INFINITE); // 待機
+	}
+	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
+	commandAllocator_->Reset();
+	commandList_->Reset(commandAllocator_.Get(), nullptr);
+
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	// 先頭はImGuiが使っているのでその次を使う
+	textureSrvHandleCPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	textureSrvHandleGPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	// SRVの生成
+	device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+
+	// textureResourceを設定
+	sprite->SetTextureResource(textureResource);
+	// SRVのハンドルを設定
+	sprite->SetTextureSRVHandle(textureSrvHandleGPU);
+	return sprite;
+}
+
 DirectX::ScratchImage Graphics::LoadTexture(const std::string& filePath) {
 	// テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
@@ -702,9 +759,15 @@ void Graphics::CreateRootSignature() {
 void Graphics::CreatePipelineState() {
 	// ブレンド設定
 	// すべての色要素を書き込む
-	blendDesc_.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
-
+	blendDesc_.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc_.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc_.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc_.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc_.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc_.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	blendDesc_.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc_.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	
 	// ラスタライザ設定
 	// 裏面(時計回り)を表示しない
 	rasterizerDesc_.CullMode = D3D12_CULL_MODE_NONE;
@@ -848,6 +911,3 @@ void Graphics::InitializeImGui(HWND hwnd) {
 		srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart()
 	);
 }
-
-
-

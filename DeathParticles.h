@@ -12,6 +12,7 @@ public:
 	void Draw(Camera& camera, Graphics& graphics);
 
 	const Transform& GetTransform() { return worldTransform_; };
+	const bool IsFinished() { return isFinished_; };
 
 private:
 	Transform worldTransform_; // ワールドトランスフォーム
