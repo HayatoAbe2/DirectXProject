@@ -13,6 +13,7 @@
 #include "Input.h"
 #include "Camera.h"
 
+class Fade;
 // ゲームシーン
 class GameScene {
 public:
@@ -83,8 +84,10 @@ private:
 
 	// ゲームのフェーズ
 	enum class Phase {
+		kFadeIn,
 		kPlay,
 		kDeath,
+		kFadeOut,
 	};
 	Phase phase_; // 現在フェーズ
 
@@ -93,4 +96,7 @@ private:
 
 	// シーンの終了
 	bool finished_ = false;
+
+	// フェード
+	Fade* fade_ = nullptr;
 };

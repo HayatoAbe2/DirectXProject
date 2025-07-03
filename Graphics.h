@@ -29,10 +29,7 @@ public:
 	Model* CreateSRV(Model* model);
 	Sprite* CreateSRV(Sprite* sprite);
 
-	// 更新処理
-
-	void UpdateSprite(const Transform& spriteTransform, const Transform& uvTransform, const Transform& cameraTransform);
-
+	
 	// 描画処理
 	void DrawModel(Model& model);
 	void DrawSprite(Sprite& sprite);
@@ -191,10 +188,6 @@ private:
 	// ログ
 	Logger logger_;
 
-	// マテリアル
-	Material* materialData_ = nullptr;
-	Material* materialDataSprite_ = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSprite_ = nullptr;
 
 	TransformationMatrix* transformationMatrixData_ = nullptr;
 	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
@@ -214,4 +207,5 @@ private:
 	UINT modelCount_ = 0;
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_ = {};
+	
 };

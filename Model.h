@@ -26,6 +26,7 @@ public:
 	/// <param name="camera"></param>
 	void UpdateTransformation(Camera& camera);
 
+	// マテリアルを初期化
 	void ResetMaterial();
 
 	// 1つのモデルの、複数のトランスフォームを更新する

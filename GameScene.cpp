@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include "Fade.h"
 
 GameScene::~GameScene() {
 	delete playerModel_;
@@ -22,6 +23,8 @@ GameScene::~GameScene() {
 	}
 	worldTransformBlocks_.clear();
 	graphics_.Finalize();
+
+	delete fade_;
 }
 
 void GameScene::Initialize(Input *input,HWND hwnd) {
@@ -39,7 +42,7 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 	skydomeModel_ = Model::LoadObjFile("Resources/skydome", "skydome.obj",graphics_.GetDevice(),graphics_);
 	deathParticleModel_ = Model::LoadObjFile("Resources/sphere", "sphere.obj",graphics_.GetDevice(),graphics_);
 
-	phase_ = Phase::kPlay;
+	phase_ = Phase::kFadeIn;
 
 	// 天球の生成
 	skydome_ = new Skydome();
@@ -87,11 +90,20 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 	// デバッグカメラの生成
 	debugCamera_ = new DebugCamera;
 	debugCamera_->Initialize();
+
+	// フェード初期化
+	fade_ = new Fade();
+	fade_->Initialize(hwnd, &graphics_, &camera_);
+	fade_->Start(Fade::Status::FadeIn, 1.0f);
 }
 
 void GameScene::Update() {
 
 	switch (phase_) {
+	case Phase::kFadeIn:
+		fade_->Update();
+		
+		[[fallthrough]];
 	case Phase::kPlay:
 
 		// 天球の更新
@@ -154,9 +166,6 @@ void GameScene::Update() {
 			deathParticles_->Update();
 		}
 
-		// カメラの処理
-		camera_.UpdateCamera(graphics_,*debugCamera_);
-
 		// ブロックの更新
 		for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
 			for (Transform* worldTransformBlock : worldTransformBlockLine) {
@@ -176,14 +185,15 @@ void GameScene::Update() {
 		}
 
 		// プレイヤー、カメラコントローラの更新はしない
+		break;
+	case Phase::kFadeOut:
+		fade_->Update();
 
-		// シーンの終了
-		if (deathParticles_ && deathParticles_->IsFinished()) {
+		if (fade_->IsFinish()) {
 			finished_ = true;
 		}
-
 		break;
-	}
+	}	
 
 	// 条件を満たしていればフェーズ変更
 	ChangePhase();
@@ -209,7 +219,7 @@ void GameScene::Draw() {
 	}
 
 	// パーティクル描画
-	if (deathParticles_) {
+	if (phase_ == Phase::kDeath && deathParticles_) {
 		deathParticles_->Draw(camera_, graphics_);
 	}
 
@@ -238,6 +248,8 @@ void GameScene::Draw() {
 		}
 	}
 	blockModel_->ClearExternalCBV();
+
+	fade_->Draw();
 
 	graphics_.EndFrame();
 }
@@ -286,6 +298,13 @@ void GameScene::CheckAllCollisions() {
 
 void GameScene::ChangePhase() {
 	switch (phase_) {
+	case Phase::kFadeIn:
+		// フェードイン終了後
+		if (fade_->IsFinish()) {
+			phase_ = Phase::kPlay;
+			fade_->Stop();
+		}
+		break;
 	case Phase::kPlay:
 		if (player_->IsDead()) {
 			// プレイヤーがやられたらフェーズを切り替える
@@ -295,6 +314,13 @@ void GameScene::ChangePhase() {
 			// パーティクルの位置を設定
 			deathParticles_->Initialize(deathParticleModel_, deathParticlesPosition);
 			return;
+		}
+		break;
+	case Phase::kDeath:
+		// フェードアウトに移行
+		if (deathParticles_ && deathParticles_->IsFinished()) {
+			phase_ = Phase::kFadeOut;
+			fade_->Start(Fade::Status::FadeOut,1.0f);
 		}
 	}
 }

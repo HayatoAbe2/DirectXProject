@@ -96,30 +96,6 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 
 	CreatePipelineState();
 
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	materialResource_ = CreateBufferResource(device_, sizeof(Material));
-	// 書き込むためのアドレスを取得
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	// デフォルトの色を設定しておく
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData_->useTexture = true;
-	materialData_->enableLighting = true;
-	materialData_->uvTransform = MakeIdentity4x4();
-
-	// Sprite用のマテリアルリソースを作る
-	materialResourceSprite_ = CreateBufferResource(device_, sizeof(Material));
-	materialResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite_));
-	materialDataSprite_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialDataSprite_->useTexture = true;
-	materialDataSprite_->enableLighting = false;
-	materialDataSprite_->uvTransform = MakeIdentity4x4();
-
-	transformationMatrixResourceSprite_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
-	transformationMatrixResourceSprite_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixDataSprite_));
-	transformationMatrixDataSprite_->WVP = MakeIdentity4x4();
-	transformationMatrixDataSprite_->World = MakeIdentity4x4();
-
-
 	CreateLightBuffer();
 
 	currentSRVIndex_ = 1;
@@ -127,23 +103,6 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	SetViewportAndScissor();
 
 	InitializeImGui(hwnd);
-}
-
-void Graphics::UpdateSprite(const Transform& spriteTransform, const Transform& uvTransform, const Transform& cameraTransform) {
-	// UVTransformの行列
-	Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransform.scale);
-	uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransform.rotate.z));
-	uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransform.translate));
-	materialDataSprite_->uvTransform = uvTransformMatrix;
-
-	// Sprite用のWorldViewProjectionMatrixを作る
-	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(spriteTransform);
-	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(clientWidth_), float(clientHeight_), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, MakeViewProjectionMatrix(cameraTransform, projectionMatrixSprite));
-
-	transformationMatrixData_->WVP = worldViewProjectionMatrixSprite;
-	transformationMatrixDataSprite_->World = worldMatrixSprite;
-
 }
 
 void Graphics::DrawModel(Model& model) {
@@ -170,7 +129,7 @@ void Graphics::DrawSprite(Sprite& sprite) {
 	commandList_->IASetIndexBuffer(&sprite.GetIBV());	// IBVを設定
 	commandList_->IASetVertexBuffers(0, 1, &sprite.GetVBV());	// VBVを設定
 	// TransformationMatrixCBufferの場所を設定
-	commandList_->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite_->GetGPUVirtualAddress());
+	commandList_->SetGraphicsRootConstantBufferView(1, sprite.GetCBV());
 	// SRVの設定
 	commandList_->SetGraphicsRootDescriptorTable(2, sprite.GetTextureSRVHandle());
 	// ライト

@@ -1,14 +1,15 @@
 #include "Sprite.h"
+#include "Material.h"
 
-void Sprite::Initialize(ID3D12Device* device, Graphics* graphics,std::string texturePath) {
+Sprite* Sprite::Initialize(Graphics* graphics,std::string texturePath,Vector2 size) {
+	Sprite* sprite = new Sprite;
 	// Sprite用のマテリアルリソースを作る
-	materialResource_ = graphics->CreateBufferResource(device, sizeof(Material));
-	Material* materialData_ = nullptr;
-	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
-	materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData_->useTexture = true;
-	materialData_->enableLighting = false;
-	materialData_->uvTransform = MakeIdentity4x4();
+	sprite->materialResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(Material));	
+	sprite->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->materialData_));
+	sprite->materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	sprite->materialData_->useTexture = true;
+	sprite->materialData_->enableLighting = false;
+	sprite->materialData_->uvTransform = MakeIdentity4x4();
 
 	// UVTransform
 	Transform uvTransform_{
@@ -18,71 +19,91 @@ void Sprite::Initialize(ID3D12Device* device, Graphics* graphics,std::string tex
 	};
 
 	// Sprite用のインデックスリソースを作成する
-	indexResource_ = graphics->CreateBufferResource(device, sizeof(uint32_t) * 6);
+	sprite->indexResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(uint32_t) * 6);
 	
 	// リソースの先頭のアドレスから使う
-	indexBufferView_.BufferLocation = indexResource_->GetGPUVirtualAddress();
+	sprite->indexBufferView_.BufferLocation = sprite->indexResource_->GetGPUVirtualAddress();
 	// 使用するリソースのサイズはindex6つ分のサイズ
-	indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
+	sprite->indexBufferView_.SizeInBytes = sizeof(uint32_t) * 6;
 	// インデックスはuint32_t
-	indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
+	sprite->indexBufferView_.Format = DXGI_FORMAT_R32_UINT;
 	// インデックスリソースにデータを書き込む
 	uint32_t* indexDataSprite = nullptr;
-	indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
+	sprite->indexResource_->Map(0, nullptr, reinterpret_cast<void**>(&indexDataSprite));
 	indexDataSprite[0] = 0;		indexDataSprite[1] = 1;		indexDataSprite[2] = 2;
 	indexDataSprite[3] = 1;		indexDataSprite[4] = 3;		indexDataSprite[5] = 2;
 
 	// Sprite用の頂点リソースを作る
-	vertexResource_ = graphics->CreateBufferResource(device, sizeof(VertexData) * 4);
+	sprite->vertexResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(VertexData) * 4);
 	// 頂点バッファビューを作成する
 	// リソースの先頭のアドレスから使う
-	vertexBufferView_.BufferLocation = vertexResource_->GetGPUVirtualAddress();
+	sprite->vertexBufferView_.BufferLocation = sprite->vertexResource_->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点4つ分のサイズ
-	vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
+	sprite->vertexBufferView_.SizeInBytes = sizeof(VertexData) * 4;
 	// 1頂点あたりのサイズ
-	vertexBufferView_.StrideInBytes = sizeof(VertexData);
+	sprite->vertexBufferView_.StrideInBytes = sizeof(VertexData);
 
 	// 頂点リソースにデータを書き込む
-	vertexData_ = nullptr;
+	sprite->vertexData_ = nullptr;
 	// 書き込むためのアドレスを取得
-	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData_));
+	sprite->vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->vertexData_));
 	// 頂点4つ
-	vertexData_[0].position = { 0.0f,360.0f,0.0f,1.0f };	// 左下
-	vertexData_[0].texcoord = { 0.0f,1.0f };
-	vertexData_[1].position = { 0.0f,0.0f,0.0f,1.0f };		// 左上
-	vertexData_[1].texcoord = { 0.0f,0.0f };
-	vertexData_[2].position = { 640.0f,360.0f,0.0f,1.0f };	// 右下
-	vertexData_[2].texcoord = { 1.0f,1.0f };
-	vertexData_[3].position = { 640.0f,0.0f,0.0f,1.0f };	// 右上
-	vertexData_[3].texcoord = { 1.0f,0.0f };
+	sprite->vertexData_[0].position = { 0.0f,size.y,0.0f,1.0f };	// 左下
+	sprite->vertexData_[0].texcoord = { 0.0f,1.0f };
+	sprite->vertexData_[1].position = { 0.0f,0.0f,0.0f,1.0f };		// 左上
+	sprite->vertexData_[1].texcoord = { 0.0f,0.0f };
+	sprite->vertexData_[2].position = { size.x,size.y,0.0f,1.0f };	// 右下
+	sprite->vertexData_[2].texcoord = { 1.0f,1.0f };
+	sprite->vertexData_[3].position = { size.x,0.0f,0.0f,1.0f };	// 右上
+	sprite->vertexData_[3].texcoord = { 1.0f,0.0f };
 
 	for (UINT i = 0; i < 4; ++i) {
-		vertexData_[i].normal = { 0.0f,0.0f,-1.0f };
+		sprite->vertexData_[i].normal = { 0.0f,0.0f,-1.0f };
 	}
 
 	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	transformationMatrixResource_ = graphics->CreateBufferResource(device, sizeof(TransformationMatrix));
+	sprite->transformationResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(TransformationMatrix));
 	// データを書き込む
 	// 書き込むためのアドレスを取得
-	transformationMatrixResource_->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData_));
+	sprite->transformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->transformationData_));
 	// 単位行列を書き込んでおく
-	transformationMatrixData_->WVP = MakeIdentity4x4();
-	transformationMatrixData_->World = MakeIdentity4x4();
+	sprite->transformationData_->WVP = MakeIdentity4x4();
+	sprite->transformationData_->World = MakeIdentity4x4();
 
 	// トランスフォーム初期化
-	transform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	sprite->transform_ = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
-	texturePath_ = texturePath;
+	sprite->texturePath_ = texturePath;
+
+	sprite = graphics->CreateSRV(sprite);
+
+	return sprite;
 }
 
-void Sprite::SetPosition(const Vector3& pos) {
-    transform_.translate = pos;
+void Sprite::Draw(Graphics& graphics, const Vector4& color) {
+	
+	// マテリアルの適用
+	material_.color = color;
+	*materialData_ = material_;
+	graphics.DrawSprite(*this);
+
+	ResetMaterial();
 }
 
-void Sprite::SetScale(const Vector3& scale) {
-    transform_.scale = scale;
+void Sprite::ResetMaterial() {
+	// マテリアル初期化
+	material_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	material_.useTexture = true;
+	material_.enableLighting = true;
+	material_.uvTransform = MakeIdentity4x4();
 }
 
-void Sprite::SetRotationZ(float angleRadians) {
-    transform_.rotate.z = angleRadians;
+void Sprite::UpdateTransform(Camera* camera,float kClientWidth,float kClientHeight) {
+	// モデルのトランスフォーム
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_);
+	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, projectionMatrix));
+	// WVPMatrixを作る
+	transformationData_->WVP = worldViewProjectionMatrix;
+	transformationData_->World = worldMatrix;
 }

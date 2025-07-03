@@ -159,12 +159,12 @@ void Model::ResetMaterial() {
 
 void Model::Draw(Graphics &graphics,const Vector4 &color) {
 
-	ResetMaterial();
 	// マテリアルの適用
 	material_.color = color;
 	*materialData_ = material_;
 
 	graphics.DrawModel(*this);
+	ResetMaterial();
 }
 
 void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
