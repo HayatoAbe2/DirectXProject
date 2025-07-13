@@ -75,8 +75,15 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc_.NumElements = _countof(inputElementDescs);
-	gridInputLayoutDesc_.pInputElementDescs = inputElementDescs;
-	gridInputLayoutDesc_.NumElements = _countof(inputElementDescs);
+	
+	D3D12_INPUT_ELEMENT_DESC gridInputElements[] = {
+	{
+		"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+	}
+	};
+	gridInputLayoutDesc_.pInputElementDescs = gridInputElements;
+	gridInputLayoutDesc_.NumElements = _countof(gridInputElements);
 
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils_));
 	assert(SUCCEEDED(hr));
@@ -658,6 +665,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(const Micr
 	D3D12_RESOURCE_DESC vertexResourceDesc{};
 	// バッファリソース。テクスチャの場合はまた別の設定をする
 	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Alignment = 0;
 	vertexResourceDesc.Width = sizeInBytes;					// リソースのサイズ
 	// バッファの場合はこれらは1にする決まり
 	vertexResourceDesc.Height = 1;
@@ -796,11 +804,23 @@ void Graphics::CreatePipelineState() {
 	// グリッド用の設定
 	//
 
+	gridVSBlob_ = CompileShader(L"Grid.VS.hlsl",
+		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	assert(gridVSBlob_ != nullptr);
+
+	gridPSBlob_ = CompileShader(L"Grid.PS.hlsl",
+		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	assert(gridPSBlob_ != nullptr);
+
 	// モデル描画用からコピー
 	gridPipelineStateDesc_ = graphicsPipelineStateDesc;
 
 	// トポロジタイプをラインにする
 	gridPipelineStateDesc_.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+
+	// シェーダー適用
+	gridPipelineStateDesc_.VS = { gridVSBlob_->GetBufferPointer(), gridVSBlob_->GetBufferSize() };
+	gridPipelineStateDesc_.PS = { gridPSBlob_->GetBufferPointer(), gridPSBlob_->GetBufferSize() };
 
 	gridPipelineStateDesc_.InputLayout = gridInputLayoutDesc_;
 	gridPipelineStateDesc_.pRootSignature = rootSignature_.Get();
@@ -914,9 +934,12 @@ void Graphics::DrawGrid(Camera& camera) {
 	// トランスフォーム
 	Matrix4x4 worldMatrix = MakeAffineMatrix(gridTransform_);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
+
 	// WVPMatrixを作る
 	gridTransformationData_->WVP = worldViewProjectionMatrix;
+	
 	gridTransformationData_->World = worldMatrix;
+	
 	*gridMaterialData_ = gridMaterial_;
 
 	// グリッド用PSOに切り替え
@@ -945,7 +968,7 @@ void Graphics::DrawGrid(Camera& camera) {
 
 void Graphics::InitializeGrid() {
 
-	const int gridHalfWidth = 30; // グリッド数の半分
+	const int gridHalfWidth = 25; // グリッド数の半分
 	const float spacing = 1.0f; // 間隔
 
 	for (int i = -gridHalfWidth; i < gridHalfWidth; ++i) {
@@ -954,16 +977,16 @@ void Graphics::InitializeGrid() {
 				// 10mごとの線
 				float x = i * spacing;
 
-				// -z ~ z
-				gridVerticesMark_.push_back({ { x,0.0f,-gridHalfWidth * spacing } });
-				gridVerticesMark_.push_back({ { x,0.0f,gridHalfWidth * spacing } });
+				//// -z ~ z
+				//gridVerticesMark_.push_back({ { x,0.1f,-gridHalfWidth * spacing } });
+				//gridVerticesMark_.push_back({ { x,0.1f,gridHalfWidth * spacing } });
 
-				// -x ~ x
-				gridVerticesMark_.push_back({ -gridHalfWidth * spacing,0.0f,x });
-				gridVerticesMark_.push_back({ gridHalfWidth * spacing,0.0f,x });
+				//// -x ~ x
+				//gridVerticesMark_.push_back({ -gridHalfWidth * spacing,0.1f,x });
+				//gridVerticesMark_.push_back({ gridHalfWidth * spacing,0.1f,x });
 			} else {
 
-				// ほかのグリッド線
+				// 1mごとの線
 				float x = i * spacing;
 
 				// -z ~ z
@@ -978,10 +1001,10 @@ void Graphics::InitializeGrid() {
 	}
 
 	// 原点を通る線
-	gridVerticesOrigin_.push_back({ { 0,0,-gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	/*gridVerticesOrigin_.push_back({ { 0,0,-gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 	gridVerticesOrigin_.push_back({ { 0,0,gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 	gridVerticesOrigin_.push_back({ { -gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
-	gridVerticesOrigin_.push_back({ { gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	gridVerticesOrigin_.push_back({ { gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });*/
 
 
 	// VertexBuffer作成

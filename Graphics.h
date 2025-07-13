@@ -324,4 +324,8 @@ private:
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC gridPipelineStateDesc_;
 	D3D12_INPUT_LAYOUT_DESC gridInputLayoutDesc_;
 	D3D12_GPU_DESCRIPTOR_HANDLE gridSRVHandleGPU_;
+
+	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
+
 };

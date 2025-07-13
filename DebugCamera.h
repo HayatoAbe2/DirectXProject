@@ -59,7 +59,7 @@ private:
 	float   pitch_ = 0.0f;  // 垂直（ローカルX軸回転）
 
 	// ローカル座標
-	Vector3 translation_ = { 0,0,-50 };
+	Vector3 translation_ = { 0,4000,-50 };
 	// ビュー行列
 	Matrix4x4 viewMatrix_;
 	// 射影行列

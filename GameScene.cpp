@@ -66,12 +66,12 @@ void GameScene::Initialize(Input *input,HWND hwnd) {
 	player_->SetMapChipField(mapChipField_);
 
 	// 敵キャラの生成
-	for (uint32_t i = 0; i < enemyCount_; ++i) {
-		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(10 + i, 18);
-		newEnemy->Initialize(enemyModel_, enemyPosition);
-		enemies_.push_back(newEnemy);
-	}
+	//for (uint32_t i = 0; i < enemyCount_; ++i) {
+	//	Enemy* newEnemy = new Enemy();
+	//	Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(10 + i, 18);
+	//	newEnemy->Initialize(enemyModel_, enemyPosition);
+	//	enemies_.push_back(newEnemy);
+	//}
 
 	// やられたときのパーティクル初期化
 	deathParticles_ = new DeathParticles();
@@ -211,7 +211,7 @@ void GameScene::Draw() {
 	//skydome_->Draw(camera_, graphics_);
 
 	//// 自キャラの描画
-	//player_->Draw(camera_,graphics_);
+	player_->Draw(camera_,graphics_);
 
 	//// 敵キャラの描画
 	//for (Enemy* enemy : enemies_) {
@@ -225,33 +225,33 @@ void GameScene::Draw() {
 	//	deathParticles_->Draw(camera_, graphics_);
 	//}
 
-	//// ブロックの描画
-	//uint32_t index = 0;
-	//for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
-	//	for (Transform* worldTransformBlock : worldTransformBlockLine) {
-	//		if (worldTransformBlock) { index++; } // ブロック数をカウント
-	//	}
-	//}
-	//// ブロック数分のCBV作成
-	//blockModel_->EnableInstanceCBV(graphics_,index);
-	//index = 0;
-	//for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
-	//	for (Transform* worldTransformBlock : worldTransformBlockLine) {
-	//		if (!worldTransformBlock) {
-	//			continue;
-	//		}
-	//		// 外部CBV更新設定
-	//		blockModel_->UpdateInstanceTransform(*worldTransformBlock, camera_, index);
+	// ブロックの描画
+	uint32_t index = 0;
+	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (Transform* worldTransformBlock : worldTransformBlockLine) {
+			if (worldTransformBlock) { index++; } // ブロック数をカウント
+		}
+	}
+	// ブロック数分のCBV作成
+	blockModel_->EnableInstanceCBV(graphics_,index);
+	index = 0;
+	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (Transform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+			// 外部CBV更新設定
+			blockModel_->UpdateInstanceTransform(*worldTransformBlock, camera_, index);
 
-	//		// 描画
-	//		blockModel_->Draw(graphics_);
+			// 描画
+			blockModel_->Draw(graphics_);
 
-	//		++index;
-	//	}
-	//}
-	//blockModel_->ClearExternalCBV();
+			++index;
+		}
+	}
+	blockModel_->ClearExternalCBV();
 
-	//fade_->Draw();
+	fade_->Draw();
 
 	graphics_.EndFrame();
 }
