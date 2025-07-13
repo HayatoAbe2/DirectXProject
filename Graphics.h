@@ -24,26 +24,44 @@ public:
 	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd);
 
 	/// <summary>
-	/// SRV作成
+	/// モデル用SRV作成
 	/// </summary>
 	Model* CreateSRV(Model* model);
+
+	/// <summary>
+	/// スプライト用SRV作成
+	/// </summary>
 	Sprite* CreateSRV(Sprite* sprite);
 
-	
-	// 描画処理
+	/// <summary>
+	/// モデル描画
+	/// </summary>
+	/// <param name="model">描画するモデル</param>
 	void DrawModel(Model& model);
+
+	/// <summary>
+	/// スプライト描画
+	/// </summary>
+	/// <param name="sprite">描画するスプライト</param>
 	void DrawSprite(Sprite& sprite);
 
-	// 解放
+	/// <summary>
+	/// グリッド描画
+	/// </summary>
+	void DrawGrid(Camera& camera);
+
+	/// <summary>
+	/// 解放処理(ループ終了後に行う)
+	/// </summary>
 	void Finalize();
 
 	/// <summary>
-	/// フレーム開始時の処理
+	/// フレーム開始時の処理(描画開始時に行う)
 	/// </summary>
 	void BeginFrame();
 
 	/// <summary>
-	/// フレーム終了時の処理
+	/// フレーム終了時の処理(描画終了時に行う)
 	/// </summary>
 	void EndFrame();
 
@@ -55,58 +73,135 @@ public:
 	/// <returns>作成したリソース</returns>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 
-	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() const {
-		return device_;
-	}
-
+	// アクセサ
+	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() const { return device_; }
 	int32_t GetWindowWidth() { return clientWidth_; };
 	int32_t GetWindowHeight() { return clientHeight_; };
 
 private:
 
+	/// <summary>
+	/// 使用アダプタの取得
+	/// </summary>
 	void SelectAdapter();
 
+	/// <summary>
+	/// デバイス生成
+	/// </summary>
 	void CreateD3D12Device();
+
+	/// <summary>
+	/// エラーメッセージ等設定
+	/// </summary>
 	void DebugFilter();
+
+	/// <summary>
+	/// Fence作成
+	/// </summary>
 	void InitializeFence();
+
+	/// <summary>
+	/// CommandQueue作成
+	/// </summary>
 	void InitializeCommandQueue();
+
+	/// <summary>
+	/// CommandAllocator作成
+	/// </summary>
 	void InitializeCommandAllocator();
+
+	/// <summary>
+	/// CommandList作成
+	/// </summary>
 	void InitializeCommandList();
+
+	/// <summary>
+	/// SwapChain初期化
+	/// </summary>
 	void InitializeSwapChain(HWND hwnd);
+
+	/// <summary>
+	/// DescriptorHeap初期化,RTV設定
+	/// </summary>
 	void InitializeDescriptorHeaps();
+
+	/// <summary>
+	/// RootSignature,RootParameter,Sampler設定
+	/// </summary>
 	void CreateRootSignature();
+
+	/// <summary>
+	/// Blend,Rasterizer,DepthStencil設定
+	/// </summary>
 	void CreatePipelineState();
 
+	/// <summary>
+	/// Shaderコンパイル
+	/// </summary>
 	IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, std::ostream& os);
 
+	/// <summary>
+	/// Viewport,Scissor設定
+	/// </summary>
 	void SetViewportAndScissor();
 
+	/// <summary>
+	/// ImGui初期化
+	/// </summary>
 	void InitializeImGui(HWND hwnd);
 
+	/// <summary>
+	/// DirectionalLight初期化
+	/// </summary>
 	void CreateLightBuffer();
 
+	/// <summary>
+	/// Texture読み込み
+	/// </summary>
 	DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
+	/// <summary>
+	/// Resource作成
+	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const DirectX::TexMetadata& metadata);
 
+	/// <summary>
+	/// Texture転送
+	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& commandList);
 
+	/// <summary>
+	/// DescriptorHeap作成
+	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
 		const Microsoft::WRL::ComPtr<ID3D12Device>& device,
 		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
 		UINT numDescriptors,
 		bool shaderVisible);
 
+	/// <summary>
+	/// DescriptorHandle取得
+	/// </summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
 		const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap,
 		uint32_t descriptorSize, uint32_t index);
 
+	/// <summary>
+	/// TextureResource作成
+	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(
 		const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height);
 
+	/// <summary>
+	/// グリッド初期化
+	/// </summary>
+	void InitializeGrid();
 
+
+	// 画面サイズ
 	int32_t clientWidth_;
 	int32_t clientHeight_;
+
 	// DXGIファクトリー
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory_ = nullptr;
 
@@ -198,14 +293,35 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite_ = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
+	
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
 	DirectionalLight* directionalLightData_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridTextureResource_ = nullptr;
 
 	// 使用するモデル数
 	UINT modelCount_ = 0;
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_ = {};
-	
+
+	// グリッドで使用
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> gridPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> gridRootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResource_;
+	Material* gridMaterialData_;
+
+	std::vector<VertexData> gridVertices_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBuffer_;
+	D3D12_VERTEX_BUFFER_VIEW gridVBV_;
+	Material gridMaterial_;
+
+	std::vector<VertexData> gridVerticesOrigin_;
+	std::vector<VertexData> gridVerticesMark_;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridTransformationResource_;
+	TransformationMatrix* gridTransformationData_;
+	Transform gridTransform_;
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC gridPipelineStateDesc_;
+	D3D12_INPUT_LAYOUT_DESC gridInputLayoutDesc_;
+	D3D12_GPU_DESCRIPTOR_HANDLE gridSRVHandleGPU_;
 };

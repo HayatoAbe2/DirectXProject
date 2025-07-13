@@ -137,9 +137,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 描画のための設定
 	Graphics graphics = Graphics(); // 初期化と終了は各シーンで行う
 	// シーン初期化
-	scene = Scene::kTitle;
-	titleScene = new TitleScene;
-	titleScene->Initialize(input, window.GetHwnd());
+	scene = Scene::kGame;
+	gameScene = new GameScene;
+	gameScene->Initialize(input,window.GetHwnd());
 
 	//-------------------------------------------------
 	// メインループ

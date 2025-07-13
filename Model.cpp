@@ -106,7 +106,6 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 	// transformを初期化
 	model->transform_ = { { 1.0f, 1.0f, 1.0f } };
 
-
 	// リソースを作成
 	model->transformationResource_ = graphics.CreateBufferResource(device, sizeof(TransformationMatrix));
 

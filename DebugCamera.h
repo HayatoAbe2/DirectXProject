@@ -6,7 +6,7 @@
 /// <summary>
 /// デバッグカメラ
 /// </summary>
-class DebugCamera{
+class DebugCamera {
 public:
 	/// <summary>
 	/// 初期化
@@ -64,6 +64,5 @@ private:
 	Matrix4x4 viewMatrix_;
 	// 射影行列
 	Matrix4x4 orthographicMatrix_;
-
 };
 

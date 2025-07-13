@@ -22,20 +22,16 @@ void DebugCamera::Update(Input* input) {
 
 	if (isEnable_) {
 		ControlCamera(input);
+
 		UpdateView();
 	}
 }
 
 void DebugCamera::ControlCamera(Input* input) { // 球面座標系での移動
-	// 今のカメラ方向行列を作る
-	Matrix4x4 mYaw = MakeRotateYMatrix(yaw_);
-	Matrix4x4 mPitch = MakeRotateXMatrix(pitch_);
-	Matrix4x4 rot = Multiply(mPitch, mYaw);
-
 	// カメラ前方向（ローカルZ+）をワールドに
-	Vector3 forward = TransformVector({ 0,0,1 }, rot);
-	Vector3 right = TransformVector({ 1,0,0 }, rot);
-	Vector3 up = TransformVector({ 0,1,0 }, rot);
+	Vector3 forward = { 0,0,1 };
+	Vector3 right = { 1,0,0 };
+	Vector3 up = { 0,1,0 };
 
 	// shift+マウスホイール押し込み中,ドラッグで視点移動
 	if (input->IsPress(DIK_LSHIFT) && input->isClickWheel()) {
@@ -67,7 +63,8 @@ void DebugCamera::ControlCamera(Input* input) { // 球面座標系での移動
 	distance_ += -moveZ;
 
 	// カメラは注視点から後ろ向きにdistance_移動した位置
-	Vector3 back = TransformVector({ 0,0,-distance_ }, rot);
+	Vector3 back;
+	back = { 0,0,-distance_ };
 	translation_ = Add(target_, back);
 }
 

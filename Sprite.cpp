@@ -1,10 +1,10 @@
 #include "Sprite.h"
 #include "Material.h"
 
-Sprite* Sprite::Initialize(Graphics* graphics,std::string texturePath,Vector2 size) {
+Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 size) {
 	Sprite* sprite = new Sprite;
 	// Sprite用のマテリアルリソースを作る
-	sprite->materialResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(Material));	
+	sprite->materialResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(Material));
 	sprite->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->materialData_));
 	sprite->materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	sprite->materialData_->useTexture = true;
@@ -20,7 +20,7 @@ Sprite* Sprite::Initialize(Graphics* graphics,std::string texturePath,Vector2 si
 
 	// Sprite用のインデックスリソースを作成する
 	sprite->indexResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(uint32_t) * 6);
-	
+
 	// リソースの先頭のアドレスから使う
 	sprite->indexBufferView_.BufferLocation = sprite->indexResource_->GetGPUVirtualAddress();
 	// 使用するリソースのサイズはindex6つ分のサイズ
@@ -81,7 +81,7 @@ Sprite* Sprite::Initialize(Graphics* graphics,std::string texturePath,Vector2 si
 }
 
 void Sprite::Draw(Graphics& graphics, const Vector4& color) {
-	
+
 	// マテリアルの適用
 	material_.color = color;
 	*materialData_ = material_;
@@ -98,7 +98,7 @@ void Sprite::ResetMaterial() {
 	material_.uvTransform = MakeIdentity4x4();
 }
 
-void Sprite::UpdateTransform(Camera* camera,float kClientWidth,float kClientHeight) {
+void Sprite::UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight) {
 	// モデルのトランスフォーム
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_);
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);

@@ -75,6 +75,8 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc_.NumElements = _countof(inputElementDescs);
+	gridInputLayoutDesc_.pInputElementDescs = inputElementDescs;
+	gridInputLayoutDesc_.NumElements = _countof(inputElementDescs);
 
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils_));
 	assert(SUCCEEDED(hr));
@@ -96,6 +98,7 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 
 	CreatePipelineState();
 
+
 	CreateLightBuffer();
 
 	currentSRVIndex_ = 1;
@@ -103,17 +106,28 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	SetViewportAndScissor();
 
 	InitializeImGui(hwnd);
+
+	InitializeGrid();
 }
 
 void Graphics::DrawModel(Model& model) {
+	// PSO設定
+	commandList_->SetPipelineState(graphicsPipelineState_.Get());
+	// トポロジを三角形に設定
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// マテリアルCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(0, model.GetMaterialAddress());
+
 	// モデル描画
 	commandList_->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
+
 	// wvp用のCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(1, model.GetCBV());
+
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
 	commandList_->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+
 	// ライト
 	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
@@ -122,18 +136,28 @@ void Graphics::DrawModel(Model& model) {
 }
 
 void Graphics::DrawSprite(Sprite& sprite) {
+	// PSO設定
+	commandList_->SetPipelineState(graphicsPipelineState_.Get());
+	// トポロジを三角形に設定
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 
 	// マテリアルCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(0, sprite.GetMaterialAddress());
+
 	// Spriteの描画。変更が必要なものだけ変更する
 	commandList_->IASetIndexBuffer(&sprite.GetIBV());	// IBVを設定
 	commandList_->IASetVertexBuffers(0, 1, &sprite.GetVBV());	// VBVを設定
+
 	// TransformationMatrixCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(1, sprite.GetCBV());
+
 	// SRVの設定
 	commandList_->SetGraphicsRootDescriptorTable(2, sprite.GetTextureSRVHandle());
+
 	// ライト
 	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
 	// 描画!(DrawCall/ドローコール)
 	commandList_->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
@@ -187,9 +211,6 @@ void Graphics::BeginFrame() {
 	commandList_->RSSetScissorRects(1, &scissorRect_);			// Scissorを設定
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
-	commandList_->SetPipelineState(graphicsPipelineState_.Get());		// PSOを設定
-	// 形状を設定。PSOに設定しているものとはまた別
-	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -645,7 +666,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(const Micr
 	vertexResourceDesc.SampleDesc.Count = 1;
 	// バッファの場合はこれにする決まり
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	// 実際に頂点リソースを作る
+	// 実際にリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
@@ -726,7 +747,7 @@ void Graphics::CreatePipelineState() {
 	blendDesc_.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 	blendDesc_.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendDesc_.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	
+
 	// ラスタライザ設定
 	// 裏面(時計回り)を表示しない
 	rasterizerDesc_.CullMode = D3D12_CULL_MODE_NONE;
@@ -769,6 +790,24 @@ void Graphics::CreatePipelineState() {
 
 	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState_));
+	assert(SUCCEEDED(hr));
+
+	//
+	// グリッド用の設定
+	//
+
+	// モデル描画用からコピー
+	gridPipelineStateDesc_ = graphicsPipelineStateDesc;
+
+	// トポロジタイプをラインにする
+	gridPipelineStateDesc_.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+
+	gridPipelineStateDesc_.InputLayout = gridInputLayoutDesc_;
+	gridPipelineStateDesc_.pRootSignature = rootSignature_.Get();
+
+	// PipelineState作成
+	hr = device_->CreateGraphicsPipelineState(&gridPipelineStateDesc_,
+		IID_PPV_ARGS(&gridPipelineState_));
 	assert(SUCCEEDED(hr));
 }
 
@@ -869,4 +908,150 @@ void Graphics::InitializeImGui(HWND hwnd) {
 		srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
 		srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart()
 	);
+}
+
+void Graphics::DrawGrid(Camera& camera) {
+	// トランスフォーム
+	Matrix4x4 worldMatrix = MakeAffineMatrix(gridTransform_);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
+	// WVPMatrixを作る
+	gridTransformationData_->WVP = worldViewProjectionMatrix;
+	gridTransformationData_->World = worldMatrix;
+	*gridMaterialData_ = gridMaterial_;
+
+	// グリッド用PSOに切り替え
+	commandList_->SetPipelineState(gridPipelineState_.Get());
+	// トポロジを線に設定
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	// マテリアルCBV
+	commandList_->SetGraphicsRootConstantBufferView(0, gridMaterialResource_->GetGPUVirtualAddress());
+
+	// VBV設定
+	commandList_->IASetVertexBuffers(0, 1, &gridVBV_);
+
+	// wvp用のCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(1, gridTransformationResource_->GetGPUVirtualAddress());
+
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+	commandList_->SetGraphicsRootDescriptorTable(2, gridSRVHandleGPU_);
+
+	// ライト
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	// ドローコール
+	commandList_->DrawInstanced(UINT(gridVertices_.size()), 1, 0, 0);
+}
+
+void Graphics::InitializeGrid() {
+
+	const int gridHalfWidth = 30; // グリッド数の半分
+	const float spacing = 1.0f; // 間隔
+
+	for (int i = -gridHalfWidth; i < gridHalfWidth; ++i) {
+		if (i != 0) {
+			if (abs(i % 10) == 0) {
+				// 10mごとの線
+				float x = i * spacing;
+
+				// -z ~ z
+				gridVerticesMark_.push_back({ { x,0.0f,-gridHalfWidth * spacing } });
+				gridVerticesMark_.push_back({ { x,0.0f,gridHalfWidth * spacing } });
+
+				// -x ~ x
+				gridVerticesMark_.push_back({ -gridHalfWidth * spacing,0.0f,x });
+				gridVerticesMark_.push_back({ gridHalfWidth * spacing,0.0f,x });
+			} else {
+
+				// ほかのグリッド線
+				float x = i * spacing;
+
+				// -z ~ z
+				gridVertices_.push_back({ {x,0.0f,-gridHalfWidth * spacing}, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+				gridVertices_.push_back({ {x,0.0f,gridHalfWidth * spacing }, { 0.0f,0.0f }, { 0.0f,1.0f,0.0f} });
+
+				// -x ~ x
+				gridVertices_.push_back({ { -gridHalfWidth * spacing,0.0f,x}, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+				gridVertices_.push_back({ { gridHalfWidth * spacing,0.0f,x }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+			}
+		}
+	}
+
+	// 原点を通る線
+	gridVerticesOrigin_.push_back({ { 0,0,-gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	gridVerticesOrigin_.push_back({ { 0,0,gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	gridVerticesOrigin_.push_back({ { -gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	gridVerticesOrigin_.push_back({ { gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+
+
+	// VertexBuffer作成
+	size_t size = sizeof(VertexData) * gridVertices_.size();
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(device_, size);
+	VertexData* dst = nullptr;
+	vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+	memcpy(dst, gridVertices_.data(), size);
+	vertexBuffer->Unmap(0, nullptr);
+
+	// VBV作成
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = UINT(size);
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	gridVertexBuffer_ = vertexBuffer;
+	gridVBV_ = vertexBufferView;
+
+	// マテリアル作成
+	gridMaterialResource_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResource_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialData_));
+	gridMaterial_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	gridMaterial_.useTexture = false;
+	gridMaterial_.enableLighting = false;
+	gridMaterial_.uvTransform = MakeIdentity4x4();
+
+	// トランスフォーム
+	gridTransform_ = { { 1.0f, 1.0f, 1.0f } };
+	// リソースを作成
+	gridTransformationResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+
+	HRESULT hr = gridTransformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&gridTransformationData_));
+	assert(SUCCEEDED(hr));
+
+
+	// Textureを読んで転送する
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	gridTextureResource_ = CreateTextureResource(device_, metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(gridTextureResource_, mipImages, device_, commandList_);
+
+	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+	commandList_->Close();
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
+	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
+	// 実行を待つ
+	fenceValue_++;
+	commandQueue_->Signal(fence_.Get(), fenceValue_); // シグナルを送る
+	if (fence_->GetCompletedValue() < fenceValue_) {
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+		WaitForSingleObject(fenceEvent_, INFINITE); // 待機
+	}
+	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
+	commandAllocator_->Reset();
+	commandList_->Reset(commandAllocator_.Get(), nullptr);
+
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
+	gridSRVHandleGPU_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	// 先頭はImGuiが使っているのでその次を使う
+	textureSrvHandleCPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	gridSRVHandleGPU_.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	// SRVの生成
+	device_->CreateShaderResourceView(gridTextureResource_.Get(), &srvDesc, textureSrvHandleCPU);
+	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
 }

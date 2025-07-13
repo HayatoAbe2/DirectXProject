@@ -202,54 +202,56 @@ void GameScene::Update() {
 void GameScene::Draw() {
 	graphics_.BeginFrame();
 
+	
+
 	// カメラの更新
 	camera_.UpdateCamera(graphics_, *debugCamera_);
+	graphics_.DrawGrid(camera_);
+	//// 天球の描画
+	//skydome_->Draw(camera_, graphics_);
 
-	// 天球の描画
-	skydome_->Draw(camera_, graphics_);
+	//// 自キャラの描画
+	//player_->Draw(camera_,graphics_);
 
-	// 自キャラの描画
-	player_->Draw(camera_,graphics_);
+	//// 敵キャラの描画
+	//for (Enemy* enemy : enemies_) {
+	//	if (enemy) {
+	//		enemy->Draw(camera_,graphics_);
+	//	}
+	//}
 
-	// 敵キャラの描画
-	for (Enemy* enemy : enemies_) {
-		if (enemy) {
-			enemy->Draw(camera_,graphics_);
-		}
-	}
+	//// パーティクル描画
+	//if (phase_ == Phase::kDeath && deathParticles_) {
+	//	deathParticles_->Draw(camera_, graphics_);
+	//}
 
-	// パーティクル描画
-	if (phase_ == Phase::kDeath && deathParticles_) {
-		deathParticles_->Draw(camera_, graphics_);
-	}
+	//// ブロックの描画
+	//uint32_t index = 0;
+	//for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
+	//	for (Transform* worldTransformBlock : worldTransformBlockLine) {
+	//		if (worldTransformBlock) { index++; } // ブロック数をカウント
+	//	}
+	//}
+	//// ブロック数分のCBV作成
+	//blockModel_->EnableInstanceCBV(graphics_,index);
+	//index = 0;
+	//for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
+	//	for (Transform* worldTransformBlock : worldTransformBlockLine) {
+	//		if (!worldTransformBlock) {
+	//			continue;
+	//		}
+	//		// 外部CBV更新設定
+	//		blockModel_->UpdateInstanceTransform(*worldTransformBlock, camera_, index);
 
-	// ブロックの描画
-	uint32_t index = 0;
-	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (Transform* worldTransformBlock : worldTransformBlockLine) {
-			if (worldTransformBlock) { index++; } // ブロック数をカウント
-		}
-	}
-	// ブロック数分のCBV作成
-	blockModel_->EnableInstanceCBV(graphics_,index);
-	index = 0;
-	for (std::vector<Transform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (Transform* worldTransformBlock : worldTransformBlockLine) {
-			if (!worldTransformBlock) {
-				continue;
-			}
-			// 外部CBV更新設定
-			blockModel_->UpdateInstanceTransform(*worldTransformBlock, camera_, index);
+	//		// 描画
+	//		blockModel_->Draw(graphics_);
 
-			// 描画
-			blockModel_->Draw(graphics_);
+	//		++index;
+	//	}
+	//}
+	//blockModel_->ClearExternalCBV();
 
-			++index;
-		}
-	}
-	blockModel_->ClearExternalCBV();
-
-	fade_->Draw();
+	//fade_->Draw();
 
 	graphics_.EndFrame();
 }
