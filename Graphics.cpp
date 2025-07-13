@@ -75,7 +75,7 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 	inputLayoutDesc_.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc_.NumElements = _countof(inputElementDescs);
-	
+
 	D3D12_INPUT_ELEMENT_DESC gridInputElements[] = {
 	{
 		"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
@@ -937,33 +937,59 @@ void Graphics::DrawGrid(Camera& camera) {
 
 	// WVPMatrixを作る
 	gridTransformationData_->WVP = worldViewProjectionMatrix;
-	
 	gridTransformationData_->World = worldMatrix;
-	
+
 	*gridMaterialData_ = gridMaterial_;
+	*gridMaterialDataMark_ = gridMaterialMark_;
+	*gridMaterialDataOrigin_ = gridMaterialOrigin_;
+
 
 	// グリッド用PSOに切り替え
 	commandList_->SetPipelineState(gridPipelineState_.Get());
 	// トポロジを線に設定
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 
+	/// 通常線
 	// マテリアルCBV
 	commandList_->SetGraphicsRootConstantBufferView(0, gridMaterialResource_->GetGPUVirtualAddress());
-
 	// VBV設定
 	commandList_->IASetVertexBuffers(0, 1, &gridVBV_);
-
 	// wvp用のCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(1, gridTransformationResource_->GetGPUVirtualAddress());
-
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
 	commandList_->SetGraphicsRootDescriptorTable(2, gridSRVHandleGPU_);
-
 	// ライト
 	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
-
 	// ドローコール
 	commandList_->DrawInstanced(UINT(gridVertices_.size()), 1, 0, 0);
+
+	/// 強調線
+	// マテリアルCBV
+	commandList_->SetGraphicsRootConstantBufferView(0, gridMaterialResourceMark_->GetGPUVirtualAddress());
+	// VBV設定
+	commandList_->IASetVertexBuffers(0, 1, &gridVBVMark_);
+	// wvp用のCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(1, gridTransformationResource_->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+	commandList_->SetGraphicsRootDescriptorTable(2, gridSRVHandleGPU_);
+	// ライト
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// ドローコール
+	commandList_->DrawInstanced(UINT(gridVerticesMark_.size()), 1, 0, 0);
+
+	/// 原点を通る線
+	// マテリアルCBV
+	commandList_->SetGraphicsRootConstantBufferView(0, gridMaterialResourceOrigin_->GetGPUVirtualAddress());
+	// VBV設定
+	commandList_->IASetVertexBuffers(0, 1, &gridVBVOrigin_);
+	// wvp用のCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(1, gridTransformationResource_->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+	commandList_->SetGraphicsRootDescriptorTable(2, gridSRVHandleGPU_);
+	// ライト
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// ドローコール
+	commandList_->DrawInstanced(UINT(gridVerticesOrigin_.size()), 1, 0, 0);
 }
 
 void Graphics::InitializeGrid() {
@@ -973,21 +999,20 @@ void Graphics::InitializeGrid() {
 
 	for (int i = -gridHalfWidth; i < gridHalfWidth; ++i) {
 		if (i != 0) {
+			float x = i * spacing;
 			if (abs(i % 10) == 0) {
 				// 10mごとの線
-				float x = i * spacing;
 
-				//// -z ~ z
-				//gridVerticesMark_.push_back({ { x,0.1f,-gridHalfWidth * spacing } });
-				//gridVerticesMark_.push_back({ { x,0.1f,gridHalfWidth * spacing } });
+				// -z ~ z
+				gridVerticesMark_.push_back({ { x,0.0f,-gridHalfWidth * spacing }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+				gridVerticesMark_.push_back({ { x,0.0f,gridHalfWidth * spacing }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 
-				//// -x ~ x
-				//gridVerticesMark_.push_back({ -gridHalfWidth * spacing,0.1f,x });
-				//gridVerticesMark_.push_back({ gridHalfWidth * spacing,0.1f,x });
+				// -x ~ x
+				gridVerticesMark_.push_back({ { -gridHalfWidth * spacing,0.0f,x}, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+				gridVerticesMark_.push_back({ {gridHalfWidth * spacing,0.0f,x }, { 0.0f,0.0f }, { 0.0f,1.0f,0.0f } });
 			} else {
 
 				// 1mごとの線
-				float x = i * spacing;
 
 				// -z ~ z
 				gridVertices_.push_back({ {x,0.0f,-gridHalfWidth * spacing}, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
@@ -1001,12 +1026,12 @@ void Graphics::InitializeGrid() {
 	}
 
 	// 原点を通る線
-	/*gridVerticesOrigin_.push_back({ { 0,0,-gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
+	gridVerticesOrigin_.push_back({ { 0,0,-gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 	gridVerticesOrigin_.push_back({ { 0,0,gridHalfWidth }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 	gridVerticesOrigin_.push_back({ { -gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
-	gridVerticesOrigin_.push_back({ { gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });*/
+	gridVerticesOrigin_.push_back({ { gridHalfWidth,0,0 }, {0.0f,0.0f}, {0.0f,1.0f,0.0f} });
 
-
+	/// 通常線
 	// VertexBuffer作成
 	size_t size = sizeof(VertexData) * gridVertices_.size();
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(device_, size);
@@ -1030,6 +1055,51 @@ void Graphics::InitializeGrid() {
 	gridMaterial_.useTexture = false;
 	gridMaterial_.enableLighting = false;
 	gridMaterial_.uvTransform = MakeIdentity4x4();
+
+	/// 強調線
+	// VertexBuffer作成
+	size = sizeof(VertexData) * gridVerticesMark_.size();
+	gridVertexBufferMark_ = CreateBufferResource(device_, size);
+	dst = nullptr;
+	gridVertexBufferMark_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+	memcpy(dst, gridVerticesMark_.data(), size);
+	gridVertexBufferMark_->Unmap(0, nullptr);
+
+	// VBV作成
+	gridVBVMark_.BufferLocation = gridVertexBufferMark_->GetGPUVirtualAddress();
+	gridVBVMark_.SizeInBytes = UINT(size);
+	gridVBVMark_.StrideInBytes = sizeof(VertexData);
+
+	// マテリアル作成
+	gridMaterialResourceMark_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResourceMark_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialDataMark_));
+	gridMaterialMark_.color = Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+	gridMaterialMark_.useTexture = false;
+	gridMaterialMark_.enableLighting = false;
+	gridMaterialMark_.uvTransform = MakeIdentity4x4();
+
+	/// 原点の線
+	// VertexBuffer作成
+	size = sizeof(VertexData) * gridVerticesOrigin_.size();
+	gridVertexBufferOrigin_ = CreateBufferResource(device_, size);
+	dst = nullptr;
+	gridVertexBufferOrigin_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+	memcpy(dst, gridVerticesOrigin_.data(), size);
+	gridVertexBufferOrigin_->Unmap(0, nullptr);
+
+	// VBV作成
+	gridVBVOrigin_.BufferLocation = gridVertexBufferOrigin_->GetGPUVirtualAddress();
+	gridVBVOrigin_.SizeInBytes = UINT(size);
+	gridVBVOrigin_.StrideInBytes = sizeof(VertexData);
+
+	// マテリアル作成
+	gridMaterialResourceOrigin_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResourceOrigin_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialDataOrigin_));
+	gridMaterialOrigin_.color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	gridMaterialOrigin_.useTexture = false;
+	gridMaterialOrigin_.enableLighting = false;
+	gridMaterialOrigin_.uvTransform = MakeIdentity4x4();
+
 
 	// トランスフォーム
 	gridTransform_ = { { 1.0f, 1.0f, 1.0f } };

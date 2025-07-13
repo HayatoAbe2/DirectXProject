@@ -314,8 +314,21 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW gridVBV_;
 	Material gridMaterial_;
 
+	// グリッド原点
 	std::vector<VertexData> gridVerticesOrigin_;
+	D3D12_VERTEX_BUFFER_VIEW gridVBVOrigin_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBufferOrigin_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResourceOrigin_;
+	Material* gridMaterialDataOrigin_;
+	Material gridMaterialOrigin_;
+
+	// グリッド強調線
 	std::vector<VertexData> gridVerticesMark_;
+	D3D12_VERTEX_BUFFER_VIEW gridVBVMark_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBufferMark_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResourceMark_;
+	Material* gridMaterialDataMark_;
+	Material gridMaterialMark_;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> gridTransformationResource_;
 	TransformationMatrix* gridTransformationData_;
@@ -325,7 +338,9 @@ private:
 	D3D12_INPUT_LAYOUT_DESC gridInputLayoutDesc_;
 	D3D12_GPU_DESCRIPTOR_HANDLE gridSRVHandleGPU_;
 
+	// グリッド用シェーダー
 	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
+
 
 };
