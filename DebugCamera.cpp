@@ -39,8 +39,8 @@ void DebugCamera::ControlCamera(Input* input) { // 球面座標系での移動
 		float moveX = input->GetMouseMove().x * kMoveSpeed_;
 		float moveY = input->GetMouseMove().y * kMoveSpeed_;
 
-		target_ = Add(target_, Multiply(moveX, -right));
-		target_ = Add(target_, Multiply(moveY, up));
+		target_ = target_ + moveX * -right;
+		target_ = target_+ moveY * up;
 
 	} else {
 
@@ -65,7 +65,7 @@ void DebugCamera::ControlCamera(Input* input) { // 球面座標系での移動
 	// カメラは注視点から後ろ向きにdistance_移動した位置
 	Vector3 back;
 	back = { 0,0,-distance_ };
-	translation_ = Add(target_, back);
+	translation_ = target_ + back;
 }
 
 void DebugCamera::UpdateView() {

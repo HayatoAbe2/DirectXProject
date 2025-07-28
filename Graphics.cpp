@@ -6,16 +6,18 @@
 #include "externals/DirectXTex/d3dx12.h"
 #include <mfobjects.h>
 #include "Sprite.h"
+#include "ShaderCompiler.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
-void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) {
+void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd,Logger* logger) {
 	HRESULT hr;
 
 	clientWidth_ = clientWidth;
 	clientHeight_ = clientHeight;
+	logger_ = logger;
 
 	// DXGIファクトリーの生成
 	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory_));
@@ -85,26 +87,22 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd) 
 	gridInputLayoutDesc_.pInputElementDescs = gridInputElements;
 	gridInputLayoutDesc_.NumElements = _countof(gridInputElements);
 
-	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils_));
-	assert(SUCCEEDED(hr));
-	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler_));
-	assert(SUCCEEDED(hr));
-
-	// 現時点でincludeはしないが、includeに対応するための設定を行っておく
-	hr = dxcUtils_->CreateDefaultIncludeHandler(&includeHandler_);
-	assert(SUCCEEDED(hr));
+	shaderCompiler_ = new ShaderCompiler;
+	shaderCompiler_->Initialize();
 
 	// Shaderをコンパイルする
-	vertexShaderBlob_ = CompileShader(L"Object3D.VS.hlsl",
-		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	vertexShaderBlob_ = shaderCompiler_->Compile(L"Object3D.VS.hlsl",
+		L"vs_6_0", logger_);
 	assert(vertexShaderBlob_ != nullptr);
 
-	pixelShaderBlob_ = CompileShader(L"Object3D.PS.hlsl",
-		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	pixelShaderBlob_ = shaderCompiler_->Compile(L"Object3D.PS.hlsl",
+		L"ps_6_0",logger_);
 	assert(pixelShaderBlob_ != nullptr);
 
 	CreatePipelineState();
 
+	// コンパイラ解放
+	delete shaderCompiler_;
 
 	CreateLightBuffer();
 
@@ -291,7 +289,7 @@ void Graphics::SelectAdapter() {
 		// ソフトウェアアダプタかチェック
 		if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
 			// 採用したアダプタの情報をログに出力(wstring)
-			logger_.Log(logger_.GetStream(), logger_.ConvertString(std::format(L"Use Adapter : {}\n", adapterDesc.Description)));
+			logger_->Log(logger_->GetStream(), logger_->ConvertString(std::format(L"Use Adapter : {}\n", adapterDesc.Description)));
 			break;
 		}
 		useAdapter_ = nullptr; // ソフトウェアアダプタの場合
@@ -317,7 +315,7 @@ void Graphics::CreateD3D12Device() {
 		// 指定した機能レベルでデバイスが生成できたかを確認
 		if (SUCCEEDED(hr)) {
 			// 生成できたのでログ出力を行ってループを抜ける
-			logger_.Log(logger_.GetStream(), std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
+			logger_->Log(logger_->GetStream(), std::format("FeatureLevel : {}\n", featureLevelStrings[i]));
 			break;
 		}
 	}
@@ -325,7 +323,7 @@ void Graphics::CreateD3D12Device() {
 	// デバイスの生成がうまくいかなかったので起動できない
 	assert(device_ != nullptr);
 	// 初期化完了のログを出す
-	logger_.Log(logger_.GetStream(), "Complete create D3D12Device.\n");
+	logger_->Log(logger_->GetStream(), "Complete create D3D12Device.\n");
 }
 
 void Graphics::DebugFilter() {
@@ -588,7 +586,7 @@ Sprite* Graphics::CreateSRV(Sprite* sprite) {
 DirectX::ScratchImage Graphics::LoadTexture(const std::string& filePath) {
 	// テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
-	std::wstring filePathW = logger_.ConvertString(filePath);
+	std::wstring filePathW = logger_->ConvertString(filePath);
 	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
 	assert(SUCCEEDED(hr));
 
@@ -733,7 +731,7 @@ void Graphics::CreateRootSignature() {
 	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob_, &errorBlob_);
 	if (FAILED(hr)) {
-		logger_.Log(logger_.GetStream(), reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
+		logger_->Log(logger_->GetStream(), reinterpret_cast<char*>(errorBlob_->GetBufferPointer()));
 		assert(false);
 	}
 	// バイナリを元に生成
@@ -804,12 +802,12 @@ void Graphics::CreatePipelineState() {
 	// グリッド用の設定
 	//
 
-	gridVSBlob_ = CompileShader(L"Grid.VS.hlsl",
-		L"vs_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	gridVSBlob_ = shaderCompiler_->Compile(L"Grid.VS.hlsl",
+		L"vs_6_0", logger_);
 	assert(gridVSBlob_ != nullptr);
 
-	gridPSBlob_ = CompileShader(L"Grid.PS.hlsl",
-		L"ps_6_0", dxcUtils_, dxcCompiler_, includeHandler_, logger_.GetStream());
+	gridPSBlob_ = shaderCompiler_->Compile(L"Grid.PS.hlsl",
+		L"ps_6_0", logger_);
 	assert(gridPSBlob_ != nullptr);
 
 	// モデル描画用からコピー
@@ -829,63 +827,6 @@ void Graphics::CreatePipelineState() {
 	hr = device_->CreateGraphicsPipelineState(&gridPipelineStateDesc_,
 		IID_PPV_ARGS(&gridPipelineState_));
 	assert(SUCCEEDED(hr));
-}
-
-IDxcBlob* Graphics::CompileShader(const std::wstring& filePath, const wchar_t* profile,
-	IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, std::ostream& os) {
-	// これからシェーダーをコンパイルする旨をログに出す
-	logger_.Log(os, logger_.ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
-	// hlslファイルを読む
-	IDxcBlobEncoding* shaderSource = nullptr;
-	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
-	// 読めなかったら止める
-	assert(SUCCEEDED(hr));
-	// 読み込んだファイルの内容を設定する
-	DxcBuffer shaderSourceBuffer;
-	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
-	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
-	shaderSourceBuffer.Encoding = DXC_CP_UTF8; // UTF8の文字コードであることを確認
-
-	LPCWSTR arguments[] = {
-		filePath.c_str(),			// コンパイル対象のhlslファイル名
-		L"-E", L"main",				// エントリーポイントの指定。基本的にmain以外にはしない
-		L"-T", profile,				// ShaderProfileの設定
-		L"-Zi", L"-Qembed_debug",	// デバッグ用の情報を埋め込む
-		L"-Od",						// 最適化を外しておく
-		L"-Zpr",					// メモリレイアウトは行優先
-	};
-	// 実際にShaderをコンパイルする
-	IDxcResult* shaderResult = nullptr;
-	hr = dxcCompiler->Compile(
-		&shaderSourceBuffer,			// 読み込んだファイル
-		arguments,						// コンパイルオプション
-		_countof(arguments),			// コンパイルオプションの数
-		includeHandler,					// includeが含まれた諸々
-		IID_PPV_ARGS(&shaderResult)		// コンパイル結果
-	);
-	// コンパイルエラーではなくdxcが起動できないなど致命的な状況
-	assert(SUCCEEDED(hr));
-
-	// 警告・エラーが出てたらログに出して止める
-	IDxcBlobUtf8* shaderError = nullptr;
-	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
-	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
-		logger_.Log(os, shaderError->GetStringPointer());
-		// 警告・エラーダメゼッタイ
-		assert(false);
-	}
-
-	// コンパイル結果から実行用のバイナリ部分を取得
-	IDxcBlob* shaderBlob = nullptr;
-	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
-	assert(SUCCEEDED(hr));
-	// 成功したログを出す
-	logger_.Log(os, logger_.ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
-	// もう使わないリソースを解放
-	shaderSource->Release();
-	shaderResult->Release();
-	// 実行用のバイナリを返却
-	return shaderBlob;
 }
 
 void Graphics::SetViewportAndScissor() {

@@ -6,7 +6,7 @@
 #include "Math.h"
 
 Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& filename,
-	Microsoft::WRL::ComPtr<ID3D12Device> device, Graphics &graphics) {
+	Microsoft::WRL::ComPtr<ID3D12Device> device, Graphics& graphics) {
 	// 変数の宣言
 	Model* model = new Model; // 構築するModeldata
 	std::vector<Vector4> positions; // 位置
@@ -23,7 +23,7 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 		std::string identifier;
 		std::istringstream s(line);
 		s >> identifier; // 先頭の識別子を読む
-		
+
 		// 識別子に応じた処理
 		if (identifier == "v") { // 頂点座標
 			Vector4 position;
@@ -139,7 +139,7 @@ std::string Model::LoadMaterialTemplateFile(const std::string& directoryPath, co
 	return mtlFilePath;
 }
 
-void Model::UpdateTransformation(Camera &camera) {
+void Model::UpdateTransformation(Camera& camera) {
 	// モデルのトランスフォーム
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_);
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
@@ -156,7 +156,7 @@ void Model::ResetMaterial() {
 	material_.uvTransform = MakeIdentity4x4();
 }
 
-void Model::Draw(Graphics &graphics,const Vector4 &color) {
+void Model::Draw(Graphics& graphics, const Vector4& color) {
 
 	// マテリアルの適用
 	material_.color = color;
@@ -204,4 +204,3 @@ void Model::UpdateInstanceTransform(const Transform& transform, const Camera& ca
 	// 外部CBVの指定
 	SetExternalCBV(instanceCBVResource_->GetGPUVirtualAddress() + index * instanceCBVStride_);
 }
-

@@ -44,7 +44,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw(Camera& camera, Graphics& graphics);
 
 	/// <summary>
 	// 入力の受付
@@ -119,8 +119,6 @@ public:
 	/// </summary>
 	/// <param name="enemy">敵</param>
 	void OnCollision(const Enemy* enemy);
-
-	void Draw(Camera& camera, Graphics& graphics);
 
 	/// <summary>
 	/// ワールドトランスフォームを取得

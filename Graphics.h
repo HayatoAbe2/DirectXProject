@@ -15,13 +15,14 @@
 #include "VertexData.h"
 
 class Sprite;
+class ShaderCompiler;
 class Graphics {
 public:
 
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd);
+	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger);
 
 	/// <summary>
 	/// モデル用SRV作成
@@ -134,11 +135,6 @@ private:
 	/// Blend,Rasterizer,DepthStencil設定
 	/// </summary>
 	void CreatePipelineState();
-
-	/// <summary>
-	/// Shaderコンパイル
-	/// </summary>
-	IDxcBlob* CompileShader(const std::wstring& filePath, const wchar_t* profile, IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, std::ostream& os);
 
 	/// <summary>
 	/// Viewport,Scissor設定
@@ -281,7 +277,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
 
 	// ログ
-	Logger logger_;
+	Logger* logger_;
 
 
 	TransformationMatrix* transformationMatrixData_ = nullptr;
@@ -342,5 +338,6 @@ private:
 	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
 
-
+	// シェーダーコンパイルクラス
+	ShaderCompiler* shaderCompiler_ = nullptr;
 };

@@ -1,0 +1,28 @@
+#pragma once
+
+class Graphics;
+class BaseScene;
+class Input;
+
+/// <summary>
+/// シーン管理
+/// </summary>
+class SceneManager {
+public:
+	SceneManager();
+	~SceneManager();
+
+	// シーンの初期化
+	void Initialize();
+	// シーンの更新
+	void Update(Input* input);
+	// シーンの描画
+	void Draw(Graphics* graphics);
+	// シーンの終了
+	void Finalize();
+
+private:
+	// 現在のシーン
+	BaseScene* currentScene_;
+};
+
