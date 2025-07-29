@@ -7,12 +7,14 @@
 #include <mfobjects.h>
 #include "Sprite.h"
 #include "ShaderCompiler.h"
+#include "DescriptorHeapManager.h"
+#include "RenderTargetManager.h"
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
-void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd,Logger* logger) {
+void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	HRESULT hr;
 
 	clientWidth_ = clientWidth;
@@ -43,13 +45,14 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd,L
 
 	// スワップチェーンの生成
 	InitializeSwapChain(hwnd);
-	for (int i = 0; i < 2; ++i) {
-		hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&swapChainResources_[i]));
-		assert(SUCCEEDED(hr));
-	}
 
 	// ディスクリプタヒープの初期化
-	InitializeDescriptorHeaps();
+	descriptorHeapManager_ = new DescriptorHeapManager;
+	descriptorHeapManager_->Initialize(device_);
+
+	// RTV作成
+	renderTargetManager_ = new RenderTargetManager;
+	renderTargetManager_->InitializeSwapChainBuffers(swapChain_, device_, descriptorHeapManager_);
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource_ = CreateDepthStencilTextureResource(device_, clientWidth_, clientHeight_);
@@ -58,7 +61,7 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd,L
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // Format。基本的にはResourceに合わせる
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D; // 2DTexture
 	// DSVHeapの先頭にDSVを作る
-	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, dsvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart());
+	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, descriptorHeapManager_->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart());
 
 	CreateRootSignature();
 	// InputLayout
@@ -96,7 +99,7 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd,L
 	assert(vertexShaderBlob_ != nullptr);
 
 	pixelShaderBlob_ = shaderCompiler_->Compile(L"Object3D.PS.hlsl",
-		L"ps_6_0",logger_);
+		L"ps_6_0", logger_);
 	assert(pixelShaderBlob_ != nullptr);
 
 	CreatePipelineState();
@@ -169,7 +172,8 @@ void Graphics::DrawSprite(Sprite& sprite) {
 
 void Graphics::Finalize() {
 	if (errorBlob_) errorBlob_->Release();
-	if (includeHandler_) includeHandler_->Release();
+	delete descriptorHeapManager_;
+	delete renderTargetManager_;
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
@@ -187,28 +191,29 @@ void Graphics::BeginFrame() {
 	// Noneにしておく
 	barrier_.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	// バリアを張る対象のリソース。現存のバックバッファに対して行う
-	barrier_.Transition.pResource = swapChainResources_[backBufferIndex_].Get();
+	barrier_.Transition.pResource = renderTargetManager_->GetSwapChainResource(backBufferIndex_).Get();
 	// 遷移前(現存)のResourceState
 	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	// 遷移後のResourceState
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
-	assert(swapChainResources_[backBufferIndex_]);
+	assert(renderTargetManager_->GetSwapChainResource(backBufferIndex_));
 
 	commandList_->ResourceBarrier(1, &barrier_);
 
 
 	// 描画先のRTVとDSVを設定する
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap_, descriptorSizeDSV_, 0);
-	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex_], false, &dsvHandle);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(descriptorHeapManager_->GetDSVHeap(), descriptorHeapManager_->GetDSVHeapSize(), 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = renderTargetManager_->GetRTVHandle(backBufferIndex_);
+	commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	// 指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f }; // 青っぽい色。RGBAの順
-	commandList_->ClearRenderTargetView(rtvHandles_[backBufferIndex_], clearColor, 0, nullptr);
+	commandList_->ClearRenderTargetView(renderTargetManager_->GetRTVHandle(backBufferIndex_), clearColor, 0, nullptr);
 	// 指定した深度で画面全体をクリアする
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap_.Get() };
+	ID3D12DescriptorHeap * descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
 
@@ -222,8 +227,6 @@ void Graphics::BeginFrame() {
 	ImGui::NewFrame();
 
 	ImGui::Begin("window"); {
-		ImGui::Text("Press SPACE to start GameScene.");
-		ImGui::Text("Press RSHIFT to toggle DebugCamera.");
 		ImGui::End();
 	}
 }
@@ -404,28 +407,6 @@ void Graphics::InitializeSwapChain(HWND hwnd) {
 	assert(SUCCEEDED(hr));
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Graphics::CreateDescriptorHeap(
-	const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
-
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
-	descriptorHeapDesc.Type = heapType;
-	descriptorHeapDesc.NumDescriptors = numDescriptors;
-	descriptorHeapDesc.Flags = shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	HRESULT hr = device->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&descriptorHeap));
-	// ディスクリプタヒープが作れなかったので起動できない
-	assert(SUCCEEDED(hr));
-	return descriptorHeap;
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE Graphics::GetCPUDescriptorHandle(
-	const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
-
-	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	handleCPU.ptr += (descriptorSize * index);
-	return handleCPU;
-}
-
 Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateDepthStencilTextureResource(
 	const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height) {
 
@@ -463,34 +444,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateDepthStencilTextureResour
 	return resource;
 }
 
-void Graphics::InitializeDescriptorHeaps() {
-	// RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
-	rtvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
-	// SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
-	srvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-	// DSV用のヒープでディスクリプタの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
-	dsvDescriptorHeap_ = CreateDescriptorHeap(device_, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
-
-	// DescriptorSizeを取得しておく
-	descriptorSizeSRV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	descriptorSizeRTV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	descriptorSizeDSV_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-	// RTVの設定
-	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;		// 出力結果をSRGBに変換して書き込む
-	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;	// 2dテクスチャとして書き込む
-	// ディスクリプタの先頭を取得する
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = GetCPUDescriptorHandle(rtvDescriptorHeap_, descriptorSizeRTV_, 0);
-	// RTVを2つ作るのでディスクリプタ2つ
-	// まず1つ目を作る。1つ目は最初のところに作る。場所を指定
-	rtvHandles_[0] = rtvStartHandle;
-	device_->CreateRenderTargetView(swapChainResources_[0].Get(), &rtvDesc_, rtvHandles_[0]);
-	// 2つ目のディスクリプタハンドルを得る(自力で)
-	rtvHandles_[1].ptr = rtvHandles_[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	// 2つ目を作る
-	device_->CreateRenderTargetView(swapChainResources_[1].Get(), &rtvDesc_, rtvHandles_[1]);
-}
-
 Model* Graphics::CreateSRV(Model* model) {
 	// Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture(model->GetMaterial());
@@ -521,11 +474,11 @@ Model* Graphics::CreateSRV(Model* model) {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
-	textureSrvHandleGPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
 	// SRVの生成
 	device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
@@ -567,11 +520,11 @@ Sprite* Graphics::CreateSRV(Sprite* sprite) {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
-	textureSrvHandleGPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
 	// SRVの生成
 	device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
@@ -864,10 +817,10 @@ void Graphics::InitializeImGui(HWND hwnd) {
 	ImGui_ImplWin32_Init(hwnd);
 	ImGui_ImplDX12_Init(device_.Get(),
 		swapChainDesc_.BufferCount,
-		rtvDesc_.Format,
-		srvDescriptorHeap_.Get(),
-		srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart(),
-		srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart()
+		renderTargetManager_->GetRTVDesc_().Format,
+		descriptorHeapManager_->GetSRVHeap().Get(),
+		descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart(),
+		descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
 	);
 }
 
@@ -1080,12 +1033,20 @@ void Graphics::InitializeGrid() {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap_->GetCPUDescriptorHandleForHeapStart();
-	gridSRVHandleGPU_ = srvDescriptorHeap_->GetGPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+	gridSRVHandleGPU_ = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
 	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += descriptorSizeSRV_ * currentSRVIndex_;
-	gridSRVHandleGPU_.ptr += descriptorSizeSRV_ * currentSRVIndex_;
+	textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	gridSRVHandleGPU_.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
 	// SRVの生成
 	device_->CreateShaderResourceView(gridTextureResource_.Get(), &srvDesc, textureSrvHandleCPU);
 	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE Graphics::GetCPUDescriptorHandle(
+	const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
+
+	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	handleCPU.ptr += (descriptorSize * index);
+	return handleCPU;
 }

@@ -16,6 +16,8 @@
 
 class Sprite;
 class ShaderCompiler;
+class DescriptorHeapManager;
+class RenderTargetManager;
 class Graphics {
 public:
 
@@ -167,15 +169,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& commandList);
 
 	/// <summary>
-	/// DescriptorHeap作成
-	/// </summary>
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(
-		const Microsoft::WRL::ComPtr<ID3D12Device>& device,
-		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
-		UINT numDescriptors,
-		bool shaderVisible);
-
-	/// <summary>
 	/// DescriptorHandle取得
 	/// </summary>
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
@@ -223,25 +216,9 @@ private:
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
-	// スワップチェーンのリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[2] = { nullptr, nullptr };
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2];
+	
 	UINT backBufferIndex_;
 
-	// RTV
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap_ = nullptr;
-
-	// SRV
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap_ = nullptr;
-	UINT currentSRVIndex_ = 0; // SRVのインデックス
-
-	// DSV
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_ = nullptr;
-
-	// 各DescriptorHeapのサイズ
-	uint32_t descriptorSizeSRV_;
-	uint32_t descriptorSizeRTV_;
-	uint32_t descriptorSizeDSV_;
 
 	// 深度ステンシルリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_ = nullptr;
@@ -251,11 +228,6 @@ private:
 
 	// inputLayout
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_;
-
-	// dxc
-	IDxcUtils* dxcUtils_;
-	IDxcCompiler3* dxcCompiler_;
-	IDxcIncludeHandler* includeHandler_;
 
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc_{};
@@ -276,10 +248,6 @@ private:
 	ID3DBlob* errorBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
 
-	// ログ
-	Logger* logger_;
-
-
 	TransformationMatrix* transformationMatrixData_ = nullptr;
 	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
 
@@ -296,8 +264,6 @@ private:
 
 	// 使用するモデル数
 	UINT modelCount_ = 0;
-
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_ = {};
 
 	// グリッドで使用
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> gridPipelineState_;
@@ -338,6 +304,18 @@ private:
 	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
 
+	// SRVのインデックス
+	UINT currentSRVIndex_ = 0;
+
+	// ログクラス
+	Logger* logger_;
+
 	// シェーダーコンパイルクラス
 	ShaderCompiler* shaderCompiler_ = nullptr;
+
+	// ディスクリプタヒープ管理クラス
+	DescriptorHeapManager* descriptorHeapManager_ = nullptr;
+
+	// 
+	RenderTargetManager* renderTargetManager_ = nullptr;
 };

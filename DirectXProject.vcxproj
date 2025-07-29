@@ -103,6 +103,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="DeathParticles.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
+    <ClCompile Include="DescriptorHeapManager.cpp" />
     <ClCompile Include="DumpExporter.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
@@ -124,6 +125,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="ModelManager.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="RenderTargetManager.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="ShaderCompiler.cpp" />
     <ClCompile Include="Skydome.cpp" />
@@ -158,6 +160,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="DeathParticles.h" />
     <ClInclude Include="DebugCamera.h" />
+    <ClInclude Include="DescriptorHeapManager.h" />
     <ClInclude Include="DictionalLight.h" />
     <ClInclude Include="DumpExporter.h" />
     <ClInclude Include="Enemy.h" />
@@ -183,6 +186,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="ModelManager.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="RenderTargetManager.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="ShaderCompiler.h" />
