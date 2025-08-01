@@ -158,14 +158,14 @@ void GameScene::Draw(Graphics* graphics) {
 					ImGui::ColorEdit3("Color", &color_.x);
 				}
 				ImGui::PopID();
-				if (isRainbow_) {
-					time_ += 1.0f / 60.0f;  // 秒数など
-					float hue = fmod(time_ * 0.1f, 1.0f);  // H: 0.0〜1.0 をループ
-					color_ = HSVtoRGB(hue);
-				}
+			}
+			if (isRainbow_) {
+				time_ += 1.0f / 60.0f;  // 秒数など
+				float hue = fmod(time_ * 0.2f, 1.0f);  // H: 0.0〜1.0 をループ
+				color_ = HSVtoRGB(hue);
 			}
 			suzanneModel_->SetTransform(transformSuzanne_);
-			suzanneModel_->UpdateTransformation(*camera_); 
+			suzanneModel_->UpdateTransformation(*camera_);
 			suzanneModel_->Draw(*graphics,color_);
 
 			ImGui::EndTabItem();

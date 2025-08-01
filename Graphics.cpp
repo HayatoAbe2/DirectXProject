@@ -815,6 +815,7 @@ void Graphics::CreateLightBuffer() {
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
 	directionalLightData_->intensity = 1.0f;
+	directionalLightData_->lightingType = 1;
 }
 
 void Graphics::InitializeImGui(HWND hwnd) {
@@ -1220,10 +1221,15 @@ void Graphics::ImGuiEditLight() {
 	ImGui::DragFloat3("Direction", &directionalLightData_->direction.x, 0.1f);
 	directionalLightData_->direction = Normalize(directionalLightData_->direction);
 	ImGui::DragFloat("Intencity", &directionalLightData_->intensity, 0.1f);
+	ImGui::Text("Lighting Type");
+	ImGui::RadioButton("Lambert", &directionalLightData_->lightingType,0);
+	ImGui::RadioButton("HalfLambert", &directionalLightData_->lightingType,1);
+	
 	if (ImGui::Button("Reset Light")) {
 		directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
 		directionalLightData_->intensity = 1.0f;
+		directionalLightData_->lightingType = 1;
 	}
 }
 

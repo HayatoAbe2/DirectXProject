@@ -12,6 +12,7 @@ struct DirectionalLight
     float32_t4 color;
     float32_t3 direction;
     float intensity;
+    int32_t lightingType;
 };
 
 Texture2D<float32_t4> gTexture : register(t0);
@@ -37,9 +38,15 @@ PixelShaderOutput main(VertexShaderOutput input){
     
     if (gMaterial.enableLighting != 0)
     {
-        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
-        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        output.color *= gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        if (gDirectionalLight.lightingType == 0)
+        {
+            float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+            output.color *= gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        }else{
+            float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+            float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+            output.color *= gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        }
     }
     
     return output;
