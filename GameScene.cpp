@@ -4,6 +4,8 @@
 #include "Model.h"
 #include "Camera.h"
 #include "DebugCamera.h"
+#include "Math.h"
+#include "Audio.h"
 #include <numbers>
 
 #include "externals/imgui/imgui.h"
@@ -19,6 +21,7 @@ GameScene::~GameScene() {
 	delete multiMeshModel_;
 	delete teapotModel_;
 	delete bunnyModel_;
+	delete suzanneModel_;
 }
 
 void GameScene::Initialize(Graphics* graphics) {
@@ -29,7 +32,6 @@ void GameScene::Initialize(Graphics* graphics) {
 
 	// スプライト
 	checkerSprite_ = Sprite::Initialize(graphics, "Resources/uvChecker.png", { 256,256 });
-	checkerSprite_->ResetMaterial();
 
 	// 球
 	transformSphere_.translate = { 3,0,0 };
@@ -48,6 +50,11 @@ void GameScene::Initialize(Graphics* graphics) {
 	transformBunny_.translate = { 2,0,0 };
 	transformBunny_.rotate = { 0,float(std::numbers::pi),0 };
 
+	// suzanne
+	suzanneModel_ = Model::LoadObjFile("Resources", "suzanne.obj", *graphics);
+	transformSuzanne_.translate = { 0,-1,0 };
+	transformSuzanne_.rotate = { 0,float(std::numbers::pi),0 };
+
 	// カメラ
 	debugCamera_ = new DebugCamera;
 	debugCamera_->Initialize();
@@ -59,9 +66,13 @@ void GameScene::Initialize(Graphics* graphics) {
 	ImGui::SetNextWindowPos({ 10,10 });
 }
 
-void GameScene::Update(Input* input) {
+void GameScene::Update(Input* input, Audio* audio) {
 
 	debugCamera_->Update(input);
+
+	if(input->IsTrigger(DIK_SPACE)){
+		audio->SoundPlay(L"Resources/Alarm01.wav");
+	}
 }
 
 void GameScene::Draw(Graphics* graphics) {
@@ -115,7 +126,7 @@ void GameScene::Draw(Graphics* graphics) {
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem("Teapot,Bunny")) {
+		if (ImGui::BeginTabItem("Teapot,Bunny,Suzanne")) {
 			if (ImGui::CollapsingHeader("Teapot")) {
 				ImGui::PushID("teapot");
 				ImGui::DragFloat3("Scale", &transformTeapot_.scale.x, 0.01f);
@@ -137,6 +148,25 @@ void GameScene::Draw(Graphics* graphics) {
 			bunnyModel_->SetTransform(transformBunny_);
 			bunnyModel_->UpdateTransformation(*camera_);
 			bunnyModel_->Draw(*graphics);
+
+			if (ImGui::CollapsingHeader("Suzanne")) {
+				ImGui::PushID("suzanne");
+				ImGui::DragFloat3("Scale", &transformSuzanne_.scale.x, 0.01f);
+				ImGui::DragFloat3("Rotate", &transformSuzanne_.rotate.x, 0.01f);
+				ImGui::DragFloat3("Translate", &transformSuzanne_.translate.x, 0.01f);
+				if (!ImGui::Checkbox("Rainbow", &isRainbow_)) {
+					ImGui::ColorEdit3("Color", &color_.x);
+				}
+				ImGui::PopID();
+				if (isRainbow_) {
+					time_ += 1.0f / 60.0f;  // 秒数など
+					float hue = fmod(time_ * 0.1f, 1.0f);  // H: 0.0〜1.0 をループ
+					color_ = HSVtoRGB(hue);
+				}
+			}
+			suzanneModel_->SetTransform(transformSuzanne_);
+			suzanneModel_->UpdateTransformation(*camera_); 
+			suzanneModel_->Draw(*graphics,color_);
 
 			ImGui::EndTabItem();
 		}

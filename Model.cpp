@@ -5,6 +5,10 @@
 #include "Camera.h"
 #include "Math.h"
 
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+
 Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& filename,
 	 Graphics& graphics) {
 	// 変数の宣言
@@ -49,16 +53,24 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 				s >> vertexDefinition;
 				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
 				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3];
+				uint32_t elementIndices[3]{};
 				for (int32_t element = 0; element < 3; ++element) {
 					std::string index;
 					std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
-					elementIndices[element] = std::stoi(index);
+					if (!index.empty()) {
+						elementIndices[element] = std::stoi(index);
+					}
 				}
 				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
 				Vector4 position = positions[elementIndices[0] - 1]; // 1始まりなので-1
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
+				Vector2 texcoord{};
+				if (!texcoords.empty() && elementIndices[1] > 0) {
+					texcoord = texcoords[elementIndices[1] - 1];
+				}
+				Vector3 normal{};
+				if (!normals.empty() && elementIndices[2] > 0) {
+					normal = normals[elementIndices[2] - 1];
+				}
 				triangle[faceVertex] = { position, texcoord, normal };
 			}
 			// 頂点を逆順で登録することで、周り順を逆にする
@@ -99,7 +111,11 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 	model->materialResource_ = graphics.CreateBufferResource(sizeof(Material));
 	model->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&model->materialData_));
 	model->material_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	model->material_.useTexture = true;
+	if (texcoords.empty()) {
+		model->material_.useTexture = false;
+	} else {
+		model->material_.useTexture = true;
+	}
 	model->material_.enableLighting = true;
 	model->material_.uvTransform = MakeIdentity4x4();
 
@@ -164,7 +180,7 @@ void Model::Draw(Graphics& graphics, const Vector4& color) {
 	*materialData_ = material_;
 
 	graphics.DrawModel(*this);
-	ResetMaterial();
+	
 }
 
 void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
@@ -202,4 +218,10 @@ void Model::UpdateInstanceTransform(const Transform& transform, const Camera& ca
 
 	// 外部CBVの指定
 	SetExternalCBV(instanceCBVResource_->GetGPUVirtualAddress() + index * instanceCBVStride_);
+}
+
+void Model::ImGuiEdit() {
+	ImGui::PushID("Model");
+	ImGui::ColorEdit3("Color", &materialData_->color.x);
+	ImGui::PopID();
 }

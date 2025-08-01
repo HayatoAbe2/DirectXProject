@@ -3,6 +3,7 @@
 class Graphics;
 class BaseScene;
 class Input;
+class Audio;
 
 /// <summary>
 /// シーン管理
@@ -15,7 +16,7 @@ public:
 	// シーンの初期化
 	void Initialize(Graphics* graphics);
 	// シーンの更新
-	void Update(Input* input);
+	void Update(Input* input,Audio* audio);
 	// シーンの描画
 	void Draw(Graphics* graphics);
 	// シーンの終了

@@ -18,8 +18,8 @@ void SceneManager::Initialize(Graphics* graphics) {
 	currentScene_->Initialize(graphics);
 }
 
-void SceneManager::Update(Input* input) {
-	currentScene_->Update(input);
+void SceneManager::Update(Input* input,Audio* audio) {
+	currentScene_->Update(input,audio);
 }
 
 void SceneManager::Draw(Graphics* graphics) {

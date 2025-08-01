@@ -50,6 +50,7 @@ void App::Initialize() {
 	audio_->Initialize();
 	assert(&audio_);
 	logger_->Log(logger_->GetStream(), std::format("XAudio Initialized.\n"));
+	audio_->SoundLoad(L"Resources/Alarm01.wav");
 
 	// DirectInputの初期化
 	input_ = new Input(window_->GetInstance(), window_->GetHwnd());
@@ -90,7 +91,7 @@ void App::Run() {
 			//-------------------------------------------------
 
 			// 更新処理
-			sceneManager_->Update(input_);
+			sceneManager_->Update(input_,audio_);
 
 			// 描画開始時に呼ぶ
 			graphics_->BeginFrame();
@@ -111,6 +112,7 @@ void App::Finalize() {
 	delete sceneManager_;
 
 	// XAudio終了処理
+	audio_->SoundUnload(L"Resources/Alarm01.wav");
 	audio_->Finalize();
 	delete audio_;
 	MFShutdown();

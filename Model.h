@@ -25,6 +25,8 @@ public:
 	// 1つのモデルの、複数のトランスフォームを更新する
 	void UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index);
 
+	void ImGuiEdit();
+
 	std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 	/// <summary>
@@ -53,8 +55,10 @@ public:
 		if (useExternalCBV_) {
 			return externalCBVAddress_;
 		} else { return transformationResource_->GetGPUVirtualAddress(); } };
-	const std::string& GetMaterial()const { return mtlFilePath; };
+	const std::string& GetMtlPath()const { return mtlFilePath; };
 	const D3D12_GPU_VIRTUAL_ADDRESS GetMaterialAddress()const { return materialResource_->GetGPUVirtualAddress(); }
+	const Vector4 GetColor()const { return material_.color; };
+
 
 	///
 	/// Setter
@@ -106,6 +110,13 @@ public:
 	/// <param name="vertexBufferView"></param>
 	void SetVertexBufferView(const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView) { vertexBufferView_ = vertexBufferView; }
 
+	/// <summary>
+	/// 色設定
+	/// </summary>
+	/// <param name="color"></param>
+	void SetColor(const Vector4& color) {
+		material_.color = color;
+	}
 private:
 
 	// モデルデータ

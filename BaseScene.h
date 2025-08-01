@@ -1,6 +1,7 @@
 #pragma once
 #include <wtypes.h>
 class Input;
+class Audio;
 class Graphics;
 
 /// <summary>
@@ -19,7 +20,7 @@ public:
 	/// <summary>
 	/// 更新処理
 	/// </summary>
-	virtual void Update(Input* input) = 0;
+	virtual void Update(Input* input,Audio* audio) = 0;
 	
 	/// <summary>
 	/// 描画処理

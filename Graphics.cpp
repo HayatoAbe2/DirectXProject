@@ -136,8 +136,10 @@ void Graphics::DrawModel(Model& model) {
 	// wvp用のCBufferの場所を設定
 	commandList_->SetGraphicsRootConstantBufferView(1, model.GetCBV());
 
-	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
-	commandList_->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+	if (model.GetTextureSRVHandle().ptr != 0) {
+		// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+		commandList_->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+	}
 
 	// ライト
 	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
@@ -446,48 +448,53 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateDepthStencilTextureResour
 }
 
 Model* Graphics::CreateSRV(Model* model) {
-	// Textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture(model->GetMaterial());
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device_, metadata);
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device_, commandList_);
+	if (!model->GetMtlPath().empty()) {
+		// Textureを読んで転送する
+		DirectX::ScratchImage mipImages = LoadTexture(model->GetMtlPath());
+		const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+		Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = CreateTextureResource(device_, metadata);
+		Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(textureResource, mipImages, device_, commandList_);
 
-	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
-	commandList_->Close();
-	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
-	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
-	// 実行を待つ
-	fenceValue_++;
-	commandQueue_->Signal(fence_.Get(), fenceValue_); // シグナルを送る
-	if (fence_->GetCompletedValue() < fenceValue_) {
-		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
-		WaitForSingleObject(fenceEvent_, INFINITE); // 待機
+		// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+		commandList_->Close();
+		Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
+		commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
+		// 実行を待つ
+		fenceValue_++;
+		commandQueue_->Signal(fence_.Get(), fenceValue_); // シグナルを送る
+		if (fence_->GetCompletedValue() < fenceValue_) {
+			fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+			WaitForSingleObject(fenceEvent_, INFINITE); // 待機
+		}
+		// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
+		commandAllocator_->Reset();
+		commandList_->Reset(commandAllocator_.Get(), nullptr);
+
+		// metaDataを基にSRVの設定
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+		srvDesc.Format = metadata.format;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+		// SRVを作成するDescriptorHeapの場所を決める
+		D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+		D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+		// 先頭はImGuiが使っているのでその次を使う
+		textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+		textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+		// SRVの生成
+		device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
+		currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+
+		// textureResourceをモデルに設定
+		model->SetTextureResource(textureResource);
+		// SRVのハンドルをモデルに設定
+		model->SetTextureSRVHandle(textureSrvHandleGPU);
+	} else {
+		model->SetTextureSRVHandle({ 0 });
+		model->SetTextureResource(nullptr);
 	}
-	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
-	commandAllocator_->Reset();
-	commandList_->Reset(commandAllocator_.Get(), nullptr);
-
-	// metaDataを基にSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	// 先頭はImGuiが使っているのでその次を使う
-	textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-	textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-	// SRVの生成
-	device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
-
-	// textureResourceをモデルに設定
-	model->SetTextureResource(textureResource);
-	// SRVのハンドルをモデルに設定
-	model->SetTextureSRVHandle(textureSrvHandleGPU);
 	return model;
 }
 
