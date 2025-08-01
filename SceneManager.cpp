@@ -13,9 +13,9 @@ SceneManager::~SceneManager() {
 	delete currentScene_;
 }
 
-void SceneManager::Initialize() {
+void SceneManager::Initialize(Graphics* graphics) {
 	currentScene_ = new GameScene();
-	currentScene_->Initialize();
+	currentScene_->Initialize(graphics);
 }
 
 void SceneManager::Update(Input* input) {

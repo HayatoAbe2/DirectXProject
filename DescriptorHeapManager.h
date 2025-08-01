@@ -9,7 +9,7 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="device">デバイス</param>
-	void Initialize(Microsoft::WRL::ComPtr<ID3D12Device> device);
+	void Initialize(ID3D12Device* device);
 
 	/// <summary>
 	/// DescriptorHeap作成
@@ -19,7 +19,7 @@ public:
 	/// <param name="numDescriptors"></param>
 	/// <param name="shaderVisible"></param>
 	/// <returns></returns>
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 
 	/// <summary>
 	/// DescriptorHeap取得

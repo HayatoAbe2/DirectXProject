@@ -7,7 +7,7 @@ class DebugCamera;
 class Camera {
 public:
 
-	Transform transform_;
+	Transform transform_ = { {1,1,1} };
 	Matrix4x4 viewMatrix_;
 	Matrix4x4 projectionMatrix_;
 

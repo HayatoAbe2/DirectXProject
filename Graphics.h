@@ -54,6 +54,11 @@ public:
 	void DrawGrid(Camera& camera);
 
 	/// <summary>
+	/// 球描画
+	/// </summary>
+	void DrawSphere(Transform& transform, Camera& camera);
+
+	/// <summary>
 	/// 解放処理(ループ終了後に行う)
 	/// </summary>
 	void Finalize();
@@ -74,12 +79,25 @@ public:
 	/// <param name="device"></param>
 	/// <param name="sizeInBytes">バッファサイズ</param>
 	/// <returns>作成したリソース</returns>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
 	// アクセサ
 	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() const { return device_; }
 	int32_t GetWindowWidth() { return clientWidth_; };
 	int32_t GetWindowHeight() { return clientHeight_; };
+
+	// ImGui操作用関数
+	// ImGuiがBegin()後,End()前に呼び出す
+
+	/// <summary>
+	/// ライティングの操作
+	/// </summary>
+	void ImGuiEditLight();
+
+	/// <summary>
+	/// 球の操作
+	/// </summary>
+	void ImGuiEditSphere();
 
 private:
 
@@ -122,11 +140,6 @@ private:
 	/// SwapChain初期化
 	/// </summary>
 	void InitializeSwapChain(HWND hwnd);
-
-	/// <summary>
-	/// DescriptorHeap初期化,RTV設定
-	/// </summary>
-	void InitializeDescriptorHeaps();
 
 	/// <summary>
 	/// RootSignature,RootParameter,Sampler設定
@@ -185,6 +198,11 @@ private:
 	/// グリッド初期化
 	/// </summary>
 	void InitializeGrid();
+
+	/// <summary>
+	/// 球初期化
+	/// </summary>
+	void InitializeSphere();
 
 
 	// 画面サイズ
@@ -316,6 +334,24 @@ private:
 	// ディスクリプタヒープ管理クラス
 	DescriptorHeapManager* descriptorHeapManager_ = nullptr;
 
-	// 
+	// RTV設定など
 	RenderTargetManager* renderTargetManager_ = nullptr;
+
+	// 球体描画系
+	struct SphereDrawer {
+		std::vector<VertexData> vertices;
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = nullptr;
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+		Material material;
+		Material* materialData = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> transformResource = nullptr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = nullptr;
+		D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU;
+		TransformationMatrix* transformData = nullptr;
+	};
+	SphereDrawer sphereDrawer_;
+
+	// Matrix4x4->Vector3の保持(ImGui編集用)
+	Transform sphereSRT_ = { 1,1,1 };
 };

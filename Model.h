@@ -11,7 +11,7 @@ class Camera;
 class Model {
 public:
 
-	Model* LoadObjFile(const std::string& directoryPath, const std::string& filename, Microsoft::WRL::ComPtr<ID3D12Device> device, Graphics& graphics);
+	static Model* LoadObjFile(const std::string& directoryPath, const std::string& filename, Graphics& graphics);
 
 	/// <summary>
 	/// 描画のため、モデルのトランスフォームデータを更新
@@ -59,8 +59,6 @@ public:
 	///
 	/// Setter
 	///
-
-
 
 	/// <summary>
 	/// SRVのGPUハンドル設定
@@ -113,20 +111,20 @@ private:
 	// モデルデータ
 	std::vector<VertexData> vertices_;
 	std::string mtlFilePath;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-	Material* materialData_;
+	Material* materialData_ = nullptr;
 	Material material_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Transform transform_;
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU_ = {};
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_;
-	TransformationMatrix* transformationData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_ = nullptr;
+	TransformationMatrix* transformationData_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
 
 	// 複数体描画用（必要なときだけ使う）
-	Microsoft::WRL::ComPtr<ID3D12Resource> instanceCBVResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instanceCBVResource_ = nullptr;
 	uint8_t* instanceCBVMappedPtr_ = nullptr;
 	UINT instanceCBVStride_ = 0;
 	// 外部CBV指定の有無とそのアドレス

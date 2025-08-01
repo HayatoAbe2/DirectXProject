@@ -1,10 +1,14 @@
 #include "Sprite.h"
 #include "Material.h"
 
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+
 Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 size) {
 	Sprite* sprite = new Sprite;
 	// Sprite用のマテリアルリソースを作る
-	sprite->materialResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(Material));
+	sprite->materialResource_ = graphics->CreateBufferResource(sizeof(Material));
 	sprite->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->materialData_));
 	sprite->materialData_->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	sprite->materialData_->useTexture = true;
@@ -19,7 +23,7 @@ Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 
 	};
 
 	// Sprite用のインデックスリソースを作成する
-	sprite->indexResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(uint32_t) * 6);
+	sprite->indexResource_ = graphics->CreateBufferResource(sizeof(uint32_t) * 6);
 
 	// リソースの先頭のアドレスから使う
 	sprite->indexBufferView_.BufferLocation = sprite->indexResource_->GetGPUVirtualAddress();
@@ -34,7 +38,7 @@ Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 
 	indexDataSprite[3] = 1;		indexDataSprite[4] = 3;		indexDataSprite[5] = 2;
 
 	// Sprite用の頂点リソースを作る
-	sprite->vertexResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(VertexData) * 4);
+	sprite->vertexResource_ = graphics->CreateBufferResource(sizeof(VertexData) * 4);
 	// 頂点バッファビューを作成する
 	// リソースの先頭のアドレスから使う
 	sprite->vertexBufferView_.BufferLocation = sprite->vertexResource_->GetGPUVirtualAddress();
@@ -62,7 +66,7 @@ Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 
 	}
 
 	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	sprite->transformationResource_ = graphics->CreateBufferResource(graphics->GetDevice(), sizeof(TransformationMatrix));
+	sprite->transformationResource_ = graphics->CreateBufferResource(sizeof(TransformationMatrix));
 	// データを書き込む
 	// 書き込むためのアドレスを取得
 	sprite->transformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&sprite->transformationData_));
@@ -106,4 +110,13 @@ void Sprite::UpdateTransform(Camera* camera, float kClientWidth, float kClientHe
 	// WVPMatrixを作る
 	transformationData_->WVP = worldViewProjectionMatrix;
 	transformationData_->World = worldMatrix;
+}
+
+void Sprite::ImGuiEdit() {
+	ImGui::PushID("Sprite");
+	ImGui::DragFloat3("Scale", &transform_.scale.x, 0.01f);
+	ImGui::DragFloat3("Rotate", &transform_.rotate.x, 0.01f);
+	ImGui::DragFloat3("Translate", &transform_.translate.x, 0.01f);
+	ImGui::ColorEdit3("Color", &materialData_->color.x);
+	ImGui::PopID();
 }

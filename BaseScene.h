@@ -9,10 +9,12 @@ class Graphics;
 class BaseScene {
 public:
 
+	virtual ~BaseScene() = default;
+
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	virtual void Initialize() = 0;
+	virtual void Initialize(Graphics* graphics) = 0;
 
 	/// <summary>
 	/// 更新処理

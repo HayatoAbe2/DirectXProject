@@ -1,7 +1,7 @@
 #include "DescriptorHeapManager.h"
 #include <cassert>
 
-void DescriptorHeapManager::Initialize(Microsoft::WRL::ComPtr<ID3D12Device> device) {
+void DescriptorHeapManager::Initialize(ID3D12Device* device) {
 		// RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
 		rtvDescriptorHeap_ = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 		// SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
@@ -15,7 +15,7 @@ void DescriptorHeapManager::Initialize(Microsoft::WRL::ComPtr<ID3D12Device> devi
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DescriptorHeapManager::CreateDescriptorHeap(
-	const Microsoft::WRL::ComPtr<ID3D12Device>& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
+	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};

@@ -13,7 +13,7 @@ public:
 	~SceneManager();
 
 	// シーンの初期化
-	void Initialize();
+	void Initialize(Graphics* graphics);
 	// シーンの更新
 	void Update(Input* input);
 	// シーンの描画
@@ -23,6 +23,6 @@ public:
 
 private:
 	// 現在のシーン
-	BaseScene* currentScene_;
+	BaseScene* currentScene_ = nullptr;
 };
 

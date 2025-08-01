@@ -56,14 +56,14 @@ void App::Initialize() {
 	assert(&input_);
 	logger_->Log(logger_->GetStream(), std::format("DirectInput Initialized.\n"));
 
-	// シーンマネージャー
-	sceneManager_ = new SceneManager();
-	sceneManager_->Initialize();
-
 	// 描画クラス
 	graphics_ = new Graphics();
 	graphics_->Initialize(kClientWidth,kClientHeight,window_->GetHwnd(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("Graphics Initialized.\n"));
+
+	// シーンマネージャー
+	sceneManager_ = new SceneManager();
+	sceneManager_->Initialize(graphics_);
 }
 
 void App::Run() {

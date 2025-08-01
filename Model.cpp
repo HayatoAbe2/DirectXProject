@@ -6,7 +6,7 @@
 #include "Math.h"
 
 Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& filename,
-	Microsoft::WRL::ComPtr<ID3D12Device> device, Graphics& graphics) {
+	 Graphics& graphics) {
 	// 変数の宣言
 	Model* model = new Model; // 構築するModeldata
 	std::vector<Vector4> positions; // 位置
@@ -70,7 +70,7 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 			std::string materialFilename;
 			s >> materialFilename;
 			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			model->mtlFilePath = LoadMaterialTemplateFile(directoryPath, materialFilename);
+			model->mtlFilePath = model->LoadMaterialTemplateFile(directoryPath, materialFilename);
 
 			// マテリアルからSRVを作成
 			model = graphics.CreateSRV(model);
@@ -79,7 +79,7 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 
 	// VertexBuffer作成
 	size_t size = sizeof(VertexData) * model->vertices_.size();
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = graphics.CreateBufferResource(device, size);
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = graphics.CreateBufferResource(size);
 	VertexData* dst = nullptr;
 	vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
 	memcpy(dst, model->vertices_.data(), size);
@@ -96,7 +96,7 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 	model->vertexBufferView_ = vertexBufferView;
 
 	// マテリアル初期化
-	model->materialResource_ = graphics.CreateBufferResource(graphics.GetDevice(), sizeof(Material));
+	model->materialResource_ = graphics.CreateBufferResource(sizeof(Material));
 	model->materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&model->materialData_));
 	model->material_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	model->material_.useTexture = true;
@@ -107,10 +107,11 @@ Model* Model::LoadObjFile(const std::string& directoryPath, const std::string& f
 	model->transform_ = { { 1.0f, 1.0f, 1.0f } };
 
 	// リソースを作成
-	model->transformationResource_ = graphics.CreateBufferResource(device, sizeof(TransformationMatrix));
+	model->transformationResource_ = graphics.CreateBufferResource(sizeof(TransformationMatrix));
 
 	HRESULT hr = model->transformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&model->transformationData_));
 	assert(SUCCEEDED(hr));
+	assert(model->transformationData_ != nullptr);
 
 	return model;
 }
@@ -170,9 +171,7 @@ void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
 	const UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
 	instanceCBVStride_ = kCBSize;
 
-	instanceCBVResource_ = graphics.CreateBufferResource(
-		graphics.GetDevice(), kCBSize * maxInstances
-	);
+	instanceCBVResource_ = graphics.CreateBufferResource(kCBSize * maxInstances);
 	instanceCBVResource_->Map(0, nullptr, reinterpret_cast<void**>(&instanceCBVMappedPtr_));
 }
 

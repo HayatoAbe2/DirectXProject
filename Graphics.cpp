@@ -13,6 +13,7 @@
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+#include <numbers>
 
 void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	HRESULT hr;
@@ -48,11 +49,11 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 
 	// ディスクリプタヒープの初期化
 	descriptorHeapManager_ = new DescriptorHeapManager;
-	descriptorHeapManager_->Initialize(device_);
+	descriptorHeapManager_->Initialize(device_.Get());
 
 	// RTV作成
 	renderTargetManager_ = new RenderTargetManager;
-	renderTargetManager_->InitializeSwapChainBuffers(swapChain_, device_, descriptorHeapManager_);
+	renderTargetManager_->InitializeSwapChainBuffers(swapChain_.Get(), device_.Get(), descriptorHeapManager_);
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource_ = CreateDepthStencilTextureResource(device_, clientWidth_, clientHeight_);
@@ -115,7 +116,9 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 
 	InitializeImGui(hwnd);
 
+	// 図形描画のための初期化
 	InitializeGrid();
+	InitializeSphere();
 }
 
 void Graphics::DrawModel(Model& model) {
@@ -171,13 +174,14 @@ void Graphics::DrawSprite(Sprite& sprite) {
 }
 
 void Graphics::Finalize() {
-	if (errorBlob_) errorBlob_->Release();
-	delete descriptorHeapManager_;
-	delete renderTargetManager_;
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+
+	if (errorBlob_) errorBlob_->Release();
+	delete descriptorHeapManager_;
+	delete renderTargetManager_;
 }
 
 void Graphics::BeginFrame() {
@@ -213,7 +217,7 @@ void Graphics::BeginFrame() {
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap * descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
 
@@ -222,13 +226,10 @@ void Graphics::BeginFrame() {
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 
+	// ImGuiフレーム
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
-	ImGui::Begin("window"); {
-		ImGui::End();
-	}
 }
 
 void Graphics::EndFrame() {
@@ -591,7 +592,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::UploadTextureData(const Microso
 	// サイズの計算
 	uint64_t intermediateSize = GetRequiredIntermediateSize(texture.Get(), 0, UINT(subresources.size()));
 	// IntermediateResourceを作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(device, intermediateSize);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = CreateBufferResource(intermediateSize);
 
 	// subresourceのデータを書き込んで転送するコマンドを積む
 	UpdateSubresources(commandList.Get(), texture.Get(), intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
@@ -608,7 +609,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::UploadTextureData(const Microso
 	return intermediateResource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes) {
+Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(size_t sizeInBytes) {
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;		// uploadHeapを使う
@@ -627,7 +628,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(const Micr
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	// 実際にリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
-	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+	HRESULT hr = device_->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));
 	assert(SUCCEEDED(hr));
@@ -698,7 +699,7 @@ void Graphics::CreateRootSignature() {
 void Graphics::CreatePipelineState() {
 	// ブレンド設定
 	// すべての色要素を書き込む
-	blendDesc_.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc_.RenderTarget[0].BlendEnable = FALSE;
 	blendDesc_.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
 	blendDesc_.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 	blendDesc_.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
@@ -801,7 +802,7 @@ void Graphics::SetViewportAndScissor() {
 
 void Graphics::CreateLightBuffer() {
 	// DirectionalLight用のResource
-	directionalLightResource_ = CreateBufferResource(device_, sizeof(DirectionalLight));
+	directionalLightResource_ = CreateBufferResource(sizeof(DirectionalLight));
 	// 書き込むためのアドレスを取得
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -928,7 +929,7 @@ void Graphics::InitializeGrid() {
 	/// 通常線
 	// VertexBuffer作成
 	size_t size = sizeof(VertexData) * gridVertices_.size();
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(device_, size);
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(size);
 	VertexData* dst = nullptr;
 	vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
 	memcpy(dst, gridVertices_.data(), size);
@@ -943,7 +944,7 @@ void Graphics::InitializeGrid() {
 	gridVBV_ = vertexBufferView;
 
 	// マテリアル作成
-	gridMaterialResource_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResource_ = CreateBufferResource(sizeof(Material));
 	gridMaterialResource_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialData_));
 	gridMaterial_.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	gridMaterial_.useTexture = false;
@@ -953,7 +954,7 @@ void Graphics::InitializeGrid() {
 	/// 強調線
 	// VertexBuffer作成
 	size = sizeof(VertexData) * gridVerticesMark_.size();
-	gridVertexBufferMark_ = CreateBufferResource(device_, size);
+	gridVertexBufferMark_ = CreateBufferResource(size);
 	dst = nullptr;
 	gridVertexBufferMark_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
 	memcpy(dst, gridVerticesMark_.data(), size);
@@ -965,7 +966,7 @@ void Graphics::InitializeGrid() {
 	gridVBVMark_.StrideInBytes = sizeof(VertexData);
 
 	// マテリアル作成
-	gridMaterialResourceMark_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResourceMark_ = CreateBufferResource(sizeof(Material));
 	gridMaterialResourceMark_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialDataMark_));
 	gridMaterialMark_.color = Vector4(1.0f, 1.0f, 0.0f, 1.0f);
 	gridMaterialMark_.useTexture = false;
@@ -975,7 +976,7 @@ void Graphics::InitializeGrid() {
 	/// 原点の線
 	// VertexBuffer作成
 	size = sizeof(VertexData) * gridVerticesOrigin_.size();
-	gridVertexBufferOrigin_ = CreateBufferResource(device_, size);
+	gridVertexBufferOrigin_ = CreateBufferResource(size);
 	dst = nullptr;
 	gridVertexBufferOrigin_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
 	memcpy(dst, gridVerticesOrigin_.data(), size);
@@ -987,7 +988,7 @@ void Graphics::InitializeGrid() {
 	gridVBVOrigin_.StrideInBytes = sizeof(VertexData);
 
 	// マテリアル作成
-	gridMaterialResourceOrigin_ = CreateBufferResource(device_, sizeof(Material));
+	gridMaterialResourceOrigin_ = CreateBufferResource(sizeof(Material));
 	gridMaterialResourceOrigin_->Map(0, nullptr, reinterpret_cast<void**>(&gridMaterialDataOrigin_));
 	gridMaterialOrigin_.color = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 	gridMaterialOrigin_.useTexture = false;
@@ -998,7 +999,7 @@ void Graphics::InitializeGrid() {
 	// トランスフォーム
 	gridTransform_ = { { 1.0f, 1.0f, 1.0f } };
 	// リソースを作成
-	gridTransformationResource_ = CreateBufferResource(device_, sizeof(TransformationMatrix));
+	gridTransformationResource_ = CreateBufferResource(sizeof(TransformationMatrix));
 
 	HRESULT hr = gridTransformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&gridTransformationData_));
 	assert(SUCCEEDED(hr));
@@ -1043,10 +1044,185 @@ void Graphics::InitializeGrid() {
 	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
 }
 
+void Graphics::InitializeSphere() {
+	// 分割数
+	const uint32_t kSubdivision = 16;
+	const float kLonEvery = 2.0f * float(std::numbers::pi) / float(kSubdivision);
+	const float kLatEvery = float(std::numbers::pi) / float(kSubdivision);
+
+	// 頂点データの書き込み
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -0.5f * float(std::numbers::pi) + kLatEvery * float(latIndex);
+		float latN = lat + kLatEvery;
+		// sin,cos
+		float cosLat = cos(lat);
+		float sinLat = sin(lat);
+		float cosLatN = cos(latN);
+		float sinLatN = sin(latN);
+
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = kLonEvery * float(lonIndex);
+			float cosLon = cos(lon);
+			float sinLon = sin(lon);
+			float cosNextLon = cos(lon + kLonEvery);
+			float sinNextLon = sin(lon + kLonEvery);
+
+			// テクスチャ座標
+			float u = float(lonIndex) / float(kSubdivision);
+			float nextU = float(lonIndex + 1) / float(kSubdivision);
+			float v = 1.0f - float(latIndex) / float(kSubdivision);
+			float nextV = 1.0f - float(latIndex + 1) / float(kSubdivision);
+
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+
+			// 頂点位置
+			// BL
+			sphereDrawer_.vertices.push_back({
+			{ cosLat * cosLon,  sinLat,  cosLat * sinLon, 1.0f },		// position
+			{ u,  v },													// texcoord
+			{Normalize({ cosLat * cosLon,  sinLat,  cosLat * sinLon})}	// normal
+				});
+			// BR
+			sphereDrawer_.vertices.push_back({
+				{cosLat * cosNextLon, sinLat,  cosLat * sinNextLon, 1.0f },
+				{ nextU, v },
+				{Normalize({cosLat * cosNextLon, sinLat,  cosLat * sinNextLon})}
+				});
+			// TL
+			sphereDrawer_.vertices.push_back({
+				{cosLatN * cosLon,  sinLatN, cosLatN * sinLon, 1.0f },
+				{ u, nextV },
+				{Normalize({cosLatN * cosLon,  sinLatN, cosLatN * sinLon})}
+				});
+
+			// TR
+			sphereDrawer_.vertices.push_back({
+				{ cosLatN * cosNextLon, sinLatN, cosLatN * sinNextLon, 1.0f },
+				{ nextU, nextV },
+				{Normalize({ cosLatN * cosNextLon, sinLatN, cosLatN * sinNextLon})}
+				});
+
+			// 同じ座標の頂点を代入
+			sphereDrawer_.vertices.push_back(sphereDrawer_.vertices[start + 2]); // TL
+			sphereDrawer_.vertices.push_back(sphereDrawer_.vertices[start + 1]); // BR
+		}
+	}
+
+	// VertexBuffer作成
+	size_t size = sizeof(VertexData) * sphereDrawer_.vertices.size();
+	sphereDrawer_.vertexBuffer = CreateBufferResource(size);
+	VertexData* dst = nullptr;
+	sphereDrawer_.vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+	memcpy(dst, sphereDrawer_.vertices.data(), size);
+	sphereDrawer_.vertexBuffer->Unmap(0, nullptr);
+
+	// VBV作成
+	sphereDrawer_.vertexBufferView.BufferLocation = sphereDrawer_.vertexBuffer->GetGPUVirtualAddress();
+	sphereDrawer_.vertexBufferView.SizeInBytes = UINT(size);
+	sphereDrawer_.vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+	// マテリアル作成
+	sphereDrawer_.materialResource = CreateBufferResource(sizeof(Material));
+	sphereDrawer_.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&sphereDrawer_.materialData));
+	sphereDrawer_.material.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	sphereDrawer_.material.useTexture = true;
+	sphereDrawer_.material.enableLighting = true;
+	sphereDrawer_.material.uvTransform = MakeIdentity4x4();
+
+	// リソースを作成
+	sphereDrawer_.transformResource = CreateBufferResource(sizeof(TransformationMatrix));
+	HRESULT hr = sphereDrawer_.transformResource->Map(0, nullptr, reinterpret_cast<void**>(&sphereDrawer_.transformData));
+	assert(SUCCEEDED(hr));
+
+
+	// Textureを読んで転送する
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	sphereDrawer_.textureResource = CreateTextureResource(device_, metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = UploadTextureData(sphereDrawer_.textureResource, mipImages, device_, commandList_);
+
+	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+	commandList_->Close();
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
+	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
+	// 実行を待つ
+	fenceValue_++;
+	commandQueue_->Signal(fence_.Get(), fenceValue_); // シグナルを送る
+	if (fence_->GetCompletedValue() < fenceValue_) {
+		fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+		WaitForSingleObject(fenceEvent_, INFINITE); // 待機
+	}
+	// 実行が完了したので、allocatorとcommandListをResetして次のコマンドを積めるようにする
+	commandAllocator_->Reset();
+	commandList_->Reset(commandAllocator_.Get(), nullptr);
+
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSRVHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+	sphereDrawer_.textureSRVHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	// 先頭はImGuiが使っているのでその次を使う
+	textureSRVHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	sphereDrawer_.textureSRVHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	// SRVの生成
+	device_->CreateShaderResourceView(sphereDrawer_.textureResource.Get(), &srvDesc, textureSRVHandleCPU);
+	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+}
+
+void Graphics::DrawSphere(Transform& transform,Camera& camera) {
+	// マテリアル変更を反映
+	*sphereDrawer_.materialData = sphereDrawer_.material;
+
+	// トランスフォーム
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
+
+	// WVPMatrixを作る
+	sphereDrawer_.transformData->WVP = worldViewProjectionMatrix;
+	sphereDrawer_.transformData->World = worldMatrix;
+
+	// マテリアルCBV
+	commandList_->SetGraphicsRootConstantBufferView(0, sphereDrawer_.materialResource->GetGPUVirtualAddress());
+	// VBV設定
+	commandList_->IASetVertexBuffers(0, 1, &sphereDrawer_.vertexBufferView);
+	// wvp用のCBufferの場所を設定
+	commandList_->SetGraphicsRootConstantBufferView(1, sphereDrawer_.transformResource->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]。
+	commandList_->SetGraphicsRootDescriptorTable(2, sphereDrawer_.textureSRVHandleGPU);
+	// ライト
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// ドローコール
+	commandList_->DrawInstanced(UINT(sphereDrawer_.vertices.size()), 1, 0, 0);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE Graphics::GetCPUDescriptorHandle(
 	const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
+}
+
+void Graphics::ImGuiEditLight() {
+	ImGui::ColorEdit3("Color", &directionalLightData_->color.x);
+	ImGui::DragFloat3("Direction", &directionalLightData_->direction.x, 0.1f);
+	directionalLightData_->direction = Normalize(directionalLightData_->direction);
+	ImGui::DragFloat("Intencity", &directionalLightData_->intensity, 0.1f);
+	if (ImGui::Button("Reset Light")) {
+		directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
+		directionalLightData_->intensity = 1.0f;
+	}
+}
+
+void Graphics::ImGuiEditSphere() {
+	ImGui::DragFloat3("UVTransform.Scale", &sphereSRT_.scale.x,0.01f);
+	ImGui::DragFloat3("UVTransform.Rotate", &sphereSRT_.rotate.x,0.01f);
+	ImGui::DragFloat3("UVTransform.Translate", &sphereSRT_.translate.x,0.01f);
+	sphereDrawer_.material.uvTransform = MakeAffineMatrix(sphereSRT_);
 }

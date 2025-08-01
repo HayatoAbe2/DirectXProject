@@ -22,6 +22,8 @@ public:
 	void ResetMaterial();
 	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight);
 
+	void ImGuiEdit();
+
 	// アクセサ
 	const Transform& GetTransform() const { return transform_; }
 	const D3D12_INDEX_BUFFER_VIEW& GetIBV()const { return indexBufferView_; };
