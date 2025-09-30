@@ -227,7 +227,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Math\Matrix4x4.h" />
     <ClInclude Include="Engine\Object\Model.h" />
     <ClInclude Include="Engine\Graphics\RenderTargetManager.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="Engine\Scene\SceneManager.h" />
     <ClInclude Include="Engine\Graphics\ShaderCompiler.h" />
     <ClInclude Include="Engine\Object\Sprite.h" />
@@ -249,9 +248,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\Object3d.hlsli" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="DirectXProject.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
