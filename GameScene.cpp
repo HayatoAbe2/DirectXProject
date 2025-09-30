@@ -4,7 +4,7 @@
 #include "Model.h"
 #include "Camera.h"
 #include "DebugCamera.h"
-#include "Math.h"
+#include "MathUtils.h"
 #include "Audio.h"
 #include <numbers>
 
