@@ -16,7 +16,7 @@ public:
 	// シーンの初期化
 	void Initialize(Graphics* graphics);
 	// シーンの更新
-	void Update(Input* input,Audio* audio);
+	void Update(Input* input, Audio* audio);
 	// シーンの描画
 	void Draw(Graphics* graphics);
 	// シーンの終了
@@ -25,5 +25,11 @@ public:
 private:
 	// 現在のシーン
 	BaseScene* currentScene_ = nullptr;
+
+	enum Scene {
+		kGame,
+	};
+	
+	Scene currentSceneType_ = Scene::kGame;
 };
 

@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include "Matrix4x4.h"
+using namespace DirectX;
 
 // 4x4行列の加法
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
@@ -374,6 +375,15 @@ Matrix4x4 MakeViewProjectionMatrix(Transform cameraTransform, Matrix4x4 projecti
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 	return Multiply(viewMatrix, projectionMatrix);
+}
+
+XMMATRIX ToXMMATRIX(const Matrix4x4& mat) {
+	return XMMATRIX(
+		mat.m[0][0], mat.m[0][1], mat.m[0][2], mat.m[0][3],
+		mat.m[1][0], mat.m[1][1], mat.m[1][2], mat.m[1][3],
+		mat.m[2][0], mat.m[2][1], mat.m[2][2], mat.m[2][3],
+		mat.m[3][0], mat.m[3][1], mat.m[3][2], mat.m[3][3]
+	);
 }
 
 Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) {

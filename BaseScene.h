@@ -26,5 +26,13 @@ public:
 	/// 描画処理
 	/// </summary>
 	virtual void Draw(Graphics* graphics) = 0;
+
+	// 終了チェック
+	virtual bool isFinished() const { return finished_; };
+
+private:
+
+	// シーンの終了
+	bool finished_ = false;
 };
 

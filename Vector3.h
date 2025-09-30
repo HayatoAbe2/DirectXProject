@@ -1,5 +1,5 @@
 #pragma once
-
+#include <DirectXMath.h>
 /// <summary>
 /// 三次元ベクトル
 /// </summary>
@@ -87,6 +87,11 @@ Vector3 Lerp(const ::Vector3& v1, const ::Vector3& v2, float t);
 /// <param name="t"></param>
 /// <returns>補間後のベクトル</returns>
 Vector3 Slerp(const ::Vector3& v1, const ::Vector3& v2, float t);
+
+/// <summary>
+/// XMVECTORからVector3へ変換
+/// </summary>
+Vector3 ToVector3(const DirectX::XMVECTOR& v);
 
 // 演算子オーバーロード
 Vector3 operator+(const Vector3& v1, const Vector3& v2);

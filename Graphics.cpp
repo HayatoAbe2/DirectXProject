@@ -118,12 +118,17 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 
 	// 図形描画のための初期化
 	InitializeGrid();
+	InitializeLine();
 	InitializeSphere();
 }
 
-void Graphics::DrawModel(Model& model) {
+void Graphics::DrawModel(Model& model,bool useAlphaBlend) {
 	// PSO設定
-	commandList_->SetPipelineState(graphicsPipelineState_.Get());
+	if (useAlphaBlend) {
+		commandList_->SetPipelineState(alphaBlendPSO_.Get());
+	} else {
+		commandList_->SetPipelineState(graphicsPipelineState_.Get());
+	}
 	// トポロジを三角形に設定
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -150,7 +155,7 @@ void Graphics::DrawModel(Model& model) {
 
 void Graphics::DrawSprite(Sprite& sprite) {
 	// PSO設定
-	commandList_->SetPipelineState(graphicsPipelineState_.Get());
+	commandList_->SetPipelineState(alphaBlendPSO_.Get());
 	// トポロジを三角形に設定
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -707,12 +712,6 @@ void Graphics::CreatePipelineState() {
 	// ブレンド設定
 	// すべての色要素を書き込む
 	blendDesc_.RenderTarget[0].BlendEnable = FALSE;
-	blendDesc_.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc_.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc_.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc_.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc_.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	blendDesc_.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blendDesc_.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
 	// ラスタライザ設定
@@ -757,6 +756,28 @@ void Graphics::CreatePipelineState() {
 
 	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState_));
+	assert(SUCCEEDED(hr));
+
+	//
+	// スプライト用(アルファ値対応)PSO
+	//
+
+	// αブレンド有効
+	D3D12_BLEND_DESC alphaBlendDesc_{};
+	alphaBlendDesc_.RenderTarget[0].BlendEnable = TRUE;
+	alphaBlendDesc_.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	alphaBlendDesc_.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	alphaBlendDesc_.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	alphaBlendDesc_.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	alphaBlendDesc_.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	alphaBlendDesc_.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	alphaBlendDesc_.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	// BlendStateのみ変更
+	graphicsPipelineStateDesc.BlendState = alphaBlendDesc_;
+
+	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
+		IID_PPV_ARGS(&alphaBlendPSO_));
 	assert(SUCCEEDED(hr));
 
 	//
@@ -1051,6 +1072,70 @@ void Graphics::InitializeGrid() {
 	device_->CreateShaderResourceView(gridTextureResource_.Get(), &srvDesc, textureSrvHandleCPU);
 	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
 }
+
+void Graphics::InitializeLine() {
+	// 2頂点分だけ（常時Mapして都度書き換える）
+	lineVertices_.resize(2);
+
+	size_t size = sizeof(VertexData) * 2;
+	lineVertexBuffer_ = CreateBufferResource(size);                 // Upload想定
+	lineVertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&lineMapped_));
+
+	lineVBV_.BufferLocation = lineVertexBuffer_->GetGPUVirtualAddress();
+	lineVBV_.SizeInBytes = UINT(size);
+	lineVBV_.StrideInBytes = sizeof(VertexData);
+
+	// マテリアル（テクスチャ・ライティング不要）
+	lineMaterialResource_ = CreateBufferResource(sizeof(Material));
+	lineMaterialResource_->Map(0, nullptr, reinterpret_cast<void**>(&lineMaterialData_));
+	lineMaterial_ = {};
+	lineMaterial_.color = Vector4(1.0f, 0.6f, 0.0f, 1.0f); // デフォ色（橙）。呼び出し時に上書き可
+	lineMaterial_.useTexture = false;
+	lineMaterial_.enableLighting = false;
+	lineMaterial_.uvTransform = MakeIdentity4x4();
+
+	// 変換行列（W=I を基本に毎回 WVP を書く）
+	lineTransformationResource_ = CreateBufferResource(sizeof(TransformationMatrix));
+	HRESULT hr = lineTransformationResource_->Map(0, nullptr, reinterpret_cast<void**>(&lineTransformationData_));
+	assert(SUCCEEDED(hr));
+}
+
+// p0 と p1 を結ぶ1本線を描画。color指定も可能
+void Graphics::DrawLine(Camera& camera, const Vector3& p0, const Vector3& p1, const Vector4& color) {
+	// === 頂点データを更新（常時Map済みのUploadに書くだけ） ===
+	// UV/Normal は使わないのでダミー値でOK
+	lineMapped_[0] = { { p0.x, p0.y, p0.z }, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f} };
+	lineMapped_[1] = { { p1.x, p1.y, p1.z }, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f} };
+
+	// === 変換行列（W=I のまま） ===
+	Matrix4x4 world = MakeIdentity4x4();
+	Matrix4x4 wvp = Multiply(world, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
+	lineTransformationData_->WVP = wvp;
+	lineTransformationData_->World = world;
+
+	// === マテリアル ===
+	lineMaterial_.color = color;                // 呼び出しごとに色を上書き
+	*lineMaterialData_ = lineMaterial_;
+
+	// === パイプライン設定 ===
+	commandList_->SetPipelineState(gridPipelineState_.Get()); // 既存のグリッド用PSO(線)を流用
+	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	// RootParameter[0] : マテリアルCBV
+	commandList_->SetGraphicsRootConstantBufferView(0, lineMaterialResource_->GetGPUVirtualAddress());
+	// VBV
+	commandList_->IASetVertexBuffers(0, 1, &lineVBV_);
+	// RootParameter[1] : WVP
+	commandList_->SetGraphicsRootConstantBufferView(1, lineTransformationResource_->GetGPUVirtualAddress());
+	// RootParameter[2] : SRV（未使用でも既存レイアウトに合わせて設定しておく）
+	commandList_->SetGraphicsRootDescriptorTable(2, gridSRVHandleGPU_);
+	// RootParameter[3] : ライト（無効化しているがルート構成合わせ）
+	commandList_->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	// === 描画 ===
+	commandList_->DrawInstanced(2, 1, 0, 0);
+}
+
 
 void Graphics::InitializeSphere() {
 	// 分割数

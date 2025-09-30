@@ -47,7 +47,15 @@ public:
 	}
 
 	Vector3 GetMouseMove() { return { float(mouseState_.lX),float(mouseState_.lY),float(mouseState_.lZ) }; };
-	
+	Vector2 GetMousePosition() {
+		POINT mousePosition;
+		// マウスの位置を取得
+		GetCursorPos(&mousePosition);
+		// ウィンドウのクライアント座標に変換
+		ScreenToClient(hwnd_, &mousePosition);
+		return { float(mousePosition.x), float(mousePosition.y) };
+	}
+
 private:
 	IDirectInput8* directInput_;
 	IDirectInputDevice8* keyboard_;
@@ -57,6 +65,7 @@ private:
 	BYTE key_[256];
 	DIMOUSESTATE preMouseState_;
 	DIMOUSESTATE mouseState_;
+	HWND hwnd_; // ウィンドウハンドル
 
 };
 

@@ -9,21 +9,28 @@ SceneManager::SceneManager() {
 }
 
 SceneManager::~SceneManager() {
-	if(currentScene_)
-	delete currentScene_;
+	if (currentScene_) {
+		delete currentScene_;
+	}
 }
 
 void SceneManager::Initialize(Graphics* graphics) {
 	currentScene_ = new GameScene();
+	currentSceneType_ = Scene::kGame;
+
 	currentScene_->Initialize(graphics);
 }
 
-void SceneManager::Update(Input* input,Audio* audio) {
-	currentScene_->Update(input,audio);
+void SceneManager::Update(Input* input, Audio* audio) {
+	if (currentScene_) {
+		currentScene_->Update(input, audio);
+	}
 }
 
 void SceneManager::Draw(Graphics* graphics) {
-	currentScene_->Draw(graphics);
+	if (currentScene_) {
+		currentScene_->Draw(graphics);
+	}
 }
 
 void SceneManager::Finalize() {

@@ -173,7 +173,7 @@ void Model::ResetMaterial() {
 	material_.uvTransform = MakeIdentity4x4();
 }
 
-void Model::Draw(Graphics& graphics, const Vector4& color) {
+void Model::Draw(Graphics& graphics, const Vector4& color,bool useAlphaBlend) {
 
 	// マテリアルの適用
 	material_.color = color;
@@ -184,6 +184,7 @@ void Model::Draw(Graphics& graphics, const Vector4& color) {
 }
 
 void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
+	if (maxInstances <= 0) { return; }
 	const UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
 	instanceCBVStride_ = kCBSize;
 

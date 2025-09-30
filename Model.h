@@ -33,7 +33,7 @@ public:
 	/// 描画
 	/// </summary>
 	/// <param name="graphics"></param>
-	void Draw(Graphics& graphics, const Vector4& color = {1,1,1,1});
+	void Draw(Graphics& graphics, const Vector4& color = {1,1,1,0.3f}, bool useAlphaBlend = 0);
 
 	void EnableInstanceCBV(Graphics& graphics, int maxInstances);
 

@@ -19,6 +19,8 @@ Input::Input(HINSTANCE hInstance,HWND hwnd) {
 	// 排他制御レベルのセット
 	mouse_->SetCooperativeLevel(
 		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+
+	hwnd_ = hwnd;
 }
 
 Input::~Input() {

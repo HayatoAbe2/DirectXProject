@@ -7,3 +7,5 @@
 #include "Matrix4x4.h"
 #include "Transform.h"
 #include "Lerp.h"
+#include "AABB.h"
+#include "Sphere.h"

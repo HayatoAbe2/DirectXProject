@@ -40,7 +40,7 @@ public:
 	/// モデル描画
 	/// </summary>
 	/// <param name="model">描画するモデル</param>
-	void DrawModel(Model& model);
+	void DrawModel(Model& model, bool useAlphaBlend = 0);
 
 	/// <summary>
 	/// スプライト描画
@@ -52,6 +52,15 @@ public:
 	/// グリッド描画
 	/// </summary>
 	void DrawGrid(Camera& camera);
+
+	/// <summary>
+	/// 線描画
+	/// </summary>
+	/// <param name="camera"></param>
+	/// <param name="p0"></param>
+	/// <param name="p1"></param>
+	/// <param name="color"></param>
+	void DrawLine(Camera& camera, const Vector3& p0, const Vector3& p1, const Vector4& color);
 
 	/// <summary>
 	/// 球描画
@@ -200,6 +209,11 @@ private:
 	void InitializeGrid();
 
 	/// <summary>
+	/// 線初期化
+	/// </summary>
+	void InitializeLine();
+
+	/// <summary>
 	/// 球初期化
 	/// </summary>
 	void InitializeSphere();
@@ -274,7 +288,9 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite_ = nullptr;
 
+	// PSO
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> alphaBlendPSO_;
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
 	DirectionalLight* directionalLightData_;
@@ -321,6 +337,20 @@ private:
 	// グリッド用シェーダー
 	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
+
+	// 線描画用
+	std::vector<VertexData> lineVertices_;                  // 2頂点ぶんのデータ
+	Microsoft::WRL::ComPtr<ID3D12Resource> lineVertexBuffer_; // 頂点バッファリソース
+	D3D12_VERTEX_BUFFER_VIEW lineVBV_;                      // VBV(頂点バッファビュー)
+	VertexData* lineMapped_ = nullptr;                      // Map して CPU から書き込むポインタ
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> lineMaterialResource_; // マテリアル用CBV
+	Material* lineMaterialData_ = nullptr;                        // Map 先
+	Material lineMaterial_;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> lineTransformationResource_; // WVP用CBV
+	TransformationMatrix* lineTransformationData_ = nullptr;           // Map 先
+
 
 	// SRVのインデックス
 	UINT currentSRVIndex_ = 0;

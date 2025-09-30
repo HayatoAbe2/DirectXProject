@@ -81,6 +81,8 @@ Sprite* Sprite::Initialize(Graphics* graphics, std::string texturePath, Vector2 
 
 	sprite = graphics->CreateSRV(sprite);
 
+	sprite->size_ = { size.x,size.y,1.0f };
+
 	return sprite;
 }
 
@@ -102,11 +104,26 @@ void Sprite::ResetMaterial() {
 	material_.uvTransform = MakeIdentity4x4();
 }
 
-void Sprite::UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight) {
-	// モデルのトランスフォーム
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform_);
-	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, projectionMatrix));
+void Sprite::UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos) {
+	// トランスフォーム
+	Matrix4x4 worldMatrix;
+	Matrix4x4 worldViewProjectionMatrix;
+	if (useScreenPos) {
+		worldMatrix = MakeAffineMatrix(transform_);
+		Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, float(kClientWidth), float(kClientHeight), 0.0f, 100.0f);
+		worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, projectionMatrix));
+	} else {
+		worldMatrix = MakeAffineMatrix(transform_);
+		
+		// ピボット補正:中心
+		Matrix4x4 matPivot = MakeTranslateMatrix({
+			-size_.x / 2.0f,
+			-size_.y / 2.0f,
+			-size_.z / 2.0f
+		});
+		worldMatrix = matPivot * worldMatrix;
+		worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, camera->projectionMatrix_));
+	}
 	// WVPMatrixを作る
 	transformationData_->WVP = worldViewProjectionMatrix;
 	transformationData_->World = worldMatrix;

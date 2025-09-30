@@ -4,6 +4,7 @@
 #include <vector>
 #include <cassert>
 #include "Lerp.h"
+using namespace DirectX;
 
 float Dot(const Vector3& v1, const Vector3& v2) {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
@@ -14,6 +15,7 @@ float Length(const Vector3& v) {
 }
 
 Vector3 Normalize(const Vector3& v) {
+	if (Length(v) <= 0.0f) { return { 0,0,0 }; } // ゼロ除算を回避
 	Vector3 result;
 	result.x = v.x / Length(v);
 	result.y = v.y / Length(v);
@@ -107,6 +109,12 @@ Vector3 CatmullRomPosition(const std::vector<Vector3>& points, float t) {
 
 	// 補間
 	return CatmullRom(p0, p1, p2, p3, t_2);
+}
+
+Vector3 ToVector3(const XMVECTOR& v) {
+	XMFLOAT3 temp;
+	XMStoreFloat3(&temp, v);
+	return Vector3{ temp.x, temp.y, temp.z };
 }
 
 /// <summary>

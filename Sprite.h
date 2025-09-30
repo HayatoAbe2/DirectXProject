@@ -20,7 +20,7 @@ public:
 	void Draw(Graphics& graphics, const Vector4& color = { 1,1,1,1 });
 
 	void ResetMaterial();
-	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight);
+	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos = true);
 
 	void ImGuiEdit();
 
@@ -54,6 +54,9 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU_ = {};
 
 	Transform transform_;
+
+	// 描画する時の大きさ
+	Vector3 size_;
 
 	Material material_;
 	Material* materialData_;

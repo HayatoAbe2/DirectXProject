@@ -54,7 +54,8 @@ void Audio::SoundLoad(const wchar_t* filename) {
 	{
 		IMFSample* pMFSample{ nullptr };
 		DWORD dwStreamFlags{ 0 };
-		pMFSourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &dwStreamFlags, nullptr, &pMFSample);
+		hr = pMFSourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM, 0, nullptr, &dwStreamFlags, nullptr, &pMFSample);
+		assert(SUCCEEDED(hr));
 
 		if (dwStreamFlags & MF_SOURCE_READERF_ENDOFSTREAM)
 		{
@@ -76,6 +77,7 @@ void Audio::SoundLoad(const wchar_t* filename) {
 		pMFMediaBuffer->Release();
 		pMFSample->Release();
 	}
+	pMFSourceReader->Release();
 
 	// 格納する音声データ
 	SoundData soundData;
@@ -100,7 +102,7 @@ void Audio::SoundUnload(const wchar_t* filename) {
 	soundData->pBuffer = nullptr;*/
 }
 
-void Audio::SoundPlay(const wchar_t* filename) {
+void Audio::SoundPlay(const wchar_t* filename,bool isLoop) {
 	if (soundMap_.find(filename) == soundMap_.end()) {
 		return; // 存在しない場合は何もしない
 	}
@@ -116,7 +118,11 @@ void Audio::SoundPlay(const wchar_t* filename) {
 	buf.pAudioData = soundMap_[filename].pBuffer;
 	buf.AudioBytes = soundMap_[filename].bufferSize;
 	buf.Flags = XAUDIO2_END_OF_STREAM; // 波形データの終端を示すフラグ
-
+	if (isLoop) {
+		buf.LoopBegin = isLoop; // ループ
+		buf.LoopLength = 0;
+		buf.LoopCount = XAUDIO2_LOOP_INFINITE;
+	}
 	// 波形データの再生
 	hr = pSourceVoice->SubmitSourceBuffer(&buf);
 	assert(SUCCEEDED(hr));

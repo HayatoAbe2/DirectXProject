@@ -113,6 +113,7 @@ void App::Finalize() {
 
 	// XAudio終了処理
 	audio_->SoundUnload(L"Resources/Alarm01.wav");
+	
 	audio_->Finalize();
 	delete audio_;
 	MFShutdown();
