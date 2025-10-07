@@ -1,6 +1,7 @@
 #include "object3d.hlsli"
 
-struct Material{
+struct Material
+{
     float32_t4 color;
     int32_t enableLighting;
     float32_t4x4 uvTransform;
@@ -20,19 +21,29 @@ SamplerState gSampler : register(s0);
 
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
-struct PixelShaderOutput{
+struct PixelShaderOutput
+{
     float32_t4 color : SV_TARGET0;
 };
 
-PixelShaderOutput main(VertexShaderOutput input){
+PixelShaderOutput main(VertexShaderOutput input)
+{
     PixelShaderOutput output;
     
-    float4 transformedUV = mul(float32_t4(input.texcoord,0.0f, 1.0f), gMaterial.uvTransform);
-    if (gMaterial.useTexture != 0){
+    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
+    if (gMaterial.useTexture != 0)
+    {
         float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+        
+        if (textureColor.a < 0.1f)
+        {
+            discard;
+        }
+        
         output.color = gMaterial.color * textureColor;
     }
-    else{
+    else
+    {
         output.color = gMaterial.color;
     }
     
@@ -41,11 +52,17 @@ PixelShaderOutput main(VertexShaderOutput input){
         if (gDirectionalLight.lightingType == 0)
         {
             float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-            output.color *= gDirectionalLight.color * cos * gDirectionalLight.intensity;
-        }else{
+            output.color.rgb *= gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        }
+        else
+        {
             float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-            output.color *= gDirectionalLight.color * cos * gDirectionalLight.intensity;
+            output.color.rgb *= gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        }
+        if (output.color.a == 0.0f)
+        {
+            discard;
         }
     }
     
