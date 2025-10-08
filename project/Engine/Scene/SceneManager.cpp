@@ -3,7 +3,7 @@
 #include "../Graphics/Graphics.h"
 #include "../Io/Input.h"
 #include "BaseScene.h"
-#include "GameScene.h"
+#include "../../application/GameScene.h"
 #include "GameContext.h"
 
 SceneManager::SceneManager(GameContext* context) {
