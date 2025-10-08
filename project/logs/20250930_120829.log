@@ -1,0 +1,14 @@
+Window Initialized.
+
+XAudio Initialized.
+
+DirectInput Initialized.
+
+Use Adapter : NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+Complete create D3D12Device.
+
+Begin Compile, path:../../Resources/shaders/Object3D.VS.hlsl, profile:vs_6_0
+

@@ -1,0 +1,38 @@
+Window Initialized.
+
+XAudio Initialized.
+
+DirectInput Initialized.
+
+Use Adapter : NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+Complete create D3D12Device.
+
+Begin Compile, path:Resources/shaders/Object3d.VS.hlsl, profile:vs_6_0
+
+Compile Succeeded, path:Resources/shaders/Object3d.VS.hlsl, profile:vs_6_0
+
+Begin Compile, path:Resources/shaders/Object3d.PS.hlsl, profile:ps_6_0
+
+Compile Succeeded, path:Resources/shaders/Object3d.PS.hlsl, profile:ps_6_0
+
+Begin Compile, path:Resources/shaders/Grid.VS.hlsl, profile:vs_6_0
+
+Compile Succeeded, path:Resources/shaders/Grid.VS.hlsl, profile:vs_6_0
+
+Begin Compile, path:Resources/shaders/Grid.PS.hlsl, profile:ps_6_0
+
+Compile Succeeded, path:Resources/shaders/Grid.PS.hlsl, profile:ps_6_0
+
+Graphics Initialized.
+
+XAudio Finalized.
+
+DirectInput Finalized.
+
+Graphics Finalized.
+
+Window Closed.
+

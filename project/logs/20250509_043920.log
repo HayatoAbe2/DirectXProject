@@ -1,0 +1,19 @@
+Use Adapter : NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+Complete create DeD12Device!!!
+
+Begin CompileShader, path:Object3D.VS.hlsl, profile:vs_6_0
+
+Compile Succeeded, path:Object3D.VS.hlsl, profile:vs_6_0
+
+Begin CompileShader, path:Object3D.PS.hlsl, profile:ps_6_0
+
+Compile Succeeded, path:Object3D.PS.hlsl, profile:ps_6_0
+
+Vertex 0: Position(-0.000, -1.000, -0.000, 1.000), TexCoord(0.000, 1.000)
+Vertex 1: Position(0.000, -1.000, 0.000, 1.000), TexCoord(0.000, 0.938)
+Vertex 2: Position(-0.000, -1.000, -0.000, 1.000), TexCoord(0.062, 1.000)
+Vertex 3: Position(0.000, -1.000, 0.000, 1.000), TexCoord(0.000, 0.938)
+Vertex 4: Position(-0.000, -1.000, -0.000, 1.000), TexCoord(0.062, 1.000)

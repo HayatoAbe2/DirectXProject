@@ -1,0 +1,23 @@
+Use Adapter : NVIDIA GeForce RTX 4060 Laptop GPU
+
+FeatureLevel : 12.2
+
+Complete create DeD12Device!!!
+
+Begin CompileShader, path:Object3D.VS.hlsl, profile:vs_6_0
+
+Compile Succeeded, path:Object3D.VS.hlsl, profile:vs_6_0
+
+Begin CompileShader, path:Object3D.PS.hlsl, profile:ps_6_0
+
+Object3D.PS.hlsl:13:5: error: unknown type name 'UINT'
+    UINT useTexture = true;
+    ^
+Object3D.PS.hlsl:13:21: error: struct/class members cannot have default values
+    UINT useTexture = true;
+                    ^
+Object3D.PS.hlsl:13:21: warning: in-class initialization of non-static data member is a C++11 extension [-Wc++11-extensions]
+Object3D.PS.hlsl:18:9: error: use of undeclared identifier 'useTexture'
+    if (useTexture){
+        ^
+
