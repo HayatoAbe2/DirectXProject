@@ -1,6 +1,6 @@
 #pragma once
 
-class Graphics;
+class Renderer;
 class BaseScene;
 class Input;
 class Audio;

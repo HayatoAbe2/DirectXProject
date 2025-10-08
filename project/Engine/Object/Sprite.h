@@ -5,7 +5,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include "Math.h"
-#include "Graphics.h"
+#include "Renderer.h"
 #include "Camera.h"
 
 class Sprite {
@@ -79,7 +79,7 @@ public:
 	/// 描画
 	/// </summary>
 	/// <param name="graphics">Graphicsインスタンス</param>
-	void Draw(Graphics& graphics);
+	void Draw(Renderer& graphics);
 
 	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos = true);
 
@@ -115,5 +115,5 @@ private:
 	TransformationMatrix* transformationData_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
 
-	friend class Graphics;
+	friend class Renderer;
 };

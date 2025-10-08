@@ -9,10 +9,10 @@ class Input;
 class Audio;
 class Model;
 class Sprite;
-class Graphics;
+class Renderer;
 class GameContext {
 public:
-	GameContext(Graphics* graphics, Audio* audio, Input* input,ResourceManager* resourceManager);
+	GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager);
 
 	///
 	/// ウィンドウ情報
@@ -51,7 +51,7 @@ public:
 	Vector2 GetMousePosition();
 
 private:
-	Graphics* graphics_ = nullptr;
+	Renderer* renderer_ = nullptr;
 	Audio* audio_ = nullptr;
 	Input* input_ = nullptr;
 	ResourceManager* resourceManager_ = nullptr;

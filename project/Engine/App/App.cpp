@@ -1,6 +1,6 @@
 #include "App.h"
 #include "../App/Window.h"
-#include "../Graphics/Graphics.h"
+#include "../Graphics/Renderer.h"
 #include "../Graphics/DeviceManager.h"
 #include "../Io/DumpExporter.h"
 #include "../Io/Logger.h"
@@ -62,16 +62,16 @@ void App::Initialize() {
 	logger_->Log(logger_->GetStream(), std::format("DirectInput Initialized.\n"));
 
 	// 描画クラス
-	graphics_ = new Graphics();
-	graphics_->Initialize(kClientWidth,kClientHeight,window_->GetHwnd(),logger_);
+	renderer_ = new Renderer();
+	renderer_->Initialize(kClientWidth,kClientHeight,window_->GetHwnd(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("Graphics Initialized.\n"));
 
 	// リソース
 	resourceManager_ = new ResourceManager();
-	resourceManager_->Initialize(graphics_->GetDeviceManager()->GetDevice(), graphics_->GetCommandListManager(), graphics_->GetDescriptorHeapManager(), logger_);
+	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), logger_);
 
 	// コンテキスト
-	GameContext* gameContext_ = new GameContext(graphics_, audio_, input_, resourceManager_);
+	GameContext* gameContext_ = new GameContext(renderer_, audio_, input_, resourceManager_);
 
 	// シーンマネージャー
 	sceneManager_ = new SceneManager(gameContext_);
@@ -105,13 +105,13 @@ void App::Run() {
 			sceneManager_->Update();
 
 			// 描画開始時に呼ぶ
-			graphics_->BeginFrame();
+			renderer_->BeginFrame();
 
 			// 描画処理
 			sceneManager_->Draw();
 			
 			// 描画終了時に呼ぶ
-			graphics_->EndFrame();
+			renderer_->EndFrame();
 		}
 	}
 }
@@ -140,8 +140,8 @@ void App::Finalize() {
 	logger_->Log(logger_->GetStream(), std::format("GameContext Finalized.\n"));
 
 	// 描画クラス実体解放
-	graphics_->Finalize();
-	delete graphics_;
+	renderer_->Finalize();
+	delete renderer_;
 	logger_->Log(logger_->GetStream(), std::format("Graphics Finalized.\n"));
 
 	// ウィンドウ終了

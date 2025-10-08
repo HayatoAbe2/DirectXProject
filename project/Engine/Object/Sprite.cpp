@@ -5,8 +5,8 @@
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
-void Sprite::Draw(Graphics& graphics) {
-	graphics.DrawSprite(*this);
+void Sprite::Draw(Renderer& renderer) {
+	renderer.DrawSprite(*this);
 }
 
 void Sprite::UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos) {

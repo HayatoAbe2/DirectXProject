@@ -1,20 +1,20 @@
 #include "GameContext.h"
-#include "../Graphics/Graphics.h"
+#include "../Graphics/Renderer.h"
 #include "../Io/Audio.h"
 #include "../Io/Input.h"
 #include "../Object/ResourceManager.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
 
-GameContext::GameContext(Graphics* graphics, Audio* audio, Input* input,ResourceManager* resourceManager) {
-	graphics_ = graphics;
+GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager) {
+	renderer_ = renderer;
 	audio_ = audio;
 	input_ = input;
 	resourceManager_ = resourceManager;
 }
 
 Vector2 GameContext::GetWindowSize() const {
-	return { float(graphics_->GetWindowWidth()),float(graphics_->GetWindowHeight()) };
+	return { float(renderer_->GetWindowWidth()),float(renderer_->GetWindowHeight()) };
 }
 
 Model* GameContext::LoadModel(const std::string& directoryPath, const std::string& filename) {
@@ -26,11 +26,11 @@ Sprite* GameContext::LoadSprite(std::string texturePath, Vector2 size) {
 }
 
 void GameContext::DrawModel(Model& model, bool useAlphaBlend) {
-	graphics_->DrawModel(model, useAlphaBlend);
+	renderer_->DrawModel(model, useAlphaBlend);
 }
 
 void GameContext::DrawSprite(Sprite& sprite) {
-	graphics_->DrawSprite(sprite);
+	renderer_->DrawSprite(sprite);
 }
 
 bool GameContext::IsTrigger(uint8_t keyNumber) {

@@ -1,7 +1,7 @@
 #pragma once
 #include "../Object/Transform.h"
 #include "../Math/MathUtils.h"
-class Graphics;
+class Renderer;
 class DebugCamera;
 
 class Camera {

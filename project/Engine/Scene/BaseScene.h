@@ -2,7 +2,7 @@
 
 class Input;
 class Audio;
-class Graphics;
+class Renderer;
 class ResourceManager;
 class GameContext;
 

@@ -75,7 +75,7 @@
     <ClCompile Include="engine\Graphics\DescriptorHeapManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Graphics\Graphics.cpp">
+    <ClCompile Include="engine\Graphics\Renderer.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="engine\Graphics\RenderTargetManager.cpp">
@@ -221,7 +221,7 @@
     <ClInclude Include="engine\Graphics\DescriptorHeapManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Graphics\Graphics.h">
+    <ClInclude Include="engine\Graphics\Renderer.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="engine\Graphics\RenderTargetManager.h">

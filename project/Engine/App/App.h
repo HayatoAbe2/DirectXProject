@@ -29,7 +29,7 @@ class Logger;
 class Window;
 class Audio;
 class Input;
-class Graphics;
+class Renderer;
 class ResourceManager;
 class SceneManager;
 class GameContext;
@@ -73,7 +73,7 @@ private:
 	Input* input_ = nullptr;
 
 	// 描画
-	Graphics* graphics_ = nullptr;
+	Renderer* renderer_ = nullptr;
 
 	// リソース管理
 	ResourceManager* resourceManager_ = nullptr;

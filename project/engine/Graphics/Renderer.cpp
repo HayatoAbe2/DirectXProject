@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include "Graphics.h"
+#include "Renderer.h"
 #include "DeviceManager.h"
 #include "CommandListManager.h"
 #include "RootSignatureManager.h"
@@ -21,7 +21,7 @@
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
 
-void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
+void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	HRESULT hr;
 
 	clientWidth_ = clientWidth;
@@ -83,7 +83,7 @@ void Graphics::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	SetViewportAndScissor();
 }
 
-void Graphics::DrawModel(Model& model,bool useAlphaBlend) {
+void Renderer::DrawModel(Model& model,bool useAlphaBlend) {
 
 	model.UpdateMaterial();
 
@@ -112,7 +112,7 @@ void Graphics::DrawModel(Model& model,bool useAlphaBlend) {
 	commandListManager_->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
 }
 
-void Graphics::DrawSprite(Sprite& sprite) {
+void Renderer::DrawSprite(Sprite& sprite) {
 	// PSO設定
 	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetAlphaBlendPSO());
 	// トポロジを三角形に設定
@@ -132,7 +132,7 @@ void Graphics::DrawSprite(Sprite& sprite) {
 	commandListManager_->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
-void Graphics::Finalize() {
+void Renderer::Finalize() {
 	if (rootSignatureManager_->GetErrorBlob()) rootSignatureManager_->GetErrorBlob()->Release();
 	delete deviceManager_;
 	delete commandListManager_;
@@ -142,7 +142,7 @@ void Graphics::Finalize() {
 	delete pipelineStateManager_;
 }
 
-void Graphics::BeginFrame() {
+void Renderer::BeginFrame() {
 
 
 	// これから書き込むバックバッファのインデックスを取得
@@ -184,7 +184,7 @@ void Graphics::BeginFrame() {
 	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetRootSignature().Get());
 }
 
-void Graphics::EndFrame() {
+void Renderer::EndFrame() {
 	HRESULT hr;
 
 	//// ImGuiの内部コマンドを生成する
@@ -213,7 +213,7 @@ void Graphics::EndFrame() {
 	commandListManager_->Reset();
 }
 
-void Graphics::InitializeSwapChain(HWND hwnd) {
+void Renderer::InitializeSwapChain(HWND hwnd) {
 	HRESULT hr;
 	swapChainDesc_.Width = clientWidth_;								// 画面の幅。ウィンドウのクライアント領域を同じものにしておく
 	swapChainDesc_.Height = clientHeight_;							// 画面の高さ。ウィンドウのクライアント領域を同じものにしておく
@@ -227,7 +227,7 @@ void Graphics::InitializeSwapChain(HWND hwnd) {
 	assert(SUCCEEDED(hr));
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateDepthStencilTextureResource(
+Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateDepthStencilTextureResource(
 	const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height) {
 
 	// 生成するResourceの設定
@@ -264,7 +264,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateDepthStencilTextureResour
 	return resource_;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(size_t sizeInBytes) {
+Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::CreateBufferResource(size_t sizeInBytes) {
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;		// uploadHeapを使う
@@ -290,7 +290,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> Graphics::CreateBufferResource(size_t siz
 	return vertexResource;
 }
 
-void Graphics::SetViewportAndScissor() {
+void Renderer::SetViewportAndScissor() {
 	// クライアント領域のサイズと一緒にして画面全体に表示
 	viewport_.Width = float(clientWidth_);
 	viewport_.Height = float(clientHeight_);
@@ -307,7 +307,7 @@ void Graphics::SetViewportAndScissor() {
 	scissorRect_.bottom = LONG(clientHeight_);
 }
 
-void Graphics::CreateLightBuffer() {
+void Renderer::CreateLightBuffer() {
 	// DirectionalLight用のResource
 	directionalLightResource_ = CreateBufferResource(sizeof(DirectionalLight));
 	// 書き込むためのアドレスを取得

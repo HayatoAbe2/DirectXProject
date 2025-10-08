@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-class Graphics;
+class Renderer;
 class Camera;
 class Model {
 public:
@@ -79,10 +79,10 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	/// <param name="graphics"></param>
-	void Draw(Graphics& graphics, const Vector4& color = {1,1,1,0.3f}, bool useAlphaBlend = 0);
+	/// <param name="renderer"></param>
+	void Draw(Renderer& renderer, const Vector4& color = {1,1,1,0.3f}, bool useAlphaBlend = 0);
 
-	void EnableInstanceCBV(Graphics& graphics, int maxInstances);
+	void EnableInstanceCBV(Renderer& renderer, int maxInstances);
 
 	/// <summary>
 	/// 外部CBVをセット(複数のCBVが必要な場合)

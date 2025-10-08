@@ -27,7 +27,7 @@ class PipelineStateManager;
 
 class ResourceManager;
 
-class Graphics {
+class Renderer {
 public:
 
 	/// <summary>

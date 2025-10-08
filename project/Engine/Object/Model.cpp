@@ -1,6 +1,6 @@
 #include "Model.h"
 #include "../Io/Logger.h"
-#include "../Graphics/Graphics.h"
+#include "../Graphics/Renderer.h"
 #include "../Scene/Camera.h"
 #include "../Math/MathUtils.h"
 
@@ -18,12 +18,12 @@ void Model::UpdateTransformation(Camera& camera) {
 	transformationData_->World = worldMatrix;
 }
 
-void Model::EnableInstanceCBV(Graphics& graphics, int maxInstances) {
+void Model::EnableInstanceCBV(Renderer& renderer, int maxInstances) {
 	if (maxInstances <= 0) { return; }
 	const UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
 	instanceCBVStride_ = kCBSize;
 
-	instanceCBVResource_ = graphics.CreateBufferResource(kCBSize * maxInstances);
+	instanceCBVResource_ = renderer.CreateBufferResource(kCBSize * maxInstances);
 	instanceCBVResource_->Map(0, nullptr, reinterpret_cast<void**>(&instanceCBVMappedPtr_));
 }
 

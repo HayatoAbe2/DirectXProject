@@ -7,7 +7,7 @@
 #include "Camera.h"
 #include "BaseScene.h"
 
-class Graphics;
+class Renderer;
 class Camera;
 class Player;
 // ゲームシーン
