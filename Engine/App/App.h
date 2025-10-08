@@ -10,10 +10,10 @@
 #include <wrl.h>
 #include <mfapi.h>
 
-#include "../../externals/imgui/imgui.h"
-#include "../../externals/imgui/imgui_impl_dx12.h"
-#include "../../externals/imgui/imgui_impl_win32.h"
-#include "../../externals/DirectXTex/d3dx12.h"
+#include "externals/imgui/imgui.h"
+#include "externals/imgui/imgui_impl_dx12.h"
+#include "externals/imgui/imgui_impl_win32.h"
+#include "externals/DirectXTex/d3dx12.h"
 
 #pragma comment(lib,"d3d12.lib")	
 #pragma comment(lib,"dxgi.lib")
@@ -30,7 +30,9 @@ class Window;
 class Audio;
 class Input;
 class Graphics;
+class ResourceManager;
 class SceneManager;
+class GameContext;
 
 /// <summary>
 /// アプリケーション全体の処理
@@ -72,6 +74,12 @@ private:
 
 	// 描画
 	Graphics* graphics_ = nullptr;
+
+	// リソース管理
+	ResourceManager* resourceManager_ = nullptr;
+
+	// ゲームシーンから利用できるデータや関数
+	GameContext* gameContext_ = nullptr;
 
 	// シーン管理
 	SceneManager* sceneManager_ = nullptr;

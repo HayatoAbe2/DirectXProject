@@ -6,28 +6,33 @@
 #include "DebugCamera.h"
 #include "MathUtils.h"
 #include "Audio.h"
+#include "GameContext.h"
 #include <numbers>
 
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
-
-
 GameScene::~GameScene() {
+	delete camera_;
+	delete debugCamera_;
 }
 
-void GameScene::Initialize(Graphics* graphics) {
-	
+void GameScene::Initialize() {
+	debugCamera_ = new DebugCamera;
+	debugCamera_->Initialize();
+	camera_ = new Camera;
+	camera_->transform_.translate = { 0,0,-50 };
+
+	playerModel_ = context_->LoadModel("Resources", "bunny.obj");
 }
 
-void GameScene::Update(Input* input, Audio* audio) {
-
-	
-
-	debugCamera_->Update(input);
+void GameScene::Update() {
+	if (context_->IsTrigger(DIK_R)) {
+		isDebugCameraActive_ = !isDebugCameraActive_;
+	}
+	debugCamera_->SetEnable(isDebugCameraActive_);
+	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
+	playerModel_->SetTransform({ {1,1,1},{0,float(std::numbers::pi),0},{0,0,0} });
 }
 
-void GameScene::Draw(Graphics* graphics) {
-	ImGui::Begin("Settings");
-	ImGui::End();
+void GameScene::Draw() {
+	playerModel_->UpdateTransformation(*camera_);
+	context_->DrawModel(*playerModel_);
 }

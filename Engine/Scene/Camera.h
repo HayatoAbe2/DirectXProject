@@ -1,6 +1,6 @@
 #pragma once
 #include "../Object/Transform.h"
-#include "../Math/Matrix4x4.h"
+#include "../Math/MathUtils.h"
 class Graphics;
 class DebugCamera;
 
@@ -16,6 +16,6 @@ public:
 	/// </summary>
 	/// <param name="graphics"></param>
 	/// <param name="debugCamera"></param>
-	void UpdateCamera(Graphics& graphics, DebugCamera& debugCamera);
+	void UpdateCamera(Vector2 windowSize, DebugCamera& debugCamera);
 
 };

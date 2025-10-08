@@ -4,21 +4,22 @@ class Graphics;
 class BaseScene;
 class Input;
 class Audio;
+class GameContext;
 
 /// <summary>
 /// シーン管理
 /// </summary>
 class SceneManager {
 public:
-	SceneManager();
+	SceneManager(GameContext* context);
 	~SceneManager();
 
 	// シーンの初期化
-	void Initialize(Graphics* graphics);
+	void Initialize();
 	// シーンの更新
-	void Update(Input* input, Audio* audio);
+	void Update();
 	// シーンの描画
-	void Draw(Graphics* graphics);
+	void Draw();
 	// シーンの終了
 	void Finalize();
 
@@ -27,9 +28,12 @@ private:
 	BaseScene* currentScene_ = nullptr;
 
 	enum Scene {
+		kTitle,
 		kGame,
 	};
 	
 	Scene currentSceneType_ = Scene::kGame;
+
+	GameContext* gameContext_ = nullptr;
 };
 

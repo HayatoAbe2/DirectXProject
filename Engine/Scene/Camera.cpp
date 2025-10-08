@@ -1,8 +1,7 @@
 #include "Camera.h"
 #include "DebugCamera.h"
-#include "../Graphics/Graphics.h"
 
-void Camera::UpdateCamera(Graphics &graphics,DebugCamera& debugCamera) {
+void Camera::UpdateCamera(Vector2 windowSize,DebugCamera& debugCamera) {
 	// デバッグカメラがONならそちらを使う
 	if (debugCamera.IsEnable()) {
 		// デバッグカメラのビュー行列を使う
@@ -12,5 +11,5 @@ void Camera::UpdateCamera(Graphics &graphics,DebugCamera& debugCamera) {
 		viewMatrix_ = Inverse(MakeAffineMatrix(transform_));
 	}
 	
-	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(graphics.GetWindowWidth()) / float(graphics.GetWindowHeight()), 0.1f, 100.0f);
+	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, windowSize.x / windowSize.y, 0.1f, 100.0f);
 }

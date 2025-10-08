@@ -1,11 +1,13 @@
 #include "SceneManager.h"
-#include "../Graphics/Graphics.h"
-#include "BaseScene.h"
-#include "../Io/Input.h"
 #include "../App/Window.h"
-#include "../../GameScene.h"
+#include "../Graphics/Graphics.h"
+#include "../Io/Input.h"
+#include "BaseScene.h"
+#include "GameScene.h"
+#include "GameContext.h"
 
-SceneManager::SceneManager() {
+SceneManager::SceneManager(GameContext* context) {
+	gameContext_ = context;
 }
 
 SceneManager::~SceneManager() {
@@ -14,22 +16,30 @@ SceneManager::~SceneManager() {
 	}
 }
 
-void SceneManager::Initialize(Graphics* graphics) {
+void SceneManager::Initialize() {
 	currentScene_ = new GameScene();
 	currentSceneType_ = Scene::kGame;
 
-	currentScene_->Initialize(graphics);
+	currentScene_->SetGameContext(gameContext_); // 初期化より前
+	currentScene_->Initialize();
 }
 
-void SceneManager::Update(Input* input, Audio* audio) {
+void SceneManager::Update() {
 	if (currentScene_) {
-		currentScene_->Update(input, audio);
+		currentScene_->Update();
+		if (currentScene_->IsFinished()) {
+			// 現在シーン削除
+			delete currentScene_;
+			currentScene_ = nullptr;
+
+			// シーン切り替え
+		}
 	}
 }
 
-void SceneManager::Draw(Graphics* graphics) {
+void SceneManager::Draw() {
 	if (currentScene_) {
-		currentScene_->Draw(graphics);
+		currentScene_->Draw();
 	}
 }
 

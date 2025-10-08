@@ -5,7 +5,6 @@
 #include "Transform.h"
 #include "DebugCamera.h"
 #include "Camera.h"
-
 #include "BaseScene.h"
 
 class Input;
@@ -19,20 +18,20 @@ public:
 	~GameScene() override;
 
 	// 初期化
-	void Initialize(Graphics* graphics) override;
+	void Initialize() override;
 
 	// 更新
-	void Update(Input* input,Audio* audio) override;
+	void Update() override;
 
 	// 描画
-	void Draw(Graphics *graphics) override;
+	void Draw() override;
 
 private:
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0;
 
 	// 3Dモデル
-	Model* PlayerModel_ = nullptr;
+	Model* playerModel_ = nullptr;
 	
 	// カメラ
 	Camera* camera_ = nullptr;

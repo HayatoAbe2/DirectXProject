@@ -1,5 +1,5 @@
 #include "ShaderCompiler.h"
-#include "../Io/Logger.h"
+#include "Logger.h"
 #include <format>
 #include <cassert>
 

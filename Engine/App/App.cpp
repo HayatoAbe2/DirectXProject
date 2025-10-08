@@ -1,11 +1,14 @@
 #include "App.h"
+#include "../App/Window.h"
+#include "../Graphics/Graphics.h"
+#include "../Graphics/DeviceManager.h"
 #include "../Io/DumpExporter.h"
 #include "../Io/Logger.h"
-#include "../App/Window.h"
 #include "../Io/Audio.h"
 #include "../Io/Input.h"
-#include "../Graphics/Graphics.h"
+#include "../Object/ResourceManager.h"
 #include "../Scene/SceneManager.h"
+#include "../Scene/GameContext.h"
 
 #include <format>
 #include <cassert>
@@ -52,7 +55,7 @@ void App::Initialize() {
 	assert(&audio_);
 	logger_->Log(logger_->GetStream(), std::format("XAudio Initialized.\n"));
 	audio_->SoundLoad(L"Resources/Alarm01.wav");
-
+	
 	// DirectInputの初期化
 	input_ = new Input(window_->GetInstance(), window_->GetHwnd());
 	assert(&input_);
@@ -63,9 +66,16 @@ void App::Initialize() {
 	graphics_->Initialize(kClientWidth,kClientHeight,window_->GetHwnd(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("Graphics Initialized.\n"));
 
+	// リソース
+	resourceManager_ = new ResourceManager();
+	resourceManager_->Initialize(graphics_->GetDeviceManager()->GetDevice(), graphics_->GetCommandListManager(), graphics_->GetDescriptorHeapManager(), logger_);
+
+	// コンテキスト
+	GameContext* gameContext_ = new GameContext(graphics_, audio_, input_, resourceManager_);
+
 	// シーンマネージャー
-	sceneManager_ = new SceneManager();
-	sceneManager_->Initialize(graphics_);
+	sceneManager_ = new SceneManager(gameContext_);
+	sceneManager_->Initialize();
 }
 
 void App::Run() {
@@ -92,13 +102,13 @@ void App::Run() {
 			//-------------------------------------------------
 
 			// 更新処理
-			sceneManager_->Update(input_,audio_);
+			sceneManager_->Update();
 
 			// 描画開始時に呼ぶ
 			graphics_->BeginFrame();
 
 			// 描画処理
-			sceneManager_->Draw(graphics_);
+			sceneManager_->Draw();
 			
 			// 描画終了時に呼ぶ
 			graphics_->EndFrame();
@@ -114,7 +124,6 @@ void App::Finalize() {
 
 	// XAudio終了処理
 	audio_->SoundUnload(L"Resources/Alarm01.wav");
-	
 	audio_->Finalize();
 	delete audio_;
 	MFShutdown();
@@ -123,6 +132,12 @@ void App::Finalize() {
 	// 入力
 	delete input_;
 	logger_->Log(logger_->GetStream(), std::format("DirectInput Finalized.\n"));
+
+	delete resourceManager_;
+	logger_->Log(logger_->GetStream(), std::format("ResourceManager Finalized.\n"));
+
+	delete gameContext_;
+	logger_->Log(logger_->GetStream(), std::format("GameContext Finalized.\n"));
 
 	// 描画クラス実体解放
 	graphics_->Finalize();

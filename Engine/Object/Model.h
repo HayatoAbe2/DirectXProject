@@ -1,17 +1,71 @@
 #pragma once
 #include "Material.h"
-#include <vector>
 #include "VertexData.h"
+#include "TransformationMatrix.h"
+#include "Texture.h"
+
 #include <d3d12.h>
 #include <wrl.h>
-#include "TransformationMatrix.h"
+#include <vector>
 #include <string>
+
 class Graphics;
 class Camera;
 class Model {
 public:
+	~Model() {
+		if (material_) delete material_;
+	}
 
-	static Model* LoadObjFile(const std::string& directoryPath, const std::string& filename, Graphics& graphics);
+	///
+	/// モデル読み込み時のSetter
+	///
+
+	/// <summary>
+	/// 頂点を設定
+	/// </summary>
+	/// <param name="vertices">モデルの頂点</param>
+	void SetVertices(const std::vector<VertexData>& vertices) { vertices_ = vertices; }
+
+	/// <summary>
+	/// 頂点バッファを設定
+	/// </summary>
+	/// <param name="vb">VertexBuffer</param>
+	void SetVertexBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource>& vb) { vertexBuffer_ = vb; }
+
+	/// <summary>
+	/// 頂点バッファビューを設定
+	/// </summary>
+	/// <param name="vbv">vertexBufferView</param>
+	void SetVBV(const D3D12_VERTEX_BUFFER_VIEW& vbv) { vertexBufferView_ = vbv; }
+
+	/// <summary>
+	/// material設定
+	/// </summary>
+	/// <param name="materialResource">マテリアル</param>
+	void SetMaterial(Material* material) { 
+		if (material_) { delete material_; }
+		material_ = material;
+	}
+
+	/// <summary>
+	/// 頂点の追加
+	/// </summary>
+	/// <param name="vertex">頂点データ</param>
+	void AddVertex(const VertexData& vertex) { vertices_.push_back(vertex); }
+
+	/// <summary>
+	/// transformリソース設定
+	/// </summary>
+	/// <param name="resource">リソース</param>
+	void SetTransformResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& resource_) { transformationResource_ = resource_; }
+
+	/// <summary>
+	/// transformデータ設定
+	/// </summary>
+	/// <param name="data">データ</param>
+	void SetTransformData(TransformationMatrix* data) { transformationData_ = data; }
+
 
 	/// <summary>
 	/// 描画のため、モデルのトランスフォームデータを更新
@@ -19,15 +73,8 @@ public:
 	/// <param name="camera"></param>
 	void UpdateTransformation(Camera& camera);
 
-	// マテリアルを初期化
-	void ResetMaterial();
-
 	// 1つのモデルの、複数のトランスフォームを更新する
 	void UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index);
-
-	void ImGuiEdit();
-
-	std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
 	/// <summary>
 	/// 描画
@@ -50,33 +97,17 @@ public:
 
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV()const { return vertexBufferView_; }
 	const std::vector<VertexData>& GetVertices() const{ return vertices_; }
-	const D3D12_GPU_DESCRIPTOR_HANDLE& GetTextureSRVHandle() const{ return textureSRVHandleGPU_; };
+
+	 const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const {return material_->GetTextureSRVHandle();}
+
 	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const { 
 		if (useExternalCBV_) {
 			return externalCBVAddress_;
-		} else { return transformationResource_->GetGPUVirtualAddress(); } };
-	const std::string& GetMtlPath()const { return mtlFilePath; };
-	const D3D12_GPU_VIRTUAL_ADDRESS GetMaterialAddress()const { return materialResource_->GetGPUVirtualAddress(); }
-	const Vector4 GetColor()const { return material_.color; };
+		} else { return transformationResource_->GetGPUVirtualAddress(); } } 
+	const std::string& GetMtlPath()const { return mtlFilePath; }
+	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialAddress() { return material_->GetCBV()->GetGPUVirtualAddress(); }
 
-
-	///
-	/// Setter
-	///
-
-	/// <summary>
-	/// SRVのGPUハンドル設定
-	/// </summary>
-	/// <param name="textureSRVHandleGPU">SRVのハンドル</param>
-	void SetTextureSRVHandle(D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU) { textureSRVHandleGPU_ = textureSRVHandleGPU; }
-
-	/// <summary>
-	/// テクスチャリソース設定
-	/// </summary>
-	/// <param name="textureResource">テクスチャリソース</param>
-	void SetTextureResource(Microsoft::WRL::ComPtr<ID3D12Resource> textureResource) {
-		textureResource_ = textureResource;
-	}
+	void UpdateMaterial() { material_->UpdateGPU(); }
 
 	/// <summary>
 	/// トランスフォーム設定
@@ -86,37 +117,6 @@ public:
 		transform_ = transform;
 	}
 
-	/// <summary>
-	/// 頂点の追加
-	/// </summary>
-	/// <param name="vertex">頂点データ</param>
-	void AddVertex(const VertexData& vertex) { vertices_.push_back(vertex); }
-
-	/// <summary>
-	/// mtlファイルパス設定
-	/// </summary>
-	/// <param name="mtlPath">mtlファイルのパス</param>
-	void SetMtlFilePath(const std::string& mtlPath) { mtlFilePath = mtlPath; }
-
-	/// <summary>
-	/// 頂点バッファ設定
-	/// </summary>
-	/// <param name="vertexBuffer"></param>
-	void SetVertexBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer) { vertexBuffer_ = vertexBuffer; }
-
-	/// <summary>
-	/// 頂点バッファビュー設定
-	/// </summary>
-	/// <param name="vertexBufferView"></param>
-	void SetVertexBufferView(const D3D12_VERTEX_BUFFER_VIEW& vertexBufferView) { vertexBufferView_ = vertexBufferView; }
-
-	/// <summary>
-	/// 色設定
-	/// </summary>
-	/// <param name="color"></param>
-	void SetColor(const Vector4& color) {
-		material_.color = color;
-	}
 private:
 
 	// モデルデータ
@@ -124,15 +124,12 @@ private:
 	std::string mtlFilePath;
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-	Material* materialData_ = nullptr;
-	Material material_;
+	Material* material_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Transform transform_;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU_ = {};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_ = nullptr;
 	TransformationMatrix* transformationData_ = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
 
 	// 複数体描画用（必要なときだけ使う）
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceCBVResource_ = nullptr;

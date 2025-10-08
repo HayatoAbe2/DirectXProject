@@ -143,15 +143,22 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Engine\Graphics\CommandListManager.cpp" />
+    <ClCompile Include="Engine\Graphics\DeviceManager.cpp" />
+    <ClCompile Include="Engine\Graphics\PipelineStateManager.cpp" />
+    <ClCompile Include="Engine\Graphics\RootSignatureManager.cpp" />
     <ClCompile Include="Engine\Math\AABB.cpp" />
     <ClCompile Include="Engine\App\App.cpp" />
     <ClCompile Include="Engine\Io\Audio.cpp" />
     <ClCompile Include="Engine\Math\Sphere.cpp" />
+    <ClCompile Include="Engine\Object\Material.cpp" />
+    <ClCompile Include="Engine\Object\ResourceManager.cpp" />
     <ClCompile Include="Engine\Scene\BaseScene.cpp" />
     <ClCompile Include="Engine\Scene\Camera.cpp" />
     <ClCompile Include="Engine\Scene\DebugCamera.cpp" />
     <ClCompile Include="Engine\Graphics\DescriptorHeapManager.cpp" />
     <ClCompile Include="Engine\Io\DumpExporter.cpp" />
+    <ClCompile Include="Engine\Scene\GameContext.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -199,16 +206,24 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Engine\Graphics\CommandListManager.h" />
+    <ClInclude Include="Engine\Graphics\DeviceManager.h" />
+    <ClInclude Include="Engine\Graphics\PipelineStateManager.h" />
+    <ClInclude Include="Engine\Graphics\RootSignatureManager.h" />
     <ClInclude Include="Engine\Math\AABB.h" />
     <ClInclude Include="Engine\App\App.h" />
     <ClInclude Include="Engine\Io\Audio.h" />
     <ClInclude Include="Engine\Math\Sphere.h" />
+    <ClInclude Include="Engine\Object\MaterialData.h" />
+    <ClInclude Include="Engine\Object\ResourceManager.h" />
+    <ClInclude Include="Engine\Object\Texture.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Scene\DebugCamera.h" />
     <ClInclude Include="Engine\Graphics\DescriptorHeapManager.h" />
-    <ClInclude Include="Engine\Scene\DictionalLight.h" />
+    <ClInclude Include="Engine\Scene\DirectionalLight.h" />
     <ClInclude Include="Engine\Io\DumpExporter.h" />
+    <ClInclude Include="Engine\Scene\GameContext.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />

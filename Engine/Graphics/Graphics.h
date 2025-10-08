@@ -1,23 +1,32 @@
 #pragma once
-#include <wrl.h>
-#include <dxgi1_6.h>
 #include "../Io/Logger.h"
-#include <d3d12.h>
-#include "../../externals/DirectXTex/DirectXTex.h"
-#include "../Math/MathUtils.h"
+#include "Math.h"
 #include "../Scene/DebugCamera.h"
 #include "../Object/Material.h"
-#include <dxcapi.h>
 #include "../Object/Model.h"
-#include "../Scene/DictionalLight.h"
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
-#include "../object/VertexData.h"
+#include "../Scene/DirectionalLight.h"
+#include "../Object/VertexData.h"
+
+#include <wrl.h>
+#include <dxgi1_6.h>
+#include <d3d12.h>
+#include <dxcapi.h>
+
+#include "externals/DirectXTex/DirectXTex.h"
 
 class Sprite;
+class DeviceManager;
+class CommandListManager;
+class RootSignatureManager;
 class ShaderCompiler;
-class DescriptorHeapManager;
 class RenderTargetManager;
+class DescriptorHeapManager;
+class PipelineStateManager;
+
+class ResourceManager;
+
 class Graphics {
 public:
 
@@ -25,16 +34,6 @@ public:
 	/// 初期化
 	/// </summary>
 	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger);
-
-	/// <summary>
-	/// モデル用SRV作成
-	/// </summary>
-	Model* CreateSRV(Model* model);
-
-	/// <summary>
-	/// スプライト用SRV作成
-	/// </summary>
-	Sprite* CreateSRV(Sprite* sprite);
 
 	/// <summary>
 	/// モデル描画
@@ -47,25 +46,6 @@ public:
 	/// </summary>
 	/// <param name="sprite">描画するスプライト</param>
 	void DrawSprite(Sprite& sprite);
-
-	/// <summary>
-	/// グリッド描画
-	/// </summary>
-	void DrawGrid(Camera& camera);
-
-	/// <summary>
-	/// 線描画
-	/// </summary>
-	/// <param name="camera"></param>
-	/// <param name="p0"></param>
-	/// <param name="p1"></param>
-	/// <param name="color"></param>
-	void DrawLine(Camera& camera, const Vector3& p0, const Vector3& p1, const Vector4& color);
-
-	/// <summary>
-	/// 球描画
-	/// </summary>
-	void DrawSphere(Transform& transform, Camera& camera);
 
 	/// <summary>
 	/// 解放処理(ループ終了後に行う)
@@ -91,59 +71,14 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
 	// アクセサ
-	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() const { return device_; }
 	int32_t GetWindowWidth() { return clientWidth_; };
 	int32_t GetWindowHeight() { return clientHeight_; };
-
-	// ImGui操作用関数
-	// ImGuiがBegin()後,End()前に呼び出す
-
-	/// <summary>
-	/// ライティングの操作
-	/// </summary>
-	void ImGuiEditLight();
-
-	/// <summary>
-	/// 球の操作
-	/// </summary>
-	void ImGuiEditSphere();
+	DeviceManager* GetDeviceManager() { return deviceManager_; };
+	CommandListManager* GetCommandListManager() { return commandListManager_; };
+	DescriptorHeapManager* GetDescriptorHeapManager() { return descriptorHeapManager_; };
 
 private:
 
-	/// <summary>
-	/// 使用アダプタの取得
-	/// </summary>
-	void SelectAdapter();
-
-	/// <summary>
-	/// デバイス生成
-	/// </summary>
-	void CreateD3D12Device();
-
-	/// <summary>
-	/// エラーメッセージ等設定
-	/// </summary>
-	void DebugFilter();
-
-	/// <summary>
-	/// Fence作成
-	/// </summary>
-	void InitializeFence();
-
-	/// <summary>
-	/// CommandQueue作成
-	/// </summary>
-	void InitializeCommandQueue();
-
-	/// <summary>
-	/// CommandAllocator作成
-	/// </summary>
-	void InitializeCommandAllocator();
-
-	/// <summary>
-	/// CommandList作成
-	/// </summary>
-	void InitializeCommandList();
 
 	/// <summary>
 	/// SwapChain初期化
@@ -151,24 +86,9 @@ private:
 	void InitializeSwapChain(HWND hwnd);
 
 	/// <summary>
-	/// RootSignature,RootParameter,Sampler設定
-	/// </summary>
-	void CreateRootSignature();
-
-	/// <summary>
-	/// Blend,Rasterizer,DepthStencil設定
-	/// </summary>
-	void CreatePipelineState();
-
-	/// <summary>
 	/// Viewport,Scissor設定
 	/// </summary>
 	void SetViewportAndScissor();
-
-	/// <summary>
-	/// ImGui初期化
-	/// </summary>
-	void InitializeImGui(HWND hwnd);
 
 	/// <summary>
 	/// DirectionalLight初期化
@@ -176,48 +96,10 @@ private:
 	void CreateLightBuffer();
 
 	/// <summary>
-	/// Texture読み込み
-	/// </summary>
-	DirectX::ScratchImage LoadTexture(const std::string& filePath);
-
-	/// <summary>
-	/// Resource作成
-	/// </summary>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const DirectX::TexMetadata& metadata);
-
-	/// <summary>
-	/// Texture転送
-	/// </summary>
-	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages, const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& commandList);
-
-	/// <summary>
-	/// DescriptorHandle取得
-	/// </summary>
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
-		const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap,
-		uint32_t descriptorSize, uint32_t index);
-
-	/// <summary>
 	/// TextureResource作成
 	/// </summary>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(
 		const Microsoft::WRL::ComPtr<ID3D12Device>& device, int32_t width, int32_t height);
-
-	/// <summary>
-	/// グリッド初期化
-	/// </summary>
-	void InitializeGrid();
-
-	/// <summary>
-	/// 線初期化
-	/// </summary>
-	void InitializeLine();
-
-	/// <summary>
-	/// 球初期化
-	/// </summary>
-	void InitializeSphere();
-
 
 	// 画面サイズ
 	int32_t clientWidth_;
@@ -226,24 +108,8 @@ private:
 	// DXGIファクトリー
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory_ = nullptr;
 
-	// 使用するアダプタ用の変数
-	IDXGIAdapter4* useAdapter_ = nullptr;
-
-	// D3D12デバイス
-	Microsoft::WRL::ComPtr<ID3D12Device> device_ = nullptr;
-
-	// フェンス
-	Microsoft::WRL::ComPtr<ID3D12Fence> fence_ = nullptr;
-	HANDLE fenceEvent_ = nullptr;
-	uint64_t fenceValue_ = 0;
-
-	// コマンドキュー
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
-	D3D12_COMMAND_QUEUE_DESC commandQueueDesc_{};
-	// コマンドアロケータ
-	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
-	// コマンドリスト
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
+	// デバイスマネージャー
+	DeviceManager* deviceManager_ = nullptr;
 
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
@@ -257,29 +123,7 @@ private:
 
 	// 遷移バリア
 	D3D12_RESOURCE_BARRIER barrier_ = {};
-
-	// inputLayout
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_;
-
-	// BlendStateの設定
-	D3D12_BLEND_DESC blendDesc_{};
-
-	// ResterizerStateの設定
-	D3D12_RASTERIZER_DESC rasterizerDesc_ = {};
-
-	// DepthStencilStateの設定
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc_{};
-
-	// シェーダー
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob_ = nullptr;
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob_ = nullptr;
-
-	// シグネチャ
-	ID3DBlob* signatureBlob_ = nullptr;
-
-	ID3DBlob* errorBlob_ = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;
-
+	
 	TransformationMatrix* transformationMatrixData_ = nullptr;
 	TransformationMatrix* transformationMatrixDataSprite_ = nullptr;
 
@@ -287,73 +131,9 @@ private:
 	D3D12_RECT scissorRect_ = {};
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite_ = nullptr;
-
-	// PSO
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> alphaBlendPSO_;
 	
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
 	DirectionalLight* directionalLightData_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridTextureResource_ = nullptr;
-
-	// 使用するモデル数
-	UINT modelCount_ = 0;
-
-	// グリッドで使用
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> gridPipelineState_;
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> gridRootSignature_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResource_;
-	Material* gridMaterialData_;
-
-	std::vector<VertexData> gridVertices_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBuffer_;
-	D3D12_VERTEX_BUFFER_VIEW gridVBV_;
-	Material gridMaterial_;
-
-	// グリッド原点
-	std::vector<VertexData> gridVerticesOrigin_;
-	D3D12_VERTEX_BUFFER_VIEW gridVBVOrigin_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBufferOrigin_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResourceOrigin_;
-	Material* gridMaterialDataOrigin_;
-	Material gridMaterialOrigin_;
-
-	// グリッド強調線
-	std::vector<VertexData> gridVerticesMark_;
-	D3D12_VERTEX_BUFFER_VIEW gridVBVMark_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridVertexBufferMark_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridMaterialResourceMark_;
-	Material* gridMaterialDataMark_;
-	Material gridMaterialMark_;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> gridTransformationResource_;
-	TransformationMatrix* gridTransformationData_;
-	Transform gridTransform_;
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gridPipelineStateDesc_;
-	D3D12_INPUT_LAYOUT_DESC gridInputLayoutDesc_;
-	D3D12_GPU_DESCRIPTOR_HANDLE gridSRVHandleGPU_;
-
-	// グリッド用シェーダー
-	Microsoft::WRL::ComPtr<IDxcBlob> gridVSBlob_ = nullptr;
-	Microsoft::WRL::ComPtr<IDxcBlob> gridPSBlob_ = nullptr;
-
-	// 線描画用
-	std::vector<VertexData> lineVertices_;                  // 2頂点ぶんのデータ
-	Microsoft::WRL::ComPtr<ID3D12Resource> lineVertexBuffer_; // 頂点バッファリソース
-	D3D12_VERTEX_BUFFER_VIEW lineVBV_;                      // VBV(頂点バッファビュー)
-	VertexData* lineMapped_ = nullptr;                      // Map して CPU から書き込むポインタ
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> lineMaterialResource_; // マテリアル用CBV
-	Material* lineMaterialData_ = nullptr;                        // Map 先
-	Material lineMaterial_;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> lineTransformationResource_; // WVP用CBV
-	TransformationMatrix* lineTransformationData_ = nullptr;           // Map 先
-
-
-	// SRVのインデックス
-	UINT currentSRVIndex_ = 0;
 
 	// ログクラス
 	Logger* logger_;
@@ -367,21 +147,15 @@ private:
 	// RTV設定など
 	RenderTargetManager* renderTargetManager_ = nullptr;
 
-	// 球体描画系
-	struct SphereDrawer {
-		std::vector<VertexData> vertices;
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = nullptr;
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-		Material material;
-		Material* materialData = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12Resource> transformResource = nullptr;
-		Microsoft::WRL::ComPtr<ID3D12Resource> textureResource = nullptr;
-		D3D12_GPU_DESCRIPTOR_HANDLE textureSRVHandleGPU;
-		TransformationMatrix* transformData = nullptr;
-	};
-	SphereDrawer sphereDrawer_;
+	// リソース管理クラス
+	ResourceManager* resourceManager_ = nullptr;
 
-	// Matrix4x4->Vector3の保持(ImGui編集用)
-	Transform sphereSRT_ = { 1,1,1 };
+	// コマンド関連
+	CommandListManager* commandListManager_ = nullptr;
+
+	// ルートシグネチャ管理クラス
+	RootSignatureManager* rootSignatureManager_ = nullptr;
+
+	// パイプラインステート管理クラス
+	PipelineStateManager* pipelineStateManager_ = nullptr;
 };
