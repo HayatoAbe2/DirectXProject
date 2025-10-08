@@ -1,13 +1,14 @@
 #pragma once
 
 class Model;
+class GameContext;
 class Player {
 public:
-	Player(Model* model);
 	~Player();
 
+	void Initialize(Model* playerModel);
 	void Update();
-	void Draw();
+	void Draw(GameContext* context, Camera* camera);
 
 private:
 

@@ -7,10 +7,9 @@
 #include "Camera.h"
 #include "BaseScene.h"
 
-class Input;
 class Graphics;
 class Camera;
-class Audio;
+class Player;
 // ゲームシーン
 class GameScene : public BaseScene {
 public:
@@ -27,8 +26,8 @@ public:
 	void Draw() override;
 
 private:
-	// テクスチャハンドル
-	uint32_t textureHandle_ = 0;
+	// プレイヤー
+	Player* player_ = nullptr;
 
 	// 3Dモデル
 	Model* playerModel_ = nullptr;
