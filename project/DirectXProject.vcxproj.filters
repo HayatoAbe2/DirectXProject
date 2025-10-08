@@ -57,97 +57,97 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <Filter>Externals\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\Matrix4x4.cpp">
+    <ClCompile Include="engine\Math\Matrix4x4.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\Vector3.cpp">
+    <ClCompile Include="engine\Math\Vector3.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\Lerp.cpp">
+    <ClCompile Include="engine\Math\Lerp.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\AABB.cpp">
+    <ClCompile Include="engine\Math\AABB.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\ShaderCompiler.cpp">
+    <ClCompile Include="engine\Graphics\ShaderCompiler.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\DescriptorHeapManager.cpp">
+    <ClCompile Include="engine\Graphics\DescriptorHeapManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\Graphics.cpp">
+    <ClCompile Include="engine\Graphics\Graphics.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\RenderTargetManager.cpp">
+    <ClCompile Include="engine\Graphics\RenderTargetManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\Vector4.cpp">
+    <ClCompile Include="engine\Math\Vector4.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\App\App.cpp">
+    <ClCompile Include="engine\App\App.cpp">
       <Filter>Engine\App</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\App\Window.cpp">
+    <ClCompile Include="engine\App\Window.cpp">
       <Filter>Engine\App</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\CommandListManager.cpp">
+    <ClCompile Include="engine\Graphics\CommandListManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\PipelineStateManager.cpp">
+    <ClCompile Include="engine\Graphics\PipelineStateManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\RootSignatureManager.cpp">
+    <ClCompile Include="engine\Graphics\RootSignatureManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\DeviceManager.cpp">
+    <ClCompile Include="engine\Graphics\DeviceManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene\BaseScene.cpp">
+    <ClCompile Include="engine\Scene\BaseScene.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene\Camera.cpp">
+    <ClCompile Include="engine\Scene\Camera.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene\DebugCamera.cpp">
+    <ClCompile Include="engine\Scene\DebugCamera.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene\GameContext.cpp">
+    <ClCompile Include="engine\Scene\GameContext.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Scene\SceneManager.cpp">
+    <ClCompile Include="engine\Scene\SceneManager.cpp">
       <Filter>Engine\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Object\Material.cpp">
+    <ClCompile Include="engine\Object\Material.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Object\Sprite.cpp">
+    <ClCompile Include="engine\Object\Sprite.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Object\Model.cpp">
+    <ClCompile Include="engine\Object\Model.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Object\ResourceManager.cpp">
+    <ClCompile Include="engine\Object\ResourceManager.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\Sphere.cpp">
+    <ClCompile Include="engine\Math\Sphere.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Io\Audio.cpp">
+    <ClCompile Include="engine\Io\Audio.cpp">
       <Filter>Engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Io\DumpExporter.cpp">
+    <ClCompile Include="engine\Io\DumpExporter.cpp">
       <Filter>Engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Io\Input.cpp">
+    <ClCompile Include="engine\Io\Input.cpp">
       <Filter>Engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Io\Logger.cpp">
+    <ClCompile Include="engine\Io\Logger.cpp">
       <Filter>Engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="GameScene.cpp">
+    <ClCompile Include="application\GameScene.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp">
+    <ClCompile Include="application\Player.cpp">
       <Filter>Application</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
@@ -191,124 +191,124 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h">
       <Filter>Externals\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\MathUtils.h">
+    <ClInclude Include="engine\Math\MathUtils.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Vector2.h">
+    <ClInclude Include="engine\Math\Vector2.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Vector3.h">
+    <ClInclude Include="engine\Math\Vector3.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Vector4.h">
+    <ClInclude Include="engine\Math\Vector4.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Matrix3x3.h">
+    <ClInclude Include="engine\Math\Matrix3x3.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Matrix4x4.h">
+    <ClInclude Include="engine\Math\Matrix4x4.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Lerp.h">
+    <ClInclude Include="engine\Math\Lerp.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\AABB.h">
+    <ClInclude Include="engine\Math\AABB.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\ShaderCompiler.h">
+    <ClInclude Include="engine\Graphics\ShaderCompiler.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\DescriptorHeapManager.h">
+    <ClInclude Include="engine\Graphics\DescriptorHeapManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Graphics.h">
+    <ClInclude Include="engine\Graphics\Graphics.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\RenderTargetManager.h">
+    <ClInclude Include="engine\Graphics\RenderTargetManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\App\App.h">
+    <ClInclude Include="engine\App\App.h">
       <Filter>Engine\App</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\App\Window.h">
+    <ClInclude Include="engine\App\Window.h">
       <Filter>Engine\App</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\BaseScene.h">
+    <ClInclude Include="engine\Scene\BaseScene.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\SceneManager.h">
+    <ClInclude Include="engine\Scene\SceneManager.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\CommandListManager.h">
+    <ClInclude Include="engine\Graphics\CommandListManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\DeviceManager.h">
+    <ClInclude Include="engine\Graphics\DeviceManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\RootSignatureManager.h">
+    <ClInclude Include="engine\Graphics\RootSignatureManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\PipelineStateManager.h">
+    <ClInclude Include="engine\Graphics\PipelineStateManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\Camera.h">
+    <ClInclude Include="engine\Scene\Camera.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\DebugCamera.h">
+    <ClInclude Include="engine\Scene\DebugCamera.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\DirectionalLight.h">
+    <ClInclude Include="engine\Scene\DirectionalLight.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Scene\GameContext.h">
+    <ClInclude Include="engine\Scene\GameContext.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\Model.h">
+    <ClInclude Include="engine\Object\Model.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Io\Audio.h">
+    <ClInclude Include="engine\Io\Audio.h">
       <Filter>Engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Io\DumpExporter.h">
+    <ClInclude Include="engine\Io\DumpExporter.h">
       <Filter>Engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Io\Input.h">
+    <ClInclude Include="engine\Io\Input.h">
       <Filter>Engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Io\Logger.h">
+    <ClInclude Include="engine\Io\Logger.h">
       <Filter>Engine\IO</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\Material.h">
+    <ClInclude Include="engine\Object\Material.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\MaterialData.h">
+    <ClInclude Include="engine\Object\MaterialData.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\ResourceManager.h">
+    <ClInclude Include="engine\Object\ResourceManager.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\Sphere.h">
+    <ClInclude Include="engine\Math\Sphere.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\Transform.h">
+    <ClInclude Include="engine\Object\Transform.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\Texture.h">
+    <ClInclude Include="engine\Object\Texture.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\Sprite.h">
+    <ClInclude Include="engine\Object\Sprite.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\TransformationMatrix.h">
+    <ClInclude Include="engine\Object\TransformationMatrix.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Object\VertexData.h">
+    <ClInclude Include="engine\Object\VertexData.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="GameScene.h">
+    <ClInclude Include="application\GameScene.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
+    <ClInclude Include="application\Player.h">
       <Filter>Application</Filter>
     </ClInclude>
   </ItemGroup>
