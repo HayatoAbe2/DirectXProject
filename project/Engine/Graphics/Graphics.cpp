@@ -134,6 +134,7 @@ void Graphics::DrawSprite(Sprite& sprite) {
 
 void Graphics::Finalize() {
 	if (rootSignatureManager_->GetErrorBlob()) rootSignatureManager_->GetErrorBlob()->Release();
+	delete deviceManager_;
 	delete commandListManager_;
 	delete descriptorHeapManager_;
 	delete renderTargetManager_;
@@ -181,11 +182,6 @@ void Graphics::BeginFrame() {
 	commandListManager_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);
 	// RootSignatureを設定
 	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetRootSignature().Get());
-
-	// ImGuiフレーム
-	//ImGui_ImplDX12_NewFrame();
-	//ImGui_ImplWin32_NewFrame();
-	//ImGui::NewFrame();
 }
 
 void Graphics::EndFrame() {

@@ -3,8 +3,12 @@
 #include <filesystem>
 
 Logger::Logger() {
+	// 現在の出力ディレクトリ（exeの実行ディレクトリ）を取得
+	std::filesystem::path outputDir = std::filesystem::current_path();
+	// logs フォルダを出力ディレクトリ配下に作成
+	std::filesystem::path logDir = outputDir / "logs";
 	// ログのディレクトリを用意
-	std::filesystem::create_directory("logs");
+	std::filesystem::create_directory(logDir);
 	// 現在時刻を取得(UTC)
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 	// ログファイルの名前にコンマ何秒はいらないので、削って秒にする
@@ -15,7 +19,7 @@ Logger::Logger() {
 	// formatを使って年月日_時分秒の文字列に変換
 	std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
 	// 時刻を使ってファイル名を決定
-	std::string logFilePath = std::string("logs/") + dateString + ".log";
+	std::filesystem::path logFilePath = logDir / (dateString + ".log");
 	// ファイルを作って書き込み準備
 	logStream_.open(logFilePath);
 }
