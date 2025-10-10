@@ -61,11 +61,11 @@ private:
 	IDirectInputDevice8* keyboard_;
 	IDirectInputDevice8* mouse_;
 
-	BYTE preKey_[256];
-	BYTE key_[256];
-	DIMOUSESTATE preMouseState_;
-	DIMOUSESTATE mouseState_;
-	HWND hwnd_; // ウィンドウハンドル
+	BYTE preKey_[256]{};
+	BYTE key_[256]{};
+	DIMOUSESTATE preMouseState_{};
+	DIMOUSESTATE mouseState_{};
+	HWND hwnd_{}; // ウィンドウハンドル
 
 };
 

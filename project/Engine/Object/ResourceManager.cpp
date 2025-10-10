@@ -10,6 +10,24 @@
 #include <sstream>
 #include <cassert>
 
+ResourceManager::~ResourceManager() {
+	// キャッシュしているリソースを解放
+	for (auto& texture : textures_) {
+		delete texture.second;
+	}
+	textures_.clear();
+
+	for (auto& model : models_) {
+		delete model.second;
+	}
+	models_.clear();
+
+	for (auto& sprite : sprites_) {
+		delete sprite.second;
+	}
+	sprites_.clear();
+}
+
 void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, Logger* logger) {
 	device_ = device;
 	commandListManager_ = commandListManager;
@@ -156,6 +174,13 @@ Texture* ResourceManager::CreateSRV(Texture* texture) {
 }
 
 Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	// キャッシュにあるか確認
+	std::string fullPath = directoryPath + "/" + filename;
+	auto it = models_.find(fullPath);
+	if (it != models_.end()) {
+		return it->second; // キャッシュにあったのでそれを返す
+	}
+	
 	// 変数の宣言
 	Model* model = new Model; // 構築するModeldata
 	std::vector<Vector4> positions;	// 位置
@@ -275,6 +300,9 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 	model->SetTransformResource(transformationResource);
 	model->SetTransformData(transformationData);
 
+	// キャッシュに登録
+	models_.insert({ fullPath, model });
+
 	return model;
 }
 
@@ -303,6 +331,13 @@ std::string ResourceManager::LoadMaterialTemplateFile(const std::string& directo
 }
 
 Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
+	// キャッシュにあるか確認
+	auto it = sprites_.find(texturePath);
+	if (it != sprites_.end()) {
+		return it->second; // キャッシュにあったのでそれを返す
+	}
+	
+	
 	Sprite* sprite = new Sprite;
 	
 	// UVTransform
@@ -396,6 +431,9 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	
 	// 描画する大きさを設定
 	sprite->SetSize({size.x,size.y,1.0f});
+
+	// キャッシュに登録
+	sprites_.insert({ texturePath, sprite });
 
 	return sprite;
 }

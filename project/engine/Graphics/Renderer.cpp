@@ -83,16 +83,12 @@ void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	SetViewportAndScissor();
 }
 
-void Renderer::DrawModel(Model& model,bool useAlphaBlend) {
+void Renderer::DrawModel(Model& model,int blendMode) {
 
 	model.UpdateMaterial();
 
 	// PSO設定
-	if (useAlphaBlend) {
-		commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetAlphaBlendPSO());
-	} else {
-		commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetNoneBlendPSO());
-	}
+	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetPSO(blendMode));
 
 	// トポロジを三角形に設定
 	commandListManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -112,9 +108,9 @@ void Renderer::DrawModel(Model& model,bool useAlphaBlend) {
 	commandListManager_->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
 }
 
-void Renderer::DrawSprite(Sprite& sprite) {
+void Renderer::DrawSprite(Sprite& sprite,int blendMode) {
 	// PSO設定
-	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetAlphaBlendPSO());
+	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetPSO(blendMode));
 	// トポロジを三角形に設定
 	commandListManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定

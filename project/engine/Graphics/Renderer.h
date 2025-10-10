@@ -1,6 +1,5 @@
 #pragma once
 #include "../Io/Logger.h"
-#include "Math.h"
 #include "../Scene/DebugCamera.h"
 #include "../Object/Material.h"
 #include "../Object/Model.h"
@@ -8,6 +7,7 @@
 #include "../Object/TransformationMatrix.h"
 #include "../Scene/DirectionalLight.h"
 #include "../Object/VertexData.h"
+#include "BlendMode.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -35,17 +35,18 @@ public:
 	/// </summary>
 	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger);
 
+	
 	/// <summary>
 	/// モデル描画
 	/// </summary>
-	/// <param name="model">描画するモデル</param>
-	void DrawModel(Model& model, bool useAlphaBlend = 0);
+	/// <param name="blendMode">ブレンドモード</param>
+	void DrawModel(Model& model, int blendMode);
 
 	/// <summary>
 	/// スプライト描画
 	/// </summary>
-	/// <param name="sprite">描画するスプライト</param>
-	void DrawSprite(Sprite& sprite);
+	/// <param name="blendMode">ブレンドモード</param>
+	void DrawSprite(Sprite& sprite,int blendMode);
 
 	/// <summary>
 	/// 解放処理(ループ終了後に行う)

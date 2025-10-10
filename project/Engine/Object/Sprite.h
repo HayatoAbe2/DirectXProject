@@ -75,12 +75,6 @@ public:
 	/// <param name="size"></param>
 	void SetSize(const Vector3& size) { size_ = size; }
 
-	/// <summary>
-	/// 描画
-	/// </summary>
-	/// <param name="graphics">Graphicsインスタンス</param>
-	void Draw(Renderer& graphics);
-
 	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos = true);
 
 	void ImGuiEdit();

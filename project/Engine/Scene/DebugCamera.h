@@ -6,18 +6,20 @@
 /// <summary>
 /// デバッグカメラ
 /// </summary>
+ 
+class GameContext;
 class DebugCamera {
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize();
+	void Initialize(GameContext* context);
 
 	/// <summary>
 	/// 更新
 	/// </summary>
 	/// <param name="key">キー入力</param>
-	void Update(Input* input);
+	void Update();
 
 	/// <summary>
 	/// ビュー行列
@@ -32,7 +34,7 @@ private:
 	/// カメラの移動・回転
 	/// </summary>
 	/// <param name="key">キー入力</param>
-	void ControlCamera(Input* input);
+	void ControlCamera();
 
 	/// <summary>
 	/// ビュー行列の更新
@@ -64,5 +66,7 @@ private:
 	Matrix4x4 viewMatrix_;
 	// 射影行列
 	Matrix4x4 orthographicMatrix_;
+
+	GameContext* context_ = nullptr;
 };
 

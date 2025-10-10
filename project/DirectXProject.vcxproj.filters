@@ -311,6 +311,7 @@
     <ClInclude Include="application\Player.h">
       <Filter>Application</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Graphics\BlendMode.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

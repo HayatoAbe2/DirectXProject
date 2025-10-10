@@ -25,12 +25,12 @@ Sprite* GameContext::LoadSprite(std::string texturePath, Vector2 size) {
 	return resourceManager_->LoadSprite(texturePath, size);
 }
 
-void GameContext::DrawModel(Model& model, bool useAlphaBlend) {
-	renderer_->DrawModel(model, useAlphaBlend);
+void GameContext::DrawModel(Model& model, BlendMode blendMode) {
+	renderer_->DrawModel(model, static_cast<int>(blendMode));
 }
 
-void GameContext::DrawSprite(Sprite& sprite) {
-	renderer_->DrawSprite(sprite);
+void GameContext::DrawSprite(Sprite& sprite, BlendMode blendMode) {
+	renderer_->DrawSprite(sprite,static_cast<int>(blendMode));
 }
 
 bool GameContext::IsTrigger(uint8_t keyNumber) {

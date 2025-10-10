@@ -21,6 +21,8 @@ class Logger;
 /// </summary>
 class ResourceManager {
 public:
+    ~ResourceManager();
+
     void Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device,CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager,Logger* logger);
 
     DirectX::ScratchImage LoadTexture(const std::string& filePath);
@@ -58,8 +60,9 @@ private:
     UINT currentSRVIndex_ = 0;
 
 	// 作成したリソースのキャッシュ
-    std::unordered_map<std::string, std::unique_ptr<Texture>> textures_;
-    std::unordered_map<std::string, std::unique_ptr<Model>> models_;
+    std::unordered_map<std::string, Texture*> textures_;
+    std::unordered_map<std::string, Model*> models_;
+    std::unordered_map<std::string, Sprite*> sprites_;
 };
 
 

@@ -1,4 +1,7 @@
 #pragma once
+
+#include "BlendMode.h"
+
 #include <d3d12.h>
 #include <wrl.h>
 #include <dxcapi.h>
@@ -9,8 +12,7 @@ public:
 
 	void CreatePipelineState();
 
-	ID3D12PipelineState* GetNoneBlendPSO() { return noneBlendPSO.Get(); }
-	ID3D12PipelineState* GetAlphaBlendPSO() { return alphaBlendPSO_.Get(); }
+	ID3D12PipelineState* GetPSO(int index) { return pso_[index].Get(); }
 
 	void SetVSBlob(Microsoft::WRL::ComPtr<IDxcBlob> blob) { vertexShaderBlob_ = blob; }
 	void SetPSBlob(Microsoft::WRL::ComPtr<IDxcBlob> blob) { pixelShaderBlob_ = blob; }
@@ -30,12 +32,7 @@ private:
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc_{};
 
 	// PSO
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> noneBlendPSO;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> alphaBlendPSO_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> addBlendPSO_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> subtractBlendPSO_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> multiplyBlendPSO_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> screenBlendPSO_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> pso_[7]{};
 
 	//
 	// 参照
@@ -50,6 +47,16 @@ private:
 	// シェーダー
 	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob_ = nullptr;
 	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob_ = nullptr;
+
+	D3D12_BLEND_DESC CreateNoneBlendDesc();
+	D3D12_BLEND_DESC CreateAlphaBlendDesc();
+	D3D12_BLEND_DESC CreateAddBlendDesc();
+	D3D12_BLEND_DESC CreateSubtractBlendDesc();
+	D3D12_BLEND_DESC CreateMultiplyBlendDesc();
+	D3D12_BLEND_DESC CreateScreenBlendDesc();
+
+	D3D12_DEPTH_STENCIL_DESC CreateDefaultDepthDesc();
+	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC baseDesc, const D3D12_BLEND_DESC& blendDesc, Microsoft::WRL::ComPtr<ID3D12PipelineState>* outPSO);
 
 };
 

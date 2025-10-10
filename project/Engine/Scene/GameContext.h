@@ -1,5 +1,6 @@
 #pragma once
 #include "MathUtils.h"
+#include "../Graphics/BlendMode.h"
 
 #include <cstdint>
 #include <string>
@@ -31,8 +32,8 @@ public:
 	/// 描画系 
 	///
 
-	void DrawModel(class Model& model, bool useAlphaBlend = 0);
-	void DrawSprite(class Sprite& sprite);
+	void DrawModel(class Model& model, BlendMode blendMode = BlendMode::Normal);
+	void DrawSprite(class Sprite& sprite, BlendMode blendMode = BlendMode::Normal);
 
 	/// 
 	/// 入力系

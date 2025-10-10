@@ -218,6 +218,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />
     <ClInclude Include="engine\Graphics\DeviceManager.h" />
     <ClInclude Include="engine\Graphics\PipelineStateManager.h" />

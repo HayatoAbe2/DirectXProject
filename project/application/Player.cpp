@@ -20,5 +20,5 @@ void Player::Update() {
 
 void Player::Draw(GameContext* context,Camera* camera) {
 	model_->UpdateTransformation(*camera);
-	context->DrawModel(*model_);
+	context->DrawModel(*model_,BlendMode::None);
 }

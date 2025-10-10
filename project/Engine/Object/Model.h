@@ -76,12 +76,6 @@ public:
 	// 1つのモデルの、複数のトランスフォームを更新する
 	void UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index);
 
-	/// <summary>
-	/// 描画
-	/// </summary>
-	/// <param name="renderer"></param>
-	void Draw(Renderer& renderer, const Vector4& color = {1,1,1,0.3f}, bool useAlphaBlend = 0);
-
 	void EnableInstanceCBV(Renderer& renderer, int maxInstances);
 
 	/// <summary>

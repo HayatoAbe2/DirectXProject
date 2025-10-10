@@ -27,156 +27,140 @@ void PipelineStateManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>
 }
 
 void PipelineStateManager::CreatePipelineState() {
-	// ブレンド設定
-	// すべての色要素を書き込む
-	blendDesc_.RenderTarget[0].BlendEnable = FALSE;
-	blendDesc_.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-	// ラスタライザ設定
-	// 裏面(時計回り)を表示しない
-	rasterizerDesc_.CullMode = D3D12_CULL_MODE_NONE;
-	// 三角形の中を塗りつぶす
-	rasterizerDesc_.FillMode = D3D12_FILL_MODE_SOLID;
-
-	// DepthStencil設定
-	// Depthの機能を有効化する
-	depthStencilDesc_.DepthEnable = true;
-	// 書き込み
-	depthStencilDesc_.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	// 比較関数はLessEqual。つまり、近ければ描画される
-	depthStencilDesc_.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	HRESULT hr;
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature_.Get();		// RootSignature
-	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc_;		// InputLayout
-	graphicsPipelineStateDesc.VS = { vertexShaderBlob_->GetBufferPointer(),
-	vertexShaderBlob_->GetBufferSize() };							// VertexShader
-	graphicsPipelineStateDesc.PS = { pixelShaderBlob_->GetBufferPointer(),
-	pixelShaderBlob_->GetBufferSize() };								// PixelShader
-	graphicsPipelineStateDesc.BlendState = blendDesc_;				// BlendState
-	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc_;		// RasterizerState
-	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc_;	// DepthStencilState
-	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	// 書き込むRTVの情報
-	graphicsPipelineStateDesc.NumRenderTargets = 1;
-	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	// 利用するトポロジ(形状)のタイプ。三角形
-	graphicsPipelineStateDesc.PrimitiveTopologyType =
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	// どのように画面に色を打ち込むかの設定
-	graphicsPipelineStateDesc.SampleDesc.Count = 1;
-	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
-	// 実際に生成
 	assert(rootSignature_);
 	assert(vertexShaderBlob_);
 	assert(pixelShaderBlob_);
 	assert(inputLayoutDesc_.pInputElementDescs != nullptr);
 
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&noneBlendPSO));
+	// 共通部分作成
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC baseDesc{};
+	baseDesc.pRootSignature = rootSignature_.Get();
+	baseDesc.InputLayout = inputLayoutDesc_;
+	baseDesc.VS = { vertexShaderBlob_->GetBufferPointer(), vertexShaderBlob_->GetBufferSize() };
+	baseDesc.PS = { pixelShaderBlob_->GetBufferPointer(), pixelShaderBlob_->GetBufferSize() };
+
+	// ブレンド
+	baseDesc.BlendState = CreateNoneBlendDesc();
+
+	// ラスタライザ
+	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+
+	// DepthStencil
+	baseDesc.DepthStencilState.DepthEnable = TRUE;
+	baseDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	baseDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	baseDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	baseDesc.NumRenderTargets = 1;
+	baseDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	baseDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	baseDesc.SampleDesc.Count = 1;
+	baseDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	// --- 各ブレンドモードごとのPSO生成 ---
+	CreatePSO(baseDesc, CreateNoneBlendDesc(), &pso_[static_cast<int>(BlendMode::None)]);				// ブレンドなし
+	CreatePSO(baseDesc, CreateAlphaBlendDesc(), &pso_[static_cast<int>(BlendMode::Normal)]);		// αブレンド
+	CreatePSO(baseDesc, CreateAddBlendDesc(), &pso_[static_cast<int>(BlendMode::Add)]);				// 加算
+	CreatePSO(baseDesc, CreateSubtractBlendDesc(), &pso_[static_cast<int>(BlendMode::Subtract)]);	// 減算
+	CreatePSO(baseDesc, CreateMultiplyBlendDesc(), &pso_[static_cast<int>(BlendMode::Multiply)]);	// 乗算
+	CreatePSO(baseDesc, CreateScreenBlendDesc(), &pso_[static_cast<int>(BlendMode::Screen)]);		// スクリーン
+}
+
+// ----------------------------------------------------
+// 各ブレンド設定生成
+// ----------------------------------------------------
+
+D3D12_BLEND_DESC PipelineStateManager::CreateNoneBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	desc.RenderTarget[0].BlendEnable = FALSE;
+	desc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	return desc;
+}
+
+D3D12_BLEND_DESC PipelineStateManager::CreateAlphaBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	auto& rt = desc.RenderTarget[0];
+	rt.BlendEnable = TRUE;
+	rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	rt.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	rt.BlendOp = D3D12_BLEND_OP_ADD;
+	rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	return desc;
+}
+
+D3D12_BLEND_DESC PipelineStateManager::CreateAddBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	auto& rt = desc.RenderTarget[0];
+	rt.BlendEnable = TRUE;
+	rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	rt.DestBlend = D3D12_BLEND_ONE;
+	rt.BlendOp = D3D12_BLEND_OP_ADD;
+	rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	return desc;
+}
+
+D3D12_BLEND_DESC PipelineStateManager::CreateSubtractBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	auto& rt = desc.RenderTarget[0];
+	rt.BlendEnable = TRUE;
+	rt.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	rt.DestBlend = D3D12_BLEND_ONE;
+	rt.BlendOp = D3D12_BLEND_OP_SUBTRACT;
+	rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	return desc;
+}
+
+D3D12_BLEND_DESC PipelineStateManager::CreateMultiplyBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	auto& rt = desc.RenderTarget[0];
+	rt.BlendEnable = TRUE;
+	rt.SrcBlend = D3D12_BLEND_ZERO;
+	rt.DestBlend = D3D12_BLEND_SRC_COLOR;
+	rt.BlendOp = D3D12_BLEND_OP_ADD;
+	rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	return desc;
+}
+
+D3D12_BLEND_DESC PipelineStateManager::CreateScreenBlendDesc() {
+	D3D12_BLEND_DESC desc{};
+	auto& rt = desc.RenderTarget[0];
+	rt.BlendEnable = TRUE;
+	rt.SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+	rt.DestBlend = D3D12_BLEND_ONE;
+	rt.BlendOp = D3D12_BLEND_OP_ADD;
+	rt.SrcBlendAlpha = D3D12_BLEND_ONE;
+	rt.DestBlendAlpha = D3D12_BLEND_ZERO;
+	rt.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	rt.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	return desc;
+}
+
+// ----------------------------------------------------
+// PSO生成
+// ----------------------------------------------------
+
+void PipelineStateManager::CreatePSO(
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC baseDesc,
+	const D3D12_BLEND_DESC& blendDesc,
+	Microsoft::WRL::ComPtr<ID3D12PipelineState>* outPSO) {
+
+	baseDesc.BlendState = blendDesc;
+	HRESULT hr = device_->CreateGraphicsPipelineState(&baseDesc, IID_PPV_ARGS(outPSO->ReleaseAndGetAddressOf()));
 	assert(SUCCEEDED(hr));
-
-	//
-	// スプライト用(アルファ値対応)PSO
-	//
-
-	// DepthStencil設定
-	D3D12_DEPTH_STENCIL_DESC spriteDepthDesc{};
-	spriteDepthDesc.DepthEnable = true;
-	spriteDepthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	spriteDepthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-
-	// PSO 設定
-	graphicsPipelineStateDesc.DepthStencilState = spriteDepthDesc;
-
-
-	// αブレンド有効
-	D3D12_BLEND_DESC alphaBlendDesc{};
-	alphaBlendDesc.RenderTarget[0].BlendEnable = TRUE;
-	alphaBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	alphaBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	alphaBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	alphaBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	alphaBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	alphaBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	alphaBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-
-	// BlendStateのみ変更
-	graphicsPipelineStateDesc.BlendState = alphaBlendDesc;
-	graphicsPipelineStateDesc.DepthStencilState = spriteDepthDesc;
-
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&alphaBlendPSO_));
-	assert(SUCCEEDED(hr));
-
-
-	D3D12_BLEND_DESC addBlendDesc{};
-	addBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	addBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	addBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-
-	graphicsPipelineStateDesc.BlendState = addBlendDesc;
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&addBlendPSO_));
-	assert(SUCCEEDED(hr));
-
-	D3D12_BLEND_DESC subtractBlendDesc{};
-	subtractBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	subtractBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	subtractBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_SUBTRACT;
-	graphicsPipelineStateDesc.BlendState = subtractBlendDesc;
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&subtractBlendPSO_));
-	assert(SUCCEEDED(hr));
-
-	D3D12_BLEND_DESC multiplyBlendDesc{};
-	multiplyBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
-	multiplyBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
-	multiplyBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	graphicsPipelineStateDesc.BlendState = multiplyBlendDesc;
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&multiplyBlendPSO_));
-	assert(SUCCEEDED(hr));
-
-	D3D12_BLEND_DESC screenBlendDesc{};
-	screenBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
-	screenBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
-	screenBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	graphicsPipelineStateDesc.BlendState = screenBlendDesc;
-	hr = device_->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&screenBlendPSO_));
-	assert(SUCCEEDED(hr));
-
-
-
-
-	//
-	// グリッド用の設定
-	//
-
-	//gridVSBlob_ = shaderCompiler_->Compile(L"Grid.VS.hlsl",
-	//	L"vs_6_0", logger_);
-	//assert(gridVSBlob_ != nullptr);
-
-	//gridPSBlob_ = shaderCompiler_->Compile(L"Grid.PS.hlsl",
-	//	L"ps_6_0", logger_);
-	//assert(gridPSBlob_ != nullptr);
-
-	//// モデル描画用からコピー
-	//gridPipelineStateDesc_ = graphicsPipelineStateDesc;
-
-	//// トポロジタイプをラインにする
-	//gridPipelineStateDesc_.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
-
-	//// シェーダー適用
-	//gridPipelineStateDesc_.VS = { gridVSBlob_->GetBufferPointer(), gridVSBlob_->GetBufferSize() };
-	//gridPipelineStateDesc_.PS = { gridPSBlob_->GetBufferPointer(), gridPSBlob_->GetBufferSize() };
-
-	//gridPipelineStateDesc_.InputLayout = gridInputLayoutDesc_;
-	//gridPipelineStateDesc_.pRootSignature = rootSignature_.Get();
-
-	//// PipelineState作成
-	//hr = deviceManager_->GetDevice()->CreateGraphicsPipelineState(&gridPipelineStateDesc_,
-	//	IID_PPV_ARGS(&gridPipelineState_));
-	//assert(SUCCEEDED(hr));
 }
