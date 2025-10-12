@@ -165,6 +165,8 @@
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\Particle.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\Particle.VS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -322,5 +324,6 @@
     <None Include="Resources\shaders\Object3d.hlsli">
       <Filter>Shader</Filter>
     </None>
+    <None Include="Resources\shaders\Particle.hlsli" />
   </ItemGroup>
 </Project>
