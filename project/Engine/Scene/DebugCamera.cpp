@@ -37,7 +37,7 @@ void DebugCamera::ControlCamera() { // 球面座標系での移動
 	Vector3 up = { 0,1,0 };
 
 	// shift+マウスホイール押し込み中,ドラッグで視点移動
-	if (context_->IsPress(DIK_LSHIFT) && context_->isClickWheel()) {
+	if (context_->IsPress(DIK_LSHIFT) && context_->IsClickWheel()) {
 
 		float moveX = context_->GetMouseMove().x * kMoveSpeed_;
 		float moveY = context_->GetMouseMove().y * kMoveSpeed_;
@@ -48,7 +48,7 @@ void DebugCamera::ControlCamera() { // 球面座標系での移動
 	} else {
 
 		// マウスホイール押し込み中,ドラッグで視点回転
-		if (context_->isClickWheel()) {
+		if (context_->IsClickWheel()) {
 			// マウスの移動量に回転速度を掛ける
 			float deltaYaw = context_->GetMouseMove().x * kRotateSpeed_;   // マウスXでY軸回転（左右）
 			float deltaPitch = context_->GetMouseMove().y * kRotateSpeed_; // マウスYでX軸回転（上下）

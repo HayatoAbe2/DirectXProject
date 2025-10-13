@@ -45,28 +45,28 @@ bool GameContext::IsRelease(uint8_t keyNumber) {
 	return input_->IsRelease(keyNumber);
 }
 
-bool GameContext::isClickLeft() {
-	return input_->isClickLeft();
+bool GameContext::IsClickLeft() {
+	return input_->IsClickLeft();
 }
 
-bool GameContext::isClickRight() {
-	return input_->isClickRight();
+bool GameContext::IsClickRight() {
+	return input_->IsClickRight();
 }
 
-bool GameContext::isClickWheel() {
-	return input_->isClickWheel();
+bool GameContext::IsClickWheel() {
+	return input_->IsClickWheel();
 }
 
-bool GameContext::isTriggerLeft() {
-	return input_->isTriggerLeft();
+bool GameContext::IsTriggerLeft() {
+	return input_->IsTriggerLeft();
 }
 
-bool GameContext::isTriggerRight() {
-	return input_->isTriggerRight();
+bool GameContext::IsTriggerRight() {
+	return input_->IsTriggerRight();
 }
 
-bool GameContext::isTriggerWheel() {
-	return input_->isTriggerWheel();
+bool GameContext::IsTriggerWheel() {
+	return input_->IsTriggerWheel();
 }
 
 Vector3 GameContext::GetMouseMove() {
@@ -76,3 +76,17 @@ Vector3 GameContext::GetMouseMove() {
 Vector2 GameContext::GetMousePosition() {
 	return input_->GetMousePosition();
 }
+
+bool GameContext::IsControllerPress(uint8_t buttonNumber) {
+	return input_->IsControllerPress(buttonNumber);
+}
+
+Vector2 GameContext::GetLeftStick() {
+	return input_->GetLeftStick();
+}
+
+Vector2 GameContext::GetRightStick() {
+	return input_->GetRightStick();
+}
+
+

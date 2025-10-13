@@ -26,10 +26,11 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Update() {
-	player_->Update();
+	player_->Update(context_);
 
 	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
 	debugCamera_->Update();
+
 }
 
 void GameScene::Draw() {

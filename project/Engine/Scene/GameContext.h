@@ -42,14 +42,17 @@ public:
 	bool IsTrigger(uint8_t keyNumber);
 	bool IsPress(uint8_t keyNumber);
 	bool IsRelease(uint8_t keyNumber);
-	bool isClickLeft();
-	bool isClickRight();
-	bool isClickWheel();
-	bool isTriggerLeft();
-	bool isTriggerRight();
-	bool isTriggerWheel();
+	bool IsClickLeft();
+	bool IsClickRight();
+	bool IsClickWheel();
+	bool IsTriggerLeft();
+	bool IsTriggerRight();
+	bool IsTriggerWheel();
 	Vector3 GetMouseMove();
 	Vector2 GetMousePosition();
+	bool IsControllerPress(uint8_t buttonNumber);
+	Vector2 GetLeftStick();
+	Vector2 GetRightStick();
 
 private:
 	Renderer* renderer_ = nullptr;

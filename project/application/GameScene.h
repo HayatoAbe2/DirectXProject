@@ -36,6 +36,5 @@ private:
 	Camera* camera_ = nullptr;
 
 	// デバッグカメラ
-	bool isDebugCameraActive_ = false;
 	DebugCamera* debugCamera_ = nullptr;
 };
