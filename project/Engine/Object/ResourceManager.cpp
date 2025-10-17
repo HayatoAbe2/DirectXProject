@@ -521,22 +521,3 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 
 	return sprite;
 }
-
-void ResourceManager::UpdateInstanceTransform(Model* model, Camera* camera,const Transform* transforms,int numInstance) {
-	assert(model);
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> instanceUploadBuffer =
-		CreateBufferResource(sizeof(TransformationMatrix) * numInstance);
-
-	TransformationMatrix* mappedData = nullptr;
-	instanceUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mappedData));
-	
-	// WVPMatrixを作る
-	for (int i = 0; i < numInstance; ++i) {
-		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[i]);
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, camera->projectionMatrix_));
-		mappedData[i].WVP = worldViewProjectionMatrix;
-		mappedData[i].World = worldMatrix;
-	}
-	instanceUploadBuffer->Unmap(0, nullptr);
-}

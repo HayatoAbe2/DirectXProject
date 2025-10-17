@@ -43,6 +43,6 @@ void GameScene::Update() {
 void GameScene::Draw() {
 	player_->Draw(context_,camera_);
 
-	planeModel_->UpdateInstanceTransform(planeModel_, camera_, planeTransforms_, numPlaneInstance_);
+	planeModel_->UpdateInstanceTransform(camera_, planeTransforms_);
 	context_->DrawModelInstance(*planeModel_);
 }

@@ -116,7 +116,7 @@ public:
 	}
 
 	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
-	void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
+	void UpdateInstanceTransform(Camera* camera, const Transform* transforms);
 
 
 

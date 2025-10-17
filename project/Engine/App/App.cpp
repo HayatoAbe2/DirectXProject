@@ -37,7 +37,7 @@ void App::Initialize() {
 	const int32_t kClientHeight = 720;
 	window_ = new Window;
 	window_->Initialize(kClientWidth, kClientHeight);
-	logger_->Log(logger_->GetStream(), std::format("Window Initialized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Window] Initializetion complete.\n"));
 
 #ifdef _DEBUG
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;
@@ -53,22 +53,23 @@ void App::Initialize() {
 	audio_ = new Audio();
 	audio_->Initialize();
 	assert(&audio_);
-	logger_->Log(logger_->GetStream(), std::format("XAudio Initialized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Audio] Initialization complete.\n"));
 	audio_->SoundLoad(L"Resources/Alarm01.wav");
 	
 	// DirectInputの初期化
 	input_ = new Input(window_->GetInstance(), window_->GetHwnd());
 	assert(&input_);
-	logger_->Log(logger_->GetStream(), std::format("DirectInput Initialized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Input] Initialization complete.\n"));
 
 	// 描画クラス
 	renderer_ = new Renderer();
 	renderer_->Initialize(kClientWidth,kClientHeight,window_->GetHwnd(),logger_);
-	logger_->Log(logger_->GetStream(), std::format("Graphics Initialized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Renderer] Initialization complete.\n"));
 
 	// リソース
 	resourceManager_ = new ResourceManager();
 	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), logger_);
+	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Initialization complete.\n"));
 
 	// コンテキスト
 	GameContext* gameContext_ = new GameContext(renderer_, audio_, input_, resourceManager_);
@@ -76,6 +77,8 @@ void App::Initialize() {
 	// シーンマネージャー
 	sceneManager_ = new SceneManager(gameContext_);
 	sceneManager_->Initialize();
+	logger_->Log(logger_->GetStream(), std::format("[SceneManager] Initialization complete.\n"));
+
 }
 
 void App::Run() {
@@ -124,30 +127,30 @@ void App::Finalize() {
 
 	// XAudio終了処理
 	audio_->SoundUnload(L"Resources/Alarm01.wav");
+
 	audio_->Finalize();
 	delete audio_;
 	MFShutdown();
-	logger_->Log(logger_->GetStream(), std::format("XAudio Finalized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Audio] Shutdown complete.\n"));
 
 	// 入力
 	delete input_;
-	logger_->Log(logger_->GetStream(), std::format("DirectInput Finalized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Input] Shutdown complete.\n"));
 
 	delete resourceManager_;
-	logger_->Log(logger_->GetStream(), std::format("ResourceManager Finalized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Shutdown complete.\n"));
 
 	delete gameContext_;
-	logger_->Log(logger_->GetStream(), std::format("GameContext Finalized.\n"));
-
+	
 	// 描画クラス実体解放
 	renderer_->Finalize();
 	delete renderer_;
-	logger_->Log(logger_->GetStream(), std::format("Graphics Finalized.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Renderer] Shutdown complete.\n"));
 
 	// ウィンドウ終了
 	CloseWindow(window_->GetHwnd());
 	delete window_;
-	logger_->Log(logger_->GetStream(), std::format("Window Closed.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Window] Closed.\n"));
 
 	CoUninitialize();
 

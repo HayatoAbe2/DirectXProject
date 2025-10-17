@@ -54,8 +54,6 @@ public:
 
     Sprite* LoadSprite(std::string texturePath, Vector2 size);
 
-    void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
-
 private:
     Logger* logger_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Device> device_ = nullptr;

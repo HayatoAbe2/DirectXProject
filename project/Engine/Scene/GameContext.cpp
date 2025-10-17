@@ -30,10 +30,6 @@ Sprite* GameContext::LoadSprite(std::string texturePath, Vector2 size) {
 	return resourceManager_->LoadSprite(texturePath, size);
 }
 
-void GameContext::UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance) {
-	resourceManager_->UpdateInstanceTransform(model, camera, transforms, numInstance);
-}
-
 void GameContext::DrawModel(Model& model, BlendMode blendMode) {
 	renderer_->DrawModel(model, static_cast<int>(blendMode));
 }
