@@ -14,7 +14,7 @@ void ShaderCompiler::Initialize() {
 	hr = dxcUtils_->CreateDefaultIncludeHandler(&includeHandler_);
 	assert(SUCCEEDED(hr));
 }
-IDxcBlob* ShaderCompiler::Compile(const std::wstring& filePath, const wchar_t* profile, 
+Microsoft::WRL::ComPtr<IDxcBlob> ShaderCompiler::Compile(const std::wstring& filePath, const wchar_t* profile, 
 	Logger* logger) {
 
 	// これからシェーダーをコンパイルする旨をログに出す
@@ -60,7 +60,7 @@ IDxcBlob* ShaderCompiler::Compile(const std::wstring& filePath, const wchar_t* p
 	}
 
 	// コンパイル結果から実行用のバイナリ部分を取得
-	IDxcBlob* shaderBlob = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> shaderBlob = nullptr;
 	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
 	assert(SUCCEEDED(hr));
 	// 成功したログを出す

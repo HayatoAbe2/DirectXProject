@@ -53,11 +53,17 @@ void CommandListManager::InitializeCommandList() {
 }
 
 void CommandListManager::ExecuteAndWait() {
+	assert(commandList_);
+	assert(commandQueue_);
+	assert(fence_);
+	assert(commandAllocator_);
+
 	// commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
 	commandList_->Close();
-	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList_ };
-	commandQueue_->ExecuteCommandLists(1, commandLists->GetAddressOf());
-	
+	ID3D12CommandList* commandLists[] = { commandList_.Get() };
+	commandQueue_->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+
 	Wait();
 	Reset();
 }

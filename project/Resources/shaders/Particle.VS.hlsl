@@ -4,7 +4,7 @@ struct TransformationMatrix{
     float32_t4x4 WVP;
     float32_t4x4 World;
 };
-StructuredBuffer<TransformationMatrix> gTransformationMatrices : register(t0);
+StructuredBuffer<TransformationMatrix> gTransformationMatrices : register(t1);
 
 struct VertexShaderInput
 {

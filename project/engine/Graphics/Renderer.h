@@ -41,6 +41,7 @@ public:
 	/// </summary>
 	/// <param name="blendMode">ブレンドモード</param>
 	void DrawModel(Model& model, int blendMode);
+	void DrawModelInstance(Model& model, int blendMode);
 
 	/// <summary>
 	/// スプライト描画

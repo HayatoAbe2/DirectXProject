@@ -23,6 +23,8 @@ void GameScene::Initialize() {
 	playerModel_ = context_->LoadModel("Resources/fence", "fence.obj");
 	player_ = new Player();
 	player_->Initialize(playerModel_);
+
+	planeModel_ = context_->LoadModel("Resources","plane.obj",10);
 }
 
 void GameScene::Update() {
@@ -31,8 +33,16 @@ void GameScene::Update() {
 	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
 	debugCamera_->Update();
 
+	for (int i = 0; i < 10; ++i) {
+		planeTransforms_[i] = {
+			{1,1,1},{0,float(std::numbers::pi),0},{i * 0.1f,i * 0.1f,i * 0.1f}
+		};
+	}
 }
 
 void GameScene::Draw() {
 	player_->Draw(context_,camera_);
+
+	planeModel_->UpdateInstanceTransform(planeModel_, camera_, planeTransforms_, numPlaneInstance_);
+	context_->DrawModelInstance(*planeModel_);
 }

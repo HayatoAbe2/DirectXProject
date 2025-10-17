@@ -2,6 +2,7 @@
 #include <string>
 #include <Windows.h>
 #include <dxcapi.h>
+#include <wrl.h>
 
 class Logger;
 class ShaderCompiler {
@@ -19,7 +20,7 @@ public:
 	/// <param name="profile">ShaderProfile</param>
 	/// <param name="logger">ログポインタ</param>
 	/// <returns></returns>
-	IDxcBlob* Compile(const std::wstring& filePath, const wchar_t* profile, Logger* logger);
+	Microsoft::WRL::ComPtr<IDxcBlob> Compile(const std::wstring& filePath, const wchar_t* profile, Logger* logger);
 
 private:
 	// dxc

@@ -1,32 +1,33 @@
 #include "PipelineStateManager.h"
 #include <cassert>
 
-void PipelineStateManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12RootSignature>& rootSignature){
+void PipelineStateManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, const Microsoft::WRL::ComPtr<ID3D12RootSignature>& rootSignature,const Microsoft::WRL::ComPtr<ID3D12RootSignature>& instancingRootSignature){
 	device_ = device;
 	rootSignature_ = rootSignature;
+	instancingRootSignature_ = instancingRootSignature;
 
 	// InputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
-	inputElementDescs[0].SemanticName = "POSITION";
-	inputElementDescs[0].SemanticIndex = 0;
-	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[1].SemanticName = "TEXCOORD";
-	inputElementDescs[1].SemanticIndex = 0;
-	inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputElementDescs[2].SemanticName = "NORMAL";
-	inputElementDescs[2].SemanticIndex = 0;
-	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	inputLayoutDesc_.pInputElementDescs = inputElementDescs;
-	inputLayoutDesc_.NumElements = _countof(inputElementDescs);
+	inputElementDescs_[0].SemanticName = "POSITION";
+	inputElementDescs_[0].SemanticIndex = 0;
+	inputElementDescs_[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs_[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs_[1].SemanticName = "TEXCOORD";
+	inputElementDescs_[1].SemanticIndex = 0;
+	inputElementDescs_[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	inputElementDescs_[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputElementDescs_[2].SemanticName = "NORMAL";
+	inputElementDescs_[2].SemanticIndex = 0;
+	inputElementDescs_[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	inputElementDescs_[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	inputLayoutDesc_.pInputElementDescs = inputElementDescs_;
+	inputLayoutDesc_.NumElements = _countof(inputElementDescs_);
 
 
-	CreatePipelineState();
+	CreateStandardPSO();
+	CreateInstancingPSO();
 }
 
-void PipelineStateManager::CreatePipelineState() {
+void PipelineStateManager::CreateStandardPSO() {
 	assert(rootSignature_);
 	assert(vertexShaderBlob_);
 	assert(pixelShaderBlob_);
@@ -43,7 +44,7 @@ void PipelineStateManager::CreatePipelineState() {
 	baseDesc.BlendState = CreateNoneBlendDesc();
 
 	// ラスタライザ
-	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 
 	// DepthStencil
@@ -59,12 +60,44 @@ void PipelineStateManager::CreatePipelineState() {
 	baseDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 
 	// --- 各ブレンドモードごとのPSO生成 ---
-	CreatePSO(baseDesc, CreateNoneBlendDesc(), &pso_[static_cast<int>(BlendMode::None)]);				// ブレンドなし
+	CreatePSO(baseDesc, CreateNoneBlendDesc(), &pso_[static_cast<int>(BlendMode::None)]);			// ブレンドなし
 	CreatePSO(baseDesc, CreateAlphaBlendDesc(), &pso_[static_cast<int>(BlendMode::Normal)]);		// αブレンド
 	CreatePSO(baseDesc, CreateAddBlendDesc(), &pso_[static_cast<int>(BlendMode::Add)]);				// 加算
 	CreatePSO(baseDesc, CreateSubtractBlendDesc(), &pso_[static_cast<int>(BlendMode::Subtract)]);	// 減算
 	CreatePSO(baseDesc, CreateMultiplyBlendDesc(), &pso_[static_cast<int>(BlendMode::Multiply)]);	// 乗算
 	CreatePSO(baseDesc, CreateScreenBlendDesc(), &pso_[static_cast<int>(BlendMode::Screen)]);		// スクリーン
+}
+
+void PipelineStateManager::CreateInstancingPSO() {
+	assert(instancingRootSignature_);
+	assert(instancingVertexShaderBlob_);
+	assert(instancingPixelShaderBlob_);
+	assert(inputLayoutDesc_.pInputElementDescs != nullptr);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC baseDesc{};
+	baseDesc.pRootSignature = instancingRootSignature_.Get();
+	baseDesc.InputLayout = inputLayoutDesc_;
+	baseDesc.VS = { instancingVertexShaderBlob_->GetBufferPointer(), instancingVertexShaderBlob_->GetBufferSize() };
+	baseDesc.PS = { instancingPixelShaderBlob_->GetBufferPointer(),	instancingPixelShaderBlob_->GetBufferSize()	};
+	baseDesc.BlendState = CreateNoneBlendDesc();
+	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	baseDesc.DepthStencilState.DepthEnable = TRUE;
+	baseDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	baseDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	baseDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	baseDesc.NumRenderTargets = 1;
+	baseDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	baseDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	baseDesc.SampleDesc.Count = 1;
+	baseDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+
+	CreatePSO(baseDesc, CreateNoneBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::None)]);			// ブレンドなし
+	CreatePSO(baseDesc, CreateAlphaBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::Normal)]);		// αブレンド
+	CreatePSO(baseDesc, CreateAddBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::Add)]);			// 加算
+	CreatePSO(baseDesc, CreateSubtractBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::Subtract)]);	// 減算
+	CreatePSO(baseDesc, CreateMultiplyBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::Multiply)]);	// 乗算
+	CreatePSO(baseDesc, CreateScreenBlendDesc(), &instancingPso_[static_cast<int>(BlendMode::Screen)]);		// スクリーン
 }
 
 // ----------------------------------------------------
@@ -156,7 +189,7 @@ D3D12_BLEND_DESC PipelineStateManager::CreateScreenBlendDesc() {
 // ----------------------------------------------------
 
 void PipelineStateManager::CreatePSO(
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC baseDesc,
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC& baseDesc,
 	const D3D12_BLEND_DESC& blendDesc,
 	Microsoft::WRL::ComPtr<ID3D12PipelineState>* outPSO) {
 

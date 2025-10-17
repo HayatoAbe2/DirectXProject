@@ -71,12 +71,15 @@ void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	pipelineStateManager_ = new PipelineStateManager;
 	pipelineStateManager_->SetVSBlob(shaderCompiler_->Compile(L"Resources/shaders/Object3D.VS.hlsl", L"vs_6_0", logger_));
 	pipelineStateManager_->SetPSBlob(shaderCompiler_->Compile(L"Resources/shaders/Object3D.PS.hlsl", L"ps_6_0", logger_));
+	
+	pipelineStateManager_->SetInstancingVSBlob(shaderCompiler_->Compile(L"Resources/shaders/Particle.VS.hlsl", L"vs_6_0", logger_));
+	pipelineStateManager_->SetInstancingPSBlob(shaderCompiler_->Compile(L"Resources/shaders/Particle.PS.hlsl", L"ps_6_0", logger_));
 
 	// コンパイラ解放
 	delete shaderCompiler_;
 
 	// PSOマネージャー
-	pipelineStateManager_->Initialize(deviceManager_->GetDevice(), rootSignatureManager_->GetRootSignature());
+	pipelineStateManager_->Initialize(deviceManager_->GetDevice(), rootSignatureManager_->GetStandardRootSignature(),rootSignatureManager_->GetInstancingRootSignature());
 
 	CreateLightBuffer();
 
@@ -88,12 +91,17 @@ void Renderer::DrawModel(Model& model,int blendMode) {
 	model.UpdateMaterial();
 
 	// PSO設定
-	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetPSO(blendMode));
+	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetStandardPSO(blendMode));
+	// RootSignatureを設定
+	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetStandardRootSignature().Get());
+	// 描画用のDescriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
+	commandListManager_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// トポロジを三角形に設定
 	commandListManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
-	commandListManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, model.GetMaterialAddress());
+	commandListManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, model.GetMaterialCBV());
 	// モデル描画
 	commandListManager_->GetCommandList()->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
 	// wvp用のCBufferの場所を設定
@@ -108,9 +116,43 @@ void Renderer::DrawModel(Model& model,int blendMode) {
 	commandListManager_->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
 }
 
+void Renderer::DrawModelInstance(Model& model, int blendMode) {
+
+	model.UpdateMaterial();
+	
+	// PSO設定
+	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetInstancingPSO(blendMode));
+	// RootSignatureを設定
+	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetInstancingRootSignature().Get());
+	// 描画用のDescriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
+	commandListManager_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
+
+	// トポロジを三角形に設定
+	commandListManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// マテリアルCBufferの場所を設定
+	commandListManager_->GetCommandList()->SetGraphicsRootConstantBufferView(0, model.GetMaterialCBV());
+	// モデル描画
+	commandListManager_->GetCommandList()->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
+	// wvp用のCBufferの場所を設定
+	commandListManager_->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
+	// SRVの設定
+	if (model.GetTextureSRVHandle().ptr != 0) {
+	commandListManager_->GetCommandList()->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+	}
+	// インスタンス用SRVの設定
+	if (model.IsInstancing()) {
+		commandListManager_->GetCommandList()->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
+	}
+	// ドローコール
+	commandListManager_->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), model.GetNumInstance(), 0, 0);
+}
+
 void Renderer::DrawSprite(Sprite& sprite,int blendMode) {
 	// PSO設定
-	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetPSO(blendMode));
+	commandListManager_->GetCommandList()->SetPipelineState(pipelineStateManager_->GetStandardPSO(blendMode));
+	// RootSignatureを設定
+	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetStandardRootSignature().Get());
 	// トポロジを三角形に設定
 	commandListManager_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
@@ -176,8 +218,6 @@ void Renderer::BeginFrame() {
 	commandListManager_->GetCommandList()->RSSetViewports(1, &viewport_);
 	// Scissorを設定
 	commandListManager_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);
-	// RootSignatureを設定
-	commandListManager_->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager_->GetRootSignature().Get());
 }
 
 void Renderer::EndFrame() {

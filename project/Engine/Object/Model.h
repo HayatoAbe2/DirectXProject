@@ -66,40 +66,18 @@ public:
 	/// <param name="data">データ</param>
 	void SetTransformData(TransformationMatrix* data) { transformationData_ = data; }
 
-
 	/// <summary>
 	/// 描画のため、モデルのトランスフォームデータを更新
 	/// </summary>
 	/// <param name="camera"></param>
 	void UpdateTransformation(Camera& camera);
 
-	// 1つのモデルの、複数のトランスフォームを更新する
-	void UpdateInstanceTransform(const Transform& transform, const Camera& camera, uint32_t index);
-
-	void EnableInstanceCBV(Renderer& renderer, int maxInstances);
-
-	/// <summary>
-	/// 外部CBVをセット(複数のCBVが必要な場合)
-	/// </summary>
-	/// <param name="address"></param>
-	void SetExternalCBV(D3D12_GPU_VIRTUAL_ADDRESS address);
-
-	/// <summary>
-	/// 外部CBVを解除
-	/// </summary>
-	void ClearExternalCBV();
-
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV()const { return vertexBufferView_; }
 	const std::vector<VertexData>& GetVertices() const{ return vertices_; }
-
-	 const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const {return material_->GetTextureSRVHandle();}
-
-	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const { 
-		if (useExternalCBV_) {
-			return externalCBVAddress_;
-		} else { return transformationResource_->GetGPUVirtualAddress(); } } 
+	const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const {return material_->GetTextureSRVHandle();}
+	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const { return transformationResource_->GetGPUVirtualAddress(); } 
 	const std::string& GetMtlPath()const { return mtlFilePath; }
-	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialAddress() { return material_->GetCBV()->GetGPUVirtualAddress(); }
+	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialCBV() { return material_->GetCBV()->GetGPUVirtualAddress(); }
 
 	void UpdateMaterial() { material_->UpdateGPU(); }
 
@@ -111,6 +89,39 @@ public:
 		transform_ = transform;
 	}
 
+	// インスタンス描画用
+	
+	void SetInstance(int num) {
+		isInstancing_ = true;
+		numInstance_ = num;
+	}
+	bool IsInstancing() { return isInstancing_; }
+	int GetNumInstance() { return numInstance_; }
+
+	const D3D12_GPU_DESCRIPTOR_HANDLE& GetInstanceSRVHandle() const { return instanceSRVHandleGPU_; }
+	void SetSRVHandle(D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU) { instanceSRVHandleGPU_ = srvHandleGPU; }
+
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetInstanceResource() const { return instanceTransformationResource_; }
+	void SetInstanceResource(Microsoft::WRL::ComPtr<ID3D12Resource> resource) {
+		instanceTransformationResource_ = resource;
+	}
+
+	void AddInstanceTransform() {
+		if (!isInstancing_) return;
+		instanceTransforms_.push_back({});
+	}
+	void SetInstanceTransforms(int index, const Transform& transform, const Camera& camera) {
+		if (!isInstancing_ || index < 0 || index >= numInstance_) return;
+		instanceTransforms_[index] = transform;
+	}
+
+	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
+	void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
+
+
+
+	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
+
 private:
 
 	// モデルデータ
@@ -119,18 +130,17 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_ = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
 	Material* material_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Transform transform_;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_ = nullptr;
 	TransformationMatrix* transformationData_ = nullptr;
 
 	// 複数体描画用（必要なときだけ使う）
-	Microsoft::WRL::ComPtr<ID3D12Resource> instanceCBVResource_ = nullptr;
-	uint8_t* instanceCBVMappedPtr_ = nullptr;
-	UINT instanceCBVStride_ = 0;
-	// 外部CBV指定の有無とそのアドレス
-	bool useExternalCBV_ = false;
-	D3D12_GPU_VIRTUAL_ADDRESS externalCBVAddress_ = 0;
+	bool isInstancing_ = false;
+	int numInstance_ = 1;
+	D3D12_GPU_DESCRIPTOR_HANDLE instanceSRVHandleGPU_;
+	std::vector<Transform> instanceTransforms_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformationResource_ = nullptr;
+	TransformationMatrix* instanceTransformationData_ = nullptr;
 };
 

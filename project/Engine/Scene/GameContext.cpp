@@ -5,6 +5,7 @@
 #include "../Object/ResourceManager.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
+#include "../Scene/Camera.h"
 
 GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager) {
 	renderer_ = renderer;
@@ -21,12 +22,24 @@ Model* GameContext::LoadModel(const std::string& directoryPath, const std::strin
 	return resourceManager_->LoadObjFile(directoryPath, filename);
 }
 
+Model* GameContext::LoadModel(const std::string& directoryPath, const std::string& filename,const int num) {
+	return resourceManager_->LoadObjFile(directoryPath, filename,num);
+}
+
 Sprite* GameContext::LoadSprite(std::string texturePath, Vector2 size) {
 	return resourceManager_->LoadSprite(texturePath, size);
 }
 
+void GameContext::UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance) {
+	resourceManager_->UpdateInstanceTransform(model, camera, transforms, numInstance);
+}
+
 void GameContext::DrawModel(Model& model, BlendMode blendMode) {
 	renderer_->DrawModel(model, static_cast<int>(blendMode));
+}
+
+void GameContext::DrawModelInstance(Model& model, BlendMode blendMode) {
+	renderer_->DrawModelInstance(model, static_cast<int>(blendMode));
 }
 
 void GameContext::DrawSprite(Sprite& sprite, BlendMode blendMode) {

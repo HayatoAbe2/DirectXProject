@@ -4,9 +4,9 @@
 
 Logger::Logger() {
 	// 現在の出力ディレクトリ（exeの実行ディレクトリ）を取得
-	std::filesystem::path outputDir = std::filesystem::current_path();
-	// logs フォルダを出力ディレクトリ配下に作成
-	std::filesystem::path logDir = outputDir / "logs";
+	std::filesystem::path outputDir = std::filesystem::current_path().parent_path();
+	// logs フォルダを出力場所に作成
+	std::filesystem::path logDir = outputDir / "generated" / "logs";
 	// ログのディレクトリを用意
 	std::filesystem::create_directory(logDir);
 	// 現在時刻を取得(UTC)

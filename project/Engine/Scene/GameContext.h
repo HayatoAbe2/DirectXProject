@@ -10,7 +10,9 @@ class Input;
 class Audio;
 class Model;
 class Sprite;
+class Camera;
 class Renderer;
+
 class GameContext {
 public:
 	GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager);
@@ -26,13 +28,21 @@ public:
 	///
 
 	Model* LoadModel(const std::string& directoryPath, const std::string& filename);
+	Model* LoadModel(const std::string& directoryPath, const std::string& filename, const int num);
 	Sprite* LoadSprite(std::string texturePath, Vector2 size);
+
+	///
+	/// トランスフォーム更新
+	///
+	
+	void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
 
 	///
 	/// 描画系 
 	///
 
 	void DrawModel(class Model& model, BlendMode blendMode = BlendMode::Normal);
+	void DrawModelInstance(Model& model, BlendMode blendMode = BlendMode::Normal);
 	void DrawSprite(class Sprite& sprite, BlendMode blendMode = BlendMode::Normal);
 
 	/// 

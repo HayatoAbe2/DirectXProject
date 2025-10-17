@@ -32,6 +32,9 @@ void Player::Update(GameContext* context) {
 
 	if (context->IsPress(DIK_UP) || context->IsControllerPress(5)) { transform_.scale += {0.01f, 0.01f, 0.01f}; }
 	if (context->IsPress(DIK_DOWN) || context->IsControllerPress(4)) { transform_.scale -= {0.01f, 0.01f, 0.01f}; }
+	if (context->IsPress(DIK_LEFT) ) { transform_.rotate.y += 0.02f; }
+	if (context->IsPress(DIK_RIGHT)) { transform_.rotate.y -= 0.02f; }
+
 }
 
 void Player::Draw(GameContext* context, Camera* camera) {

@@ -3,9 +3,11 @@
 #include <wrl.h>
 #include <unordered_map>
 #include <string>
+#include <vector>
 #include <memory>
 #include <dxcapi.h>
 #include "../Math/MathUtils.h"
+#include "../Object/TransformationMatrix.h"
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 
@@ -15,6 +17,7 @@ class Sprite;
 class DescriptorHeapManager;
 class CommandListManager;
 class Logger;
+class Camera;
 
 /// <summary>
 /// テクスチャ、モデルなどの管理
@@ -33,19 +36,25 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
+    Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResourceDefault(size_t sizeInBytes);
+
     Texture* CreateSRV(Texture* texture);
 
+    Model* CreateInstancingSRV(Model* model, const int numInstance_);
+    
     /// <summary>
     /// モデルのファイル読み込み
     /// </summary>
     /// <param name="directoryPath"></param>
     /// <param name="filename"></param>
     /// <returns></returns>
-    Model* LoadObjFile(const std::string& directoryPath, const std::string& filename);
+    Model* LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_ = 1);
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
     Sprite* LoadSprite(std::string texturePath, Vector2 size);
+
+    void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
 
 private:
     Logger* logger_ = nullptr;

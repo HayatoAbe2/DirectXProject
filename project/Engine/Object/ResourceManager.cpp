@@ -5,10 +5,13 @@
 #include "../Io/Logger.h"
 #include "../Graphics/CommandListManager.h"
 #include "../Graphics/DescriptorHeapManager.h"
+#include "../Scene/Camera.h"
 
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <iostream>
+#include <format>
 
 ResourceManager::~ResourceManager() {
 	// キャッシュしているリソースを解放
@@ -109,6 +112,8 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::UploadTextureData(const 
 }
 
 Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(size_t sizeInBytes) {
+	assert(sizeInBytes > 0);
+
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;		// uploadHeapを使う
@@ -131,8 +136,36 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(siz
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));
 	assert(SUCCEEDED(hr));
+
 	return vertexResource;
 }
+
+Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResourceDefault(size_t sizeInBytes) {
+	D3D12_HEAP_PROPERTIES defaultHeapProps{};
+	defaultHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC bufferDesc{};
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Width = sizeInBytes;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> gpuResource;
+	HRESULT hr = device_->CreateCommittedResource(
+		&defaultHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST, // コピー待ち状態
+		nullptr,
+		IID_PPV_ARGS(&gpuResource)
+	);
+	assert(SUCCEEDED(hr));
+	return gpuResource;
+}
+
 
 Texture* ResourceManager::CreateSRV(Texture* texture) {
 	if (!texture->GetMtlPath().empty()) {
@@ -155,7 +188,7 @@ Texture* ResourceManager::CreateSRV(Texture* texture) {
 		// SRVを作成するDescriptorHeapの場所を決める
 		D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
 		D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-		// 先頭はImGuiが使っているのでその次を使う
+		// 空いている場所まで進める
 		textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
 		textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
 		// SRVの生成
@@ -174,21 +207,35 @@ Texture* ResourceManager::CreateSRV(Texture* texture) {
 	return texture;
 }
 
-/*
-void ResourceManager::CreateInstanceSRV() {
+Model* ResourceManager::CreateInstancingSRV(Model* model,const int numInstance_) {
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
 	instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	instancingSrvDesc.Buffer.FirstElement = 0;
 	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	instancingSrvDesc.Buffer.NumElements = kNumInstance;
+	instancingSrvDesc.Buffer.NumElements = numInstance_;
 	instancingSrvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = rendertargetManager_->GetSRVHeap();
-}
-*/
 
-Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+	// SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
+	// 空いている場所まで進める
+	instancingSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	instancingSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
+	// SRVの生成
+	device_->CreateShaderResourceView(model->GetInstanceResource().Get(), &instancingSrvDesc, instancingSrvHandleCPU);
+	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+
+	// SRVハンドル
+	model->SetSRVHandle(instancingSrvHandleGPU);
+	return model;
+}
+
+Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance) {
+	if (numInstance == 0) { assert(false); } // インスタンス数0なわけないので止める
+	
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
 	auto it = models_.find(fullPath);
@@ -305,15 +352,36 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 	material->SetTexture(texture);	// テクスチャ
 	model->SetMaterial(material);
 
-	// transformリソースを作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource = CreateBufferResource(sizeof(TransformationMatrix));
-	TransformationMatrix* transformationData = nullptr;
-	transformationResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationData));
-	// 単位行列を書き込んでおく
-	transformationData->WVP = MakeIdentity4x4();
-	transformationData->World = MakeIdentity4x4();
-	model->SetTransformResource(transformationResource);
-	model->SetTransformData(transformationData);
+	if (numInstance == 1) {
+		// transformリソースを作成
+		Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource = CreateBufferResource(sizeof(TransformationMatrix));
+		TransformationMatrix* transformationData = nullptr;
+		transformationResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationData));
+		// 単位行列を書き込んでおく
+		transformationData->WVP = MakeIdentity4x4();
+		transformationData->World = MakeIdentity4x4();
+		model->SetTransformResource(transformationResource);
+		model->SetTransformData(transformationData);
+	} else {
+		// インスタンス描画設定
+		model->SetInstance(numInstance);
+
+		// インスタンス数分のtransformリソース
+		Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(TransformationMatrix) * numInstance);
+		TransformationMatrix* transformData = nullptr;
+		instanceTransformResource->Map(0, nullptr, reinterpret_cast<void**>(&transformData));
+		// 単位行列を書き込んでおく
+		for (int i = 0; i < numInstance; ++i) {
+			transformData[i].World = MakeIdentity4x4();
+			transformData[i].WVP = MakeIdentity4x4();
+			model->AddInstanceTransform();
+		}
+		instanceTransformResource->Unmap(0, nullptr);
+
+		model->SetInstanceResource(instanceTransformResource);
+		model->SetInstanceTransformData(transformData);
+		model = CreateInstancingSRV(model, numInstance);
+	}
 
 	// キャッシュに登録
 	models_.insert({ fullPath, model });
@@ -420,6 +488,7 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	TransformationMatrix* transformationData = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource;
 	transformationResource = CreateBufferResource(sizeof(TransformationMatrix));
+	
 	// データを書き込む
 	// 書き込むためのアドレスを取得
 	transformationResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationData));
@@ -451,4 +520,23 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	sprites_.insert({ texturePath, sprite });
 
 	return sprite;
+}
+
+void ResourceManager::UpdateInstanceTransform(Model* model, Camera* camera,const Transform* transforms,int numInstance) {
+	assert(model);
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> instanceUploadBuffer =
+		CreateBufferResource(sizeof(TransformationMatrix) * numInstance);
+
+	TransformationMatrix* mappedData = nullptr;
+	instanceUploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&mappedData));
+	
+	// WVPMatrixを作る
+	for (int i = 0; i < numInstance; ++i) {
+		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[i]);
+		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera->viewMatrix_, camera->projectionMatrix_));
+		mappedData[i].WVP = worldViewProjectionMatrix;
+		mappedData[i].World = worldMatrix;
+	}
+	instanceUploadBuffer->Unmap(0, nullptr);
 }

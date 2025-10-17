@@ -26,15 +26,18 @@ public:
 	void Draw() override;
 
 private:
+	// 3Dモデル
+	Model* playerModel_ = nullptr;
+	Model* planeModel_ = nullptr;
+
 	// プレイヤー
 	Player* player_ = nullptr;
 
-	// 3Dモデル
-	Model* playerModel_ = nullptr;
-	
 	// カメラ
 	Camera* camera_ = nullptr;
-
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
+
+	int numPlaneInstance_ = 10;
+	Transform planeTransforms_[10]{};
 };
