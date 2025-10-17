@@ -151,6 +151,7 @@
       <Filter>Application</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -314,6 +315,7 @@
       <Filter>Application</Filter>
     </ClInclude>
     <ClInclude Include="engine\Graphics\BlendMode.h" />
+    <ClInclude Include="engine\Graphics\DirectXContext.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

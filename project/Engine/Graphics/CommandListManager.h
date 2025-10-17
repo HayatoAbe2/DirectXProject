@@ -44,9 +44,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return commandList_; }
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> GetCommandAllocator() { return commandAllocator_; }
 	Microsoft::WRL::ComPtr<ID3D12Fence> GetFence() { return fence_; }
-	uint64_t GetFenceValue() { return fenceValue_; }
-	HANDLE GetFenceEvent() { return fenceEvent_; }
-	void IncrementFenceValue() { fenceValue_++; }
+	
 	/// <summary>
 	/// コマンドリストを実行して待機
 	/// </summary>

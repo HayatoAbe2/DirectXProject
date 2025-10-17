@@ -155,6 +155,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
     <ClCompile Include="engine\Graphics\CommandListManager.cpp" />
     <ClCompile Include="engine\Graphics\DeviceManager.cpp" />
     <ClCompile Include="engine\Graphics\PipelineStateManager.cpp" />
@@ -228,6 +229,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="engine\Graphics\DirectXContext.h" />
     <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />
     <ClInclude Include="engine\Graphics\DeviceManager.h" />
