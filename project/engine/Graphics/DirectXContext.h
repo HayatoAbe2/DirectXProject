@@ -25,7 +25,7 @@ class ShaderCompiler;
 class RenderTargetManager;
 class DescriptorHeapManager;
 class PipelineStateManager;
-
+class FixFPS;
 class ResourceManager;
 
 class DirectXContext {
@@ -148,5 +148,8 @@ private:
 
 	// パイプラインステート管理クラス
 	PipelineStateManager* pipelineStateManager_ = nullptr;
+
+	// FPS固定クラス
+	FixFPS* fixFPS_ = nullptr;
 };
 

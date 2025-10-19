@@ -151,7 +151,12 @@
       <Filter>Application</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
+    <ClCompile Include="engine\Graphics\FixFPS.cpp">
+      <Filter>Engine\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Graphics\DirectXContext.cpp">
+      <Filter>Engine\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -166,8 +171,12 @@
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\shaders\Particle.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\Particle.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\Particle.PS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\Particle.VS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -314,8 +323,15 @@
     <ClInclude Include="application\Player.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Graphics\BlendMode.h" />
-    <ClInclude Include="engine\Graphics\DirectXContext.h" />
+    <ClInclude Include="engine\Graphics\FixFPS.h">
+      <Filter>Engine\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Graphics\DirectXContext.h">
+      <Filter>Engine\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Graphics\BlendMode.h">
+      <Filter>Engine\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -326,6 +342,8 @@
     <None Include="Resources\shaders\Object3d.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="Resources\shaders\Particle.hlsli" />
+    <None Include="Resources\shaders\Particle.hlsli">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

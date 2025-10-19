@@ -7,6 +7,7 @@
 #include "RenderTargetManager.h"
 #include "DescriptorHeapManager.h"
 #include "PipelineStateManager.h"
+#include "FixFPS.h"
 #include "../Object/Sprite.h"
 #include "../Object/ResourceManager.h"
 
@@ -84,6 +85,10 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	CreateLightBuffer();
 
 	SetViewportAndScissor();
+
+	// FPS固定クラス初期化
+	fixFPS_ = new FixFPS;
+	fixFPS_->Initialize();
 }
 
 void DirectXContext::Finalize() {
@@ -94,6 +99,7 @@ void DirectXContext::Finalize() {
 	delete renderTargetManager_;
 	delete rootSignatureManager_;
 	delete pipelineStateManager_;
+	delete fixFPS_;
 }
 
 void DirectXContext::BeginFrame() {
@@ -163,6 +169,8 @@ void DirectXContext::EndFrame() {
 
 	commandListManager_->Wait();
 	commandListManager_->Reset();
+
+	fixFPS_->Update();
 }
 
 void DirectXContext::InitializeSwapChain(HWND hwnd) {

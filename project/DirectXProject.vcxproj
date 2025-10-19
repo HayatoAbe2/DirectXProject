@@ -184,6 +184,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Io\Input.cpp" />
     <ClCompile Include="engine\Math\Lerp.cpp" />
     <ClCompile Include="engine\Io\Logger.cpp" />
+    <ClCompile Include="engine\Graphics\FixFPS.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\Math\Matrix4x4.cpp" />
     <ClCompile Include="engine\Object\Model.cpp" />
@@ -279,6 +280,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\VertexData.h" />
     <ClInclude Include="engine\App\Window.h" />
     <ClInclude Include="application\Player.h" />
+    <ClInclude Include="engine\Graphics\FixFPS.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

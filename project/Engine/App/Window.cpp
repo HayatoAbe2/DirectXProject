@@ -1,4 +1,5 @@
 #include "Window.h"
+#pragma comment(lib, "winmm.lib")
 
 void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 	// ウィンドウプロシージャ
@@ -34,6 +35,9 @@ void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 	);
 
 	ShowWindow(hwnd_, SW_SHOW);
+
+	// タイマーの分解能を設定
+	timeBeginPeriod(1); 
 }
 
 
