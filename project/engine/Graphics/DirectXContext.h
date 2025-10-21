@@ -59,6 +59,12 @@ public:
 	/// <returns>作成したリソース</returns>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
+	/// <summary>
+	/// ImGui初期化
+	/// </summary>
+	/// <param name="hwnd"></param>
+	void InitializeImGui(HWND hwnd);
+
 	// アクセサ
 	int32_t GetWindowWidth() { return clientWidth_; }
 	int32_t GetWindowHeight() { return clientHeight_; }

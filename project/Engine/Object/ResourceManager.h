@@ -64,7 +64,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_;
  
     // SRVのインデックス
-    UINT currentSRVIndex_ = 0;
+    UINT currentSRVIndex_ = 1; // 0 = ImGui用
 
 	// 作成したリソースのキャッシュ
     std::unordered_map<std::string, Texture*> textures_;

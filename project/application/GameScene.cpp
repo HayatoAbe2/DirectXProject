@@ -20,7 +20,7 @@ void GameScene::Initialize() {
 	camera_->transform_.translate = { 0,1,-20 };
 	camera_->transform_.rotate = { -0.1f,0,0};
 
-	playerModel_ = context_->LoadModel("Resources/fence", "fence.obj");
+	playerModel_ = context_->LoadModel("Resources", "teapot.obj");
 	player_ = new Player();
 	player_->Initialize(playerModel_);
 
@@ -38,6 +38,8 @@ void GameScene::Update() {
 			{1,1,1},{0,float(std::numbers::pi),0},{i * 0.1f,i * 0.1f,i * 0.1f}
 		};
 	}
+
+
 }
 
 void GameScene::Draw() {

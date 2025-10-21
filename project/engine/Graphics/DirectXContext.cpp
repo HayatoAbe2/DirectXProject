@@ -145,12 +145,6 @@ void DirectXContext::BeginFrame() {
 void DirectXContext::EndFrame() {
 	HRESULT hr;
 
-	//// ImGuiの内部コマンドを生成する
-	//ImGui::Render();
-
-	//// 実際のcommandListのImGuiの描画コマンドを読む
-	//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandListManager_->GetCommandList().Get());
-
 	// 今回はRenderTargetからPresentにする
 	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	barrier_.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
@@ -164,6 +158,8 @@ void DirectXContext::EndFrame() {
 	// GPUにコマンドリストの実行を行わせる
 	ID3D12CommandList* commandLists[] = { commandListManager_->GetCommandList().Get() };
 	commandListManager_->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
+
+
 	// GPUとOSに画面の交換を行うよう通知する
 	swapChain_->Present(1, 0);
 
@@ -276,4 +272,20 @@ void DirectXContext::CreateLightBuffer() {
 	directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
 	directionalLightData_->intensity = 1.0f;
 	directionalLightData_->lightingType = 1;
+}
+
+void DirectXContext::InitializeImGui(HWND hwnd) {
+	// Imguiの初期化
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX12_Init(
+		deviceManager_->GetDevice().Get(),
+		swapChainDesc_.BufferCount,
+		renderTargetManager_->GetRTVDesc_().Format,
+		descriptorHeapManager_->GetSRVHeap().Get(),
+		descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart(),
+		descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
+	);
 }

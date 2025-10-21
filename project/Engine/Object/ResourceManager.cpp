@@ -234,7 +234,7 @@ Model* ResourceManager::CreateInstancingSRV(Model* model,const int numInstance_)
 }
 
 Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance) {
-	if (numInstance == 0) { assert(false); } // インスタンス数0なわけないので止める
+	if (numInstance == 0) { assert(false); } // インスタンス数0はないので止める
 	
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;

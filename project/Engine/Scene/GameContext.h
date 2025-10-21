@@ -34,8 +34,8 @@ public:
 	///
 	/// トランスフォーム更新
 	///
-	
-	void UpdateInstanceTransform(Model* model, Camera* camera, const Transform* transforms, int numInstance);
+
+
 
 	///
 	/// 描画系 
@@ -63,6 +63,8 @@ public:
 	bool IsControllerPress(uint8_t buttonNumber);
 	Vector2 GetLeftStick();
 	Vector2 GetRightStick();
+
+
 
 private:
 	Renderer* renderer_ = nullptr;
