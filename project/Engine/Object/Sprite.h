@@ -69,34 +69,49 @@ public:
 		material_ = material;
 	}
 
-	/// <summary>
-	/// 大きさ設定
-	/// </summary>
-	/// <param name="size"></param>
-	void SetSize(const Vector3& size) { size_ = size; }
+	void UpdateTransform(Vector2 windowSize);
 
-	void UpdateTransform(Camera* camera, float kClientWidth, float kClientHeight, bool useScreenPos = true);
+	// 切り取り
+	void SetTextureRect(float x, float y, float w, float h);
 
 	void ImGuiEdit();
 
+	//
 	// アクセサ
-	const Transform& GetTransform() const { return transform_; }
+	//
+
+	// サイズ
+	const Vector2& GetSize() const { return size_; }
+	void SetSize(const Vector2& size) { size_ = size; }
+
+	// 位置
+	const Vector2& GetPosition() const { return position_; }
+	void SetPosition(const Vector2& position) { position_ = position; }
+
+	// 回転
+	float GetRotation() const { return rotation_; }
+	void SetRotation(float rotation) { rotation_ = rotation; }
+
+	// 色
+	const Vector4& GetColor() const { return material_->GetData().color; }
+	void SetColor(Vector4 color) { MaterialData data = material_->GetData(); data.color = color; material_->SetData(data); }
+
 	const D3D12_INDEX_BUFFER_VIEW& GetIBV()const { return indexBufferView_; };
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV() const { return vertexBufferView_; };
 	D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const { return material_->GetTextureSRVHandle(); };
 	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const {
 		return transformationResource_->GetGPUVirtualAddress(); 
 	}
-	
-	void SetTransform(const Transform& transform) {
-		transform_ = transform;
+	const D3D12_GPU_VIRTUAL_ADDRESS GetMaterialCBV()const {
+		return material_->GetCBV()->GetGPUVirtualAddress();
 	}
 
-private:
-	Transform transform_;
+	void UpdateMaterial() { material_->UpdateGPU(); }
 
-	// 描画する時の大きさ
-	Vector3 size_;
+private:
+	Vector2 size_ = { 640.0f,360.0f };
+	Vector2 position_ = {};
+	float rotation_ = 0.0f;
 
 	Material* material_;
 

@@ -113,14 +113,20 @@ void Renderer::DrawSprite(Sprite& sprite,int blendMode) {
 	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
 	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
 
+	sprite.UpdateMaterial();
+
 	// PSO設定
 	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetStandardPSO(blendMode));
 	// RootSignatureを設定
 	cmdListManager->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager->GetStandardRootSignature().Get());
+	// 描画用のDescriptorHeapの設定
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descHeapManager->GetSRVHeap().Get() };
+	cmdListManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
+
 	// トポロジを三角形に設定
 	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, sprite.GetCBV());
+	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, sprite.GetMaterialCBV());
 	// Spriteの描画。変更が必要なものだけ変更する
 	cmdListManager->GetCommandList()->IASetIndexBuffer(&sprite.GetIBV());	// IBVを設定
 	cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &sprite.GetVBV());	// VBVを設定
@@ -128,8 +134,6 @@ void Renderer::DrawSprite(Sprite& sprite,int blendMode) {
 	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, sprite.GetCBV());
 	// SRVの設定
 	cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, sprite.GetTextureSRVHandle());
-	// ライト
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
 	// 描画!(DrawCall/ドローコール)
 	cmdListManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }

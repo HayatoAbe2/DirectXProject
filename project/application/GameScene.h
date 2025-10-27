@@ -29,6 +29,8 @@ private:
 	// 3Dモデル
 	Model* playerModel_ = nullptr;
 	Model* planeModel_ = nullptr;
+	Sprite* uvChecker_ = nullptr;
+	Sprite* sprite_ = nullptr;
 
 	// プレイヤー
 	Player* player_ = nullptr;
@@ -37,7 +39,6 @@ private:
 	Camera* camera_ = nullptr;
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
-
 	int numPlaneInstance_ = 10;
 	Transform planeTransforms_[10]{};
 };

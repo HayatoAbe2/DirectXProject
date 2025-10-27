@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <string>
+#include <../Math/MathUtils.h>
 
 class Texture {
 public:
@@ -11,6 +12,7 @@ public:
 	void SetResource(Microsoft::WRL::ComPtr<ID3D12Resource> resource) {
 		resource_ = resource;
 	}
+	const Vector2 GetSize() const { return { static_cast<float>(resource_.Get()->GetDesc().Width),static_cast<float>(resource_.Get()->GetDesc().Height) }; }
 
 	/// <summary>
 	/// mtlファイルパス設定

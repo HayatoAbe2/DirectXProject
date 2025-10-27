@@ -29,7 +29,7 @@ public:
 
 	Model* LoadModel(const std::string& directoryPath, const std::string& filename);
 	Model* LoadModel(const std::string& directoryPath, const std::string& filename, const int num);
-	Sprite* LoadSprite(std::string texturePath, Vector2 size);
+	Sprite* LoadSprite(std::string texturePath);
 
 	///
 	/// トランスフォーム更新

@@ -24,7 +24,17 @@ void GameScene::Initialize() {
 	player_ = new Player();
 	player_->Initialize(playerModel_);
 
-	planeModel_ = context_->LoadModel("Resources","plane.obj",10);
+	// スプライト
+	uvChecker_ = context_->LoadSprite("Resources/uvChecker.png");
+	uvChecker_->SetSize({ 256.0f, 256.0f });
+	uvChecker_->SetTextureRect(0, 0, 128, 128);
+
+	sprite_ = context_->LoadSprite("Resources/monsterBall.png");
+	sprite_->SetSize({ 256.0f, 256.0f });
+	sprite_->SetPosition({ 256.0f,0.0f });
+
+	// インスタンス描画
+	planeModel_ = context_->LoadModel("Resources", "plane.obj", 10);
 }
 
 void GameScene::Update() {
@@ -35,15 +45,18 @@ void GameScene::Update() {
 
 	for (int i = 0; i < 10; ++i) {
 		planeTransforms_[i] = {
-			{1,1,1},{0,float(std::numbers::pi),0},{i * 0.1f,i * 0.1f,i * 0.1f}
+			{1,1,1},{0,float(std::numbers::pi),0},{2.0f + i * 0.1f,i * 0.1f,i * 0.1f}
 		};
 	}
-
-
 }
 
 void GameScene::Draw() {
 	player_->Draw(context_,camera_);
+
+	uvChecker_->UpdateTransform(context_->GetWindowSize());
+	sprite_->UpdateTransform(context_->GetWindowSize());
+	context_->DrawSprite(*uvChecker_);
+	context_->DrawSprite(*sprite_);
 
 	planeModel_->UpdateInstanceTransform(camera_, planeTransforms_);
 	context_->DrawModelInstance(*planeModel_);

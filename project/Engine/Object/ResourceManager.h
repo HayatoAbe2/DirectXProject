@@ -52,7 +52,7 @@ public:
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
-    Sprite* LoadSprite(std::string texturePath, Vector2 size);
+    Sprite* LoadSprite(std::string texturePath);
 
 private:
     Logger* logger_ = nullptr;

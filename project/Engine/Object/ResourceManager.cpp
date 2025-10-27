@@ -413,7 +413,7 @@ std::string ResourceManager::LoadMaterialTemplateFile(const std::string& directo
 	return mtlFilePath;
 }
 
-Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
+Sprite* ResourceManager::LoadSprite(std::string texturePath) {
 	// キャッシュにあるか確認
 	auto it = sprites_.find(texturePath);
 	if (it != sprites_.end()) {
@@ -468,15 +468,15 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	// 頂点4つ
-	vertexData[0].position = { 0.0f,size.y,0.0f,1.0f };	// 左下
+	vertexData[0].position = { 0.0f,1.0f,0.0f,1.0f };	// 左下
 	vertexData[0].texcoord = { 0.0f,1.0f };
-	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f };		// 左上
-	vertexData[2].position = { size.x,size.y,0.0f,1.0f };	// 右下
-	vertexData[2].texcoord = { 1.0f,1.0f };
-	vertexData[3].position = { size.x,0.0f,0.0f,1.0f };	// 右上
+	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f };	// 左上
 	vertexData[1].texcoord = { 0.0f,0.0f };
+	vertexData[2].position = { 1.0f,1.0f,0.0f,1.0f };	// 右下
+	vertexData[2].texcoord = { 1.0f,1.0f };
+	vertexData[3].position = { 1.0f,0.0f,0.0f,1.0f };	// 右上
 	vertexData[3].texcoord = { 1.0f,0.0f };
-
+	
 	for (UINT i = 0; i < 4; ++i) {
 		vertexData[i].normal = { 0.0f,0.0f,-1.0f };
 	}
@@ -499,9 +499,6 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	sprite->SetTransformData(transformationData);
 	sprite->SetTransformResource(transformationResource);
 
-	// トランスフォーム初期化
-	sprite->SetTransform({ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} });
-
 	// TexturePathを設定
 	Texture* texture = new Texture;
 	texture->SetMtlFilePath(texturePath);
@@ -512,10 +509,7 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath, Vector2 size) {
 	material->Initialize(this, true, false); // テクスチャ座標情報がなければテクスチャ不使用
 	material->SetTexture(texture);
 	sprite->SetMaterial(material);
-	
-	// 描画する大きさを設定
-	sprite->SetSize({size.x,size.y,1.0f});
-
+		
 	// キャッシュに登録
 	sprites_.insert({ texturePath, sprite });
 
