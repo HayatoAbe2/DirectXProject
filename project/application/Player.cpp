@@ -40,8 +40,11 @@ void Player::Update(GameContext* context) {
 		input_.y = moveSpeed_; 
 	}
 
+	// 入力を反映
 	velocity_.x = input_.x;
 	velocity_.z = -input_.y;
+
+	// 速度をもとに移動
 	transform_.translate += velocity_;
 
 	if (context->IsPress(DIK_UP) || context->IsControllerPress(5)) { transform_.scale += {0.01f, 0.01f, 0.01f}; }

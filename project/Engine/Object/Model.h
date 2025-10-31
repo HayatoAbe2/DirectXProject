@@ -3,6 +3,7 @@
 #include "VertexData.h"
 #include "TransformationMatrix.h"
 #include "Texture.h"
+#include "Mesh.h"
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -13,46 +14,15 @@ class Renderer;
 class Camera;
 class Model {
 public:
-	~Model() {
-		if (material_) delete material_;
-	}
-
 	///
 	/// モデル読み込み時のSetter
 	///
 
 	/// <summary>
-	/// 頂点を設定
+	/// メッシュ追加
 	/// </summary>
-	/// <param name="vertices">モデルの頂点</param>
-	void SetVertices(const std::vector<VertexData>& vertices) { vertices_ = vertices; }
-
-	/// <summary>
-	/// 頂点バッファを設定
-	/// </summary>
-	/// <param name="vb">VertexBuffer</param>
-	void SetVertexBuffer(const Microsoft::WRL::ComPtr<ID3D12Resource>& vb) { vertexBuffer_ = vb; }
-
-	/// <summary>
-	/// 頂点バッファビューを設定
-	/// </summary>
-	/// <param name="vbv">vertexBufferView</param>
-	void SetVBV(const D3D12_VERTEX_BUFFER_VIEW& vbv) { vertexBufferView_ = vbv; }
-
-	/// <summary>
-	/// material設定
-	/// </summary>
-	/// <param name="materialResource">マテリアル</param>
-	void SetMaterial(Material* material) { 
-		if (material_) { delete material_; }
-		material_ = material;
-	}
-
-	/// <summary>
-	/// 頂点の追加
-	/// </summary>
-	/// <param name="vertex">頂点データ</param>
-	void AddVertex(const VertexData& vertex) { vertices_.push_back(vertex); }
+	/// <param name="mesh">追加するメッシュ</param>
+	void AddMeshes(const std::shared_ptr<Mesh>& mesh) { meshes_.push_back(mesh); }
 
 	/// <summary>
 	/// transformリソース設定
@@ -72,14 +42,8 @@ public:
 	/// <param name="camera"></param>
 	void UpdateTransformation(Camera& camera);
 
-	const D3D12_VERTEX_BUFFER_VIEW& GetVBV()const { return vertexBufferView_; }
-	const std::vector<VertexData>& GetVertices() const{ return vertices_; }
-	const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const {return material_->GetTextureSRVHandle();}
 	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const { return transformationResource_->GetGPUVirtualAddress(); } 
 	const std::string& GetMtlPath()const { return mtlFilePath; }
-	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialCBV() { return material_->GetCBV()->GetGPUVirtualAddress(); }
-
-	void UpdateMaterial() { material_->UpdateGPU(); }
 
 	/// <summary>
 	/// トランスフォーム設定
@@ -88,6 +52,9 @@ public:
 	void SetTransform(const Transform& transform) {
 		transform_ = transform;
 	}
+	
+	// メッシュ(全体)の取得
+	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() { return meshes_; }
 
 	// インスタンス描画用
 	
@@ -118,19 +85,15 @@ public:
 	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
 	void UpdateInstanceTransform(Camera* camera, const Transform* transforms);
 
-
-
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
 private:
-
 	// モデルデータ
-	std::vector<VertexData> vertices_;
 	std::string mtlFilePath;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_ = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
-	Material* material_;
 	Transform transform_;
+
+	// メッシュ
+	std::vector<std::shared_ptr<Mesh>> meshes_;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_ = nullptr;
 	TransformationMatrix* transformationData_ = nullptr;

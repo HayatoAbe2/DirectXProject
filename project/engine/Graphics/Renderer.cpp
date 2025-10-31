@@ -37,14 +37,12 @@ void Renderer::Finalize() {
 	ImGui::DestroyContext();
 }
 
-void Renderer::DrawModel(Model& model,int blendMode) {
+void Renderer::DrawModel(Model& model, int blendMode) {
 	CommandListManager* cmdListManager = dxContext_.get()->GetCommandListManager();
 	PipelineStateManager* psoManager = dxContext_.get()->GetPipelineStateManager();
 	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
 	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
 
-	model.UpdateMaterial();
-	
 	// PSO設定
 	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetStandardPSO(blendMode));
 	// RootSignatureを設定
@@ -55,20 +53,27 @@ void Renderer::DrawModel(Model& model,int blendMode) {
 
 	// トポロジを三角形に設定
 	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// マテリアルCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, model.GetMaterialCBV());
-	// モデル描画
-	cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
-	// wvp用のCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetCBV());
-	// SRVの設定
-	if (model.GetTextureSRVHandle().ptr != 0) {
-		cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+
+	// 各メッシュを描画
+	for (auto& mesh : model.GetMeshes()) {
+
+		// マテリアル更新
+		mesh->UpdateMaterial();
+		// マテリアルCBufferの場所を設定
+		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		// モデル描画
+		cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// wvp用のCBufferの場所を設定
+		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetCBV());
+		// SRVの設定
+		if (mesh->GetTextureSRVHandle().ptr != 0) {
+			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+		}
+		// ライト
+		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
+		// ドローコール
+		cmdListManager->GetCommandList()->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
 	}
-	// ライト
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
-	// ドローコール
-	cmdListManager->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), 1, 0, 0);
 }
 
 void Renderer::DrawModelInstance(Model& model, int blendMode) {
@@ -77,8 +82,6 @@ void Renderer::DrawModelInstance(Model& model, int blendMode) {
 	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
 	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
 
-	model.UpdateMaterial();
-	
 	// PSO設定
 	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetInstancingPSO(blendMode));
 	// RootSignatureを設定
@@ -86,25 +89,31 @@ void Renderer::DrawModelInstance(Model& model, int blendMode) {
 	// 描画用のDescriptorHeapの設定
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descHeapManager->GetSRVHeap().Get() };
 	cmdListManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
-
 	// トポロジを三角形に設定
 	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// マテリアルCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, model.GetMaterialCBV());
-	// モデル描画
-	cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &model.GetVBV());	// VBVを設定
-	// wvp用のCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
-	// SRVの設定
-	if (model.GetTextureSRVHandle().ptr != 0) {
-	cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, model.GetTextureSRVHandle());
+
+	// 各メッシュを描画
+	for (auto& mesh : model.GetMeshes()) {
+
+		// マテリアル更新
+		mesh->UpdateMaterial();
+		// マテリアルCBufferの場所を設定
+		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		// モデル描画
+		cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// wvp用のCBufferの場所を設定
+		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
+		// SRVの設定
+		if (mesh->GetTextureSRVHandle().ptr != 0) {
+			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+		}
+		// インスタンス用SRVの設定
+		if (model.IsInstancing()) {
+			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
+		}
+		// ドローコール
+		cmdListManager->GetCommandList()->DrawInstanced(UINT(mesh->GetVertices().size()), model.GetNumInstance(), 0, 0);
 	}
-	// インスタンス用SRVの設定
-	if (model.IsInstancing()) {
-		cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
-	}
-	// ドローコール
-	cmdListManager->GetCommandList()->DrawInstanced(UINT(model.GetVertices().size()), model.GetNumInstance(), 0, 0);
 }
 
 void Renderer::DrawSprite(Sprite& sprite,int blendMode) {

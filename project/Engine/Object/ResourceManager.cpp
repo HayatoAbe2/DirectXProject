@@ -341,16 +341,18 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 	vertexBufferView.SizeInBytes = UINT(size);
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
-	// Modelに格納
-	model->SetVertices(vertices);					// 頂点
-	model->SetVertexBuffer(vertexBuffer);			// 頂点バッファ
-	model->SetVBV(vertexBufferView);				// 頂点バッファビュー
+	// Meshに格納
+	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+	mesh->SetVertices(vertices);			// 頂点
+	mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
+	mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
 
 	// マテリアル初期化
-	Material* material = new Material;
+	std::shared_ptr<Material> material = std::make_shared<Material>();
 	material->Initialize(this, !texcoords.empty(),true); // テクスチャ座標情報がなければテクスチャ不使用
 	material->SetTexture(texture);	// テクスチャ
-	model->SetMaterial(material);
+	mesh->SetMaterial(material);
+	model->AddMeshes(mesh);
 
 	if (numInstance == 1) {
 		// transformリソースを作成

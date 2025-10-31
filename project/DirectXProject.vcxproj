@@ -196,6 +196,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Math\Vector4.cpp" />
     <ClCompile Include="engine\App\Window.cpp" />
     <ClCompile Include="application\Player.cpp" />
+    <ClCompile Include="application\PlayerBullet.cpp" />
+    <ClCompile Include="engine\Object\Mesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -281,6 +283,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\App\Window.h" />
     <ClInclude Include="application\Player.h" />
     <ClInclude Include="engine\Graphics\FixFPS.h" />
+    <ClInclude Include="application\PlayerBullet.h" />
+    <ClInclude Include="engine\Object\Mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
