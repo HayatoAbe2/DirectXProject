@@ -23,13 +23,34 @@
 
 void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	dxContext_ = std::make_unique<DirectXContext>();
-	dxContext_.get()->Initialize(clientWidth, clientHeight, hwnd, logger);
+	dxContext_->Initialize(clientWidth, clientHeight, hwnd, logger);
+
+	// エンティティtransformバッファ初期化
+	UINT bufferSize = sizeof(TransformationMatrix) * kMaxObjects;
+
+	// 定数バッファのアライメント（256の倍数）
+	bufferSize = (bufferSize + 255) & ~255;
+
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+
+	dxContext_->GetDeviceManager()->GetDevice()->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&transformBuffer_)
+	);
+
+	// 一度だけMapして保持
+	transformBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedTransformData_));
 
 	InitializeImGui(hwnd);
 }
 
 void Renderer::Finalize() {
-	dxContext_.get()->Finalize();
+	dxContext_->Finalize();
 
 	// ImGuiの終了処理
 	ImGui_ImplDX12_Shutdown();
@@ -37,60 +58,109 @@ void Renderer::Finalize() {
 	ImGui::DestroyContext();
 }
 
-void Renderer::DrawModel(Model& model, int blendMode) {
-	CommandListManager* cmdListManager = dxContext_.get()->GetCommandListManager();
-	PipelineStateManager* psoManager = dxContext_.get()->GetPipelineStateManager();
-	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
-	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
+void Renderer::UpdateEntityTransforms(
+	const Entity& entity,
+	const Camera& camera) {
+	TransformationMatrix data;
+	data.World = MakeAffineMatrix(entity.GetTransform());
+	data.WVP = data.World
+		* camera.viewMatrix_
+		* camera.projectionMatrix_;
+	memcpy(mappedTransformData_ + sizeof(TransformationMatrix) * entity.GetID(), &data, sizeof(TransformationMatrix));
+}
+
+void Renderer::UpdateSpriteTransform(Entity& entity) {
+	Transform transform{};
+	Vector2 size = entity.GetSprite()->GetSize();
+	Vector2 pos = entity.GetSprite()->GetPosition();
+	float rot = entity.GetSprite()->GetRotation();
+	Vector2 windowSize = { float(dxContext_->GetWindowWidth()),float(dxContext_->GetWindowHeight()) };
+
+	transform.scale = { size.x, size.y, 1.0f };
+	transform.translate = { pos.x,pos.y, 0.0f };
+	transform.rotate = { 0.0f,0.0f,rot };
+	// トランスフォーム
+	TransformationMatrix data;
+	data.World = MakeAffineMatrix(transform);
+	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, windowSize.x, windowSize.y, 0.0f, 100.0f);
+	data.WVP = Multiply(data.World, projectionMatrix);
+	
+	// コピー
+	memcpy(mappedTransformData_ + sizeof(TransformationMatrix) * entity.GetID(), &data, sizeof(TransformationMatrix));
+}
+
+void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
+	if (entity.IsRenderable()) {
+		// 各描画対象があれば描画する
+		if (entity.GetModel()) {
+			UpdateEntityTransforms(entity, camera);
+			DrawModel(&entity, blendMode);
+		}
+		if (entity.GetSprite()) {
+			UpdateSpriteTransform(entity);
+			DrawSprite(&entity, blendMode);
+		}
+		/*if (entity->modelInstance)
+			DrawEntityModelInstanced(*entity);
+		if (entity->spriteInstance)
+			DrawEntitySpriteInstanced(*entity);*/
+	}
+}
+
+void Renderer::DrawModel(Entity* entity, int blendMode) {
+	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
+	auto pso = dxContext_->GetPipelineStateManager()->GetStandardPSO(blendMode);
+	auto rootSig = dxContext_->GetRootSignatureManager()->GetStandardRootSignature().Get();
+	auto descHeap = dxContext_->GetDescriptorHeapManager()->GetSRVHeap().Get();
 
 	// PSO設定
-	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetStandardPSO(blendMode));
+	cmdList->SetPipelineState(pso);
 	// RootSignatureを設定
-	cmdListManager->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager->GetStandardRootSignature().Get());
+	cmdList->SetGraphicsRootSignature(rootSig);
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descHeapManager->GetSRVHeap().Get() };
-	cmdListManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
-
-	// トポロジを三角形に設定
-	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->SetDescriptorHeaps(1, &descHeap);
+	// トポロジを三角形に設定a
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
-	for (auto& mesh : model.GetMeshes()) {
+	for (auto& mesh : entity->GetModel()->GetMeshes()) {
 
 		// マテリアル更新
 		mesh->UpdateMaterial();
 		// マテリアルCBufferの場所を設定
-		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
 		// モデル描画
-		cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-		// wvp用のCBufferの場所を設定
-		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetCBV());
+		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// WVPのCBV
+		D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
+			transformBuffer_->GetGPUVirtualAddress() + sizeof(TransformationMatrix) * entity->GetID();
+		cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
+
 		// SRVの設定
 		if (mesh->GetTextureSRVHandle().ptr != 0) {
-			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
 		// ライト
-		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
+		cmdList->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
 		// ドローコール
-		cmdListManager->GetCommandList()->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
 	}
 }
 
 void Renderer::DrawModelInstance(Model& model, int blendMode) {
-	CommandListManager* cmdListManager = dxContext_.get()->GetCommandListManager();
-	PipelineStateManager* psoManager = dxContext_.get()->GetPipelineStateManager();
-	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
-	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
+	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
+	auto pso = dxContext_->GetPipelineStateManager()->GetInstancingPSO(blendMode);
+	auto rootSig = dxContext_->GetRootSignatureManager()->GetInstancingRootSignature().Get();
+	auto descHeap = dxContext_->GetDescriptorHeapManager()->GetSRVHeap().Get();
 
 	// PSO設定
-	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetInstancingPSO(blendMode));
+	cmdList->SetPipelineState(pso);
 	// RootSignatureを設定
-	cmdListManager->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager->GetInstancingRootSignature().Get());
+	cmdList->SetGraphicsRootSignature(rootSig);
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descHeapManager->GetSRVHeap().Get() };
-	cmdListManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
+	cmdList->SetDescriptorHeaps(1, &descHeap);
 	// トポロジを三角形に設定
-	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
 	for (auto& mesh : model.GetMeshes()) {
@@ -98,53 +168,52 @@ void Renderer::DrawModelInstance(Model& model, int blendMode) {
 		// マテリアル更新
 		mesh->UpdateMaterial();
 		// マテリアルCBufferの場所を設定
-		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
 		// モデル描画
-		cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
 		// wvp用のCBufferの場所を設定
-		cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
+		cmdList->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
 		// SRVの設定
 		if (mesh->GetTextureSRVHandle().ptr != 0) {
-			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
 		// インスタンス用SRVの設定
 		if (model.IsInstancing()) {
-			cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
+			cmdList->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
 		}
 		// ドローコール
-		cmdListManager->GetCommandList()->DrawInstanced(UINT(mesh->GetVertices().size()), model.GetNumInstance(), 0, 0);
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), model.GetNumInstance(), 0, 0);
 	}
 }
 
-void Renderer::DrawSprite(Sprite& sprite,int blendMode) {
-	CommandListManager* cmdListManager = dxContext_.get()->GetCommandListManager();
-	PipelineStateManager* psoManager = dxContext_.get()->GetPipelineStateManager();
-	RootSignatureManager* rootSignatureManager = dxContext_.get()->GetRootSignatureManager();
-	DescriptorHeapManager* descHeapManager = dxContext_.get()->GetDescriptorHeapManager();
+void Renderer::DrawSprite(Entity* entity, int blendMode) {
+	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
+	auto pso = dxContext_->GetPipelineStateManager()->GetStandardPSO(blendMode);
+	auto rootSig = dxContext_->GetRootSignatureManager()->GetStandardRootSignature().Get();
+	auto descHeap = dxContext_->GetDescriptorHeapManager()->GetSRVHeap().Get();
 
-	sprite.UpdateMaterial();
-
+	entity->GetSprite()->UpdateMaterial();
 	// PSO設定
-	cmdListManager->GetCommandList()->SetPipelineState(psoManager->GetStandardPSO(blendMode));
+	cmdList->SetPipelineState(pso);
 	// RootSignatureを設定
-	cmdListManager->GetCommandList()->SetGraphicsRootSignature(rootSignatureManager->GetStandardRootSignature().Get());
+	cmdList->SetGraphicsRootSignature(rootSig);
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descHeapManager->GetSRVHeap().Get() };
-	cmdListManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
-
+	cmdList->SetDescriptorHeaps(1, &descHeap);
 	// トポロジを三角形に設定
-	cmdListManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	// マテリアルCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, sprite.GetMaterialCBV());
+	cmdList->SetGraphicsRootConstantBufferView(0, entity->GetSprite()->GetMaterialCBV());
 	// Spriteの描画。変更が必要なものだけ変更する
-	cmdListManager->GetCommandList()->IASetIndexBuffer(&sprite.GetIBV());	// IBVを設定
-	cmdListManager->GetCommandList()->IASetVertexBuffers(0, 1, &sprite.GetVBV());	// VBVを設定
-	// TransformationMatrixCBufferの場所を設定
-	cmdListManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, sprite.GetCBV());
+	cmdList->IASetIndexBuffer(&entity->GetSprite()->GetIBV());	// IBVを設定
+	cmdList->IASetVertexBuffers(0, 1, &entity->GetSprite()->GetVBV());	// VBVを設定
+	// WVPのCBV
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
+		transformBuffer_->GetGPUVirtualAddress() + sizeof(TransformationMatrix) * entity->GetID();
+	cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
 	// SRVの設定
-	cmdListManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, sprite.GetTextureSRVHandle());
+	cmdList->SetGraphicsRootDescriptorTable(2, entity->GetSprite()->GetTextureSRVHandle());
 	// 描画!(DrawCall/ドローコール)
-	cmdListManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
 void Renderer::BeginFrame() {

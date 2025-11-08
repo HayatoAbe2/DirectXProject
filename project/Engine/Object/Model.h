@@ -24,34 +24,7 @@ public:
 	/// <param name="mesh">追加するメッシュ</param>
 	void AddMeshes(const std::shared_ptr<Mesh>& mesh) { meshes_.push_back(mesh); }
 
-	/// <summary>
-	/// transformリソース設定
-	/// </summary>
-	/// <param name="resource">リソース</param>
-	void SetTransformResource(const Microsoft::WRL::ComPtr<ID3D12Resource>& resource_) { transformationResource_ = resource_; }
-
-	/// <summary>
-	/// transformデータ設定
-	/// </summary>
-	/// <param name="data">データ</param>
-	void SetTransformData(TransformationMatrix* data) { transformationData_ = data; }
-
-	/// <summary>
-	/// 描画のため、モデルのトランスフォームデータを更新
-	/// </summary>
-	/// <param name="camera"></param>
-	void UpdateTransformation(Camera& camera);
-
-	const D3D12_GPU_VIRTUAL_ADDRESS GetCBV()const { return transformationResource_->GetGPUVirtualAddress(); } 
 	const std::string& GetMtlPath()const { return mtlFilePath; }
-
-	/// <summary>
-	/// トランスフォーム設定
-	/// </summary>
-	/// <param name="transform">トランスフォーム</param>
-	void SetTransform(const Transform& transform) {
-		transform_ = transform;
-	}
 	
 	// メッシュ(全体)の取得
 	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() { return meshes_; }
@@ -83,20 +56,14 @@ public:
 	}
 
 	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
-	void UpdateInstanceTransform(Camera* camera, const Transform* transforms);
-
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
 private:
 	// モデルデータ
 	std::string mtlFilePath;
-	Transform transform_;
 
 	// メッシュ
 	std::vector<std::shared_ptr<Mesh>> meshes_;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_ = nullptr;
-	TransformationMatrix* transformationData_ = nullptr;
 
 	// 複数体描画用（必要なときだけ使う）
 	bool isInstancing_ = false;

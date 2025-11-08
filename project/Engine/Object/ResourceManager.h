@@ -48,11 +48,11 @@ public:
     /// <param name="directoryPath"></param>
     /// <param name="filename"></param>
     /// <returns></returns>
-    Model* LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_ = 1);
+    std::shared_ptr<Model> LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_ = 1);
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
-    Sprite* LoadSprite(std::string texturePath);
+    std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
 
 private:
     Logger* logger_ = nullptr;
@@ -68,8 +68,8 @@ private:
 
 	// 作成したリソースのキャッシュ
     std::unordered_map<std::string, Texture*> textures_;
-    std::unordered_map<std::string, Model*> models_;
-    std::unordered_map<std::string, Sprite*> sprites_;
+    std::unordered_map<std::string, std::shared_ptr<Model>> models_;
+    std::unordered_map<std::string, std::shared_ptr<Sprite>> sprites_;
 };
 
 

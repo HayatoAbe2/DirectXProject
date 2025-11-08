@@ -32,3 +32,5 @@ void Sprite::SetTextureRect(float x, float y, float w, float h) {
 	vertexData_[2].texcoord = { right, bottom };
 	vertexData_[3].texcoord = { right, top };
 }
+
+

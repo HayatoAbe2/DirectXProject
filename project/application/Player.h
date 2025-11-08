@@ -2,7 +2,7 @@
 #include "Transform.h"
 #include "MathUtils.h"
 
-class Model;
+class Entity;
 class GameContext;
 class Camera;
 
@@ -14,7 +14,7 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="playerModel">モデル</param>
-	void Initialize(Model* playerModel);
+	void Initialize(Entity* playerModel);
 
 	/// <summary>
 	/// 更新
@@ -43,6 +43,6 @@ private:
 	float moveSpeed_ = 0.2f;
 
 	// モデル
-	Model* model_ = nullptr;
+	Entity* model_ = nullptr;
 };
 

@@ -3,6 +3,7 @@
 #include "../Io/Audio.h"
 #include "../Io/Input.h"
 #include "../Object/ResourceManager.h"
+#include "../Object/Entity.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
 #include "../Scene/Camera.h"
@@ -18,28 +19,20 @@ Vector2 GameContext::GetWindowSize() const {
 	return { float(renderer_->GetWindowWidth()),float(renderer_->GetWindowHeight()) };
 }
 
-Model* GameContext::LoadModel(const std::string& directoryPath, const std::string& filename) {
+std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename) {
 	return resourceManager_->LoadObjFile(directoryPath, filename);
 }
 
-Model* GameContext::LoadModel(const std::string& directoryPath, const std::string& filename,const int num) {
+std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename,const int num) {
 	return resourceManager_->LoadObjFile(directoryPath, filename,num);
 }
 
-Sprite* GameContext::LoadSprite(std::string texturePath) {
+std::shared_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {
 	return resourceManager_->LoadSprite(texturePath);
 }
 
-void GameContext::DrawModel(Model& model, BlendMode blendMode) {
-	renderer_->DrawModel(model, static_cast<int>(blendMode));
-}
-
-void GameContext::DrawModelInstance(Model& model, BlendMode blendMode) {
-	renderer_->DrawModelInstance(model, static_cast<int>(blendMode));
-}
-
-void GameContext::DrawSprite(Sprite& sprite, BlendMode blendMode) {
-	renderer_->DrawSprite(sprite,static_cast<int>(blendMode));
+void GameContext::DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode) {
+	renderer_->DrawEntity(entity, camera,static_cast<int>(blendMode));
 }
 
 bool GameContext::IsTrigger(uint8_t keyNumber) {

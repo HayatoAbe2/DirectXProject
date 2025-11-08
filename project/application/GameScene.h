@@ -1,12 +1,12 @@
 #pragma once
-#include "Model.h"
-#include "Sprite.h"
-#include <list>
 #include "Transform.h"
 #include "DebugCamera.h"
 #include "Camera.h"
 #include "BaseScene.h"
+#include <list>
+#include <memory>
 
+class Entity;
 class Renderer;
 class Camera;
 class Player;
@@ -27,10 +27,10 @@ public:
 
 private:
 	// 3Dモデル
-	Model* playerModel_ = nullptr;
-	Model* planeModel_ = nullptr;
-	Sprite* uvChecker_ = nullptr;
-	Sprite* sprite_ = nullptr;
+	std::unique_ptr<Entity> playerModel_ = nullptr;
+	std::unique_ptr<Entity> planeModel_ = nullptr;
+	std::unique_ptr<Entity> uvChecker_ = nullptr;
+	std::unique_ptr<Entity> sprite_ = nullptr;
 
 	// プレイヤー
 	Player* player_ = nullptr;

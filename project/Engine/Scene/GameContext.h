@@ -4,10 +4,12 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 class ResourceManager;
 class Input;
 class Audio;
+class Entity;
 class Model;
 class Sprite;
 class Camera;
@@ -27,9 +29,9 @@ public:
 	/// リソース管理系
 	///
 
-	Model* LoadModel(const std::string& directoryPath, const std::string& filename);
-	Model* LoadModel(const std::string& directoryPath, const std::string& filename, const int num);
-	Sprite* LoadSprite(std::string texturePath);
+	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename);
+	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename, const int num);
+	std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
 
 	///
 	/// トランスフォーム更新
@@ -41,9 +43,7 @@ public:
 	/// 描画系 
 	///
 
-	void DrawModel(class Model& model, BlendMode blendMode = BlendMode::Normal);
-	void DrawModelInstance(Model& model, BlendMode blendMode = BlendMode::Normal);
-	void DrawSprite(class Sprite& sprite, BlendMode blendMode = BlendMode::Normal);
+	void DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode = BlendMode::Normal);
 
 	/// 
 	/// 入力系

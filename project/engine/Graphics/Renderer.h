@@ -3,6 +3,7 @@
 #include "../Scene/DebugCamera.h"
 #include "../Object/Material.h"
 #include "../Object/Model.h"
+#include "../Object/Entity.h"
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
 #include "../Object/VertexData.h"
@@ -28,12 +29,24 @@ public:
 	/// 解放処理(ループ終了後に行う)
 	/// </summary>
 	void Finalize();
+
+	/// <summary>
+	/// トランスフォーム更新
+	/// </summary>
+	/// <param name="entity">エンティティ</param>
+	/// <param name="camera">カメラ</param>
+	void UpdateEntityTransforms(const Entity& entity, const Camera& camera);
+
+	void UpdateSpriteTransform(Entity& entity);
+
+	void DrawEntity(Entity& entity, const Camera& camera, int blendMode);
+
+	void DrawModel(Entity* entity, int blendMode);
 	
 	/// <summary>
 	/// モデル描画
 	/// </summary>
 	/// <param name="blendMode">ブレンドモード</param>
-	void DrawModel(Model& model, int blendMode);
 
 	/// <summary>
 	/// インスタンスモデル描画
@@ -42,11 +55,7 @@ public:
 	/// <param name="blendMode">ブレンドモード</param>
 	void DrawModelInstance(Model& model, int blendMode);
 
-	/// <summary>
-	/// スプライト描画
-	/// </summary>
-	/// <param name="blendMode">ブレンドモード</param>
-	void DrawSprite(Sprite& sprite,int blendMode);
+	void DrawSprite(Entity* entity, int blendMode);
 
 	/// <summary>
 	/// フレーム開始時の処理(描画開始時に行う)
@@ -75,4 +84,13 @@ public:
 
 private:
 	std::unique_ptr<DirectXContext> dxContext_ = nullptr;
+	void* mappedCBV_ = nullptr;
+
+	// transform
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformBuffer_;
+	UINT8* mappedTransformData_ = nullptr;
+
+	// CBサイズ
+	static constexpr UINT kCBSize = (sizeof(Matrix4x4) + 255) & ~255;
+	const UINT kMaxObjects = 4096; // 最大数。もし足りなかったら増やす
 };

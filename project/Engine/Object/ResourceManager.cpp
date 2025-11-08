@@ -19,15 +19,7 @@ ResourceManager::~ResourceManager() {
 		delete texture.second;
 	}
 	textures_.clear();
-
-	for (auto& model : models_) {
-		delete model.second;
-	}
 	models_.clear();
-
-	for (auto& sprite : sprites_) {
-		delete sprite.second;
-	}
 	sprites_.clear();
 }
 
@@ -233,7 +225,7 @@ Model* ResourceManager::CreateInstancingSRV(Model* model,const int numInstance_)
 	return model;
 }
 
-Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance) {
+std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance) {
 	if (numInstance == 0) { assert(false); } // インスタンス数0はないので止める
 	
 	// キャッシュにあるか確認
@@ -244,7 +236,7 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 	}
 	
 	// 変数の宣言
-	Model* model = new Model; // 構築するModeldata
+	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
 	std::vector<Vector4> positions;	// 位置
 	std::vector<Vector3> normals;	// 法線
 	std::vector<Vector2> texcoords; // テクスチャ座標
@@ -362,8 +354,6 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 		// 単位行列を書き込んでおく
 		transformationData->WVP = MakeIdentity4x4();
 		transformationData->World = MakeIdentity4x4();
-		model->SetTransformResource(transformationResource);
-		model->SetTransformData(transformationData);
 	} else {
 		// インスタンス描画設定
 		model->SetInstance(numInstance);
@@ -382,7 +372,7 @@ Model* ResourceManager::LoadObjFile(const std::string& directoryPath, const std:
 
 		model->SetInstanceResource(instanceTransformResource);
 		model->SetInstanceTransformData(transformData);
-		model = CreateInstancingSRV(model, numInstance);
+		//model = CreateInstancingSRV(model, numInstance);
 	}
 
 	// キャッシュに登録
@@ -415,7 +405,7 @@ std::string ResourceManager::LoadMaterialTemplateFile(const std::string& directo
 	return mtlFilePath;
 }
 
-Sprite* ResourceManager::LoadSprite(std::string texturePath) {
+std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// キャッシュにあるか確認
 	auto it = sprites_.find(texturePath);
 	if (it != sprites_.end()) {
@@ -423,7 +413,7 @@ Sprite* ResourceManager::LoadSprite(std::string texturePath) {
 	}
 	
 	
-	Sprite* sprite = new Sprite;
+	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>();
 	
 	// UVTransform
 	Transform uvTransform_{

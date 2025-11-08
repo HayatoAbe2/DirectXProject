@@ -1,6 +1,6 @@
 #include "Player.h"
 #include "GameContext.h"
-#include "Model.h"
+#include "Entity.h"
 #include "Camera.h"
 #include <numbers>
 #define DIRECTINPUT_VERSION 0x0800
@@ -14,9 +14,8 @@ Player::~Player() {
 
 }
 
-void Player::Initialize(Model* playerModel) {
+void Player::Initialize(Entity* playerModel) {
 	model_ = playerModel;
-	model_->SetTransform(transform_);
 }
 
 void Player::Update(GameContext* context) {
@@ -55,8 +54,7 @@ void Player::Update(GameContext* context) {
 
 void Player::Draw(GameContext* context, Camera* camera) {
 	model_->SetTransform(transform_);
-	model_->UpdateTransformation(*camera);
-	context->DrawModel(*model_);
+	context->DrawEntity(*model_,*camera);
 
 	ImGui::Begin("Player Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", transform_.translate.x, transform_.translate.y, transform_.translate.z);

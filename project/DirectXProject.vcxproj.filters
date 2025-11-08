@@ -159,6 +159,7 @@
     </ClCompile>
     <ClCompile Include="application\PlayerBullet.cpp" />
     <ClCompile Include="engine\Object\Mesh.cpp" />
+    <ClCompile Include="engine\Object\Entity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -336,6 +337,7 @@
     </ClInclude>
     <ClInclude Include="application\PlayerBullet.h" />
     <ClInclude Include="engine\Object\Mesh.h" />
+    <ClInclude Include="engine\Object\Entity.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
