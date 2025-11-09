@@ -68,7 +68,7 @@ void App::Initialize() {
 
 	// リソース
 	resourceManager_ = new ResourceManager();
-	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), logger_);
+	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), renderer_->GetSRVManager(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Initialization complete.\n"));
 
 	// コンテキスト

@@ -122,7 +122,6 @@ private:
 	VertexData* vertexData_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_;
 	TransformationMatrix* transformationData_;
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
 
 	friend class Renderer;
 };

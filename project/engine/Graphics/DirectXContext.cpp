@@ -6,6 +6,7 @@
 #include "ShaderCompiler.h"
 #include "RenderTargetManager.h"
 #include "DescriptorHeapManager.h"
+#include "SRVManager.h"
 #include "PipelineStateManager.h"
 #include "FixFPS.h"
 #include "../Object/Sprite.h"
@@ -52,6 +53,10 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	renderTargetManager_ = new RenderTargetManager;
 	renderTargetManager_->InitializeSwapChainBuffers(swapChain_.Get(), deviceManager_->GetDevice().Get(), descriptorHeapManager_);
 
+	// SRVマネージャー
+	srvManager_ = new SRVManager;
+	srvManager_->Initialize(descriptorHeapManager_, deviceManager_->GetDevice().Get());
+
 	// DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource_ = CreateDepthStencilTextureResource(deviceManager_->GetDevice(), clientWidth_, clientHeight_);
 	// DSVの設定
@@ -95,6 +100,7 @@ void DirectXContext::Finalize() {
 	if (rootSignatureManager_->GetErrorBlob()) rootSignatureManager_->GetErrorBlob()->Release();
 	delete deviceManager_;
 	delete commandListManager_;
+	delete srvManager_;
 	delete descriptorHeapManager_;
 	delete renderTargetManager_;
 	delete rootSignatureManager_;
@@ -123,9 +129,10 @@ void DirectXContext::BeginFrame() {
 
 	commandListManager_->GetCommandList()->ResourceBarrier(1, &barrier_);
 
+	srvManager_->PreDraw(commandListManager_->GetCommandList());
 
 	// 描画先のRTVとDSVを設定する
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = renderTargetManager_->GetCPUDescriptorHandle(descriptorHeapManager_->GetDSVHeap().Get(), descriptorHeapManager_->GetDSVHeapSize(), 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = descriptorHeapManager_->GetCPUDescriptorHandle(descriptorHeapManager_->GetDSVHeap().Get(), descriptorHeapManager_->GetDSVHeapSize(), 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = renderTargetManager_->GetRTVHandle(backBufferIndex_);
 	commandListManager_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	// 指定した色で画面全体をクリアする
@@ -134,7 +141,7 @@ void DirectXContext::BeginFrame() {
 	// 指定した深度で画面全体をクリアする
 	commandListManager_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeapManager_->GetSRVHeap().Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetHeap().Get() };
 	commandListManager_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 	// Viewportを設定
 	commandListManager_->GetCommandList()->RSSetViewports(1, &viewport_);
@@ -276,16 +283,16 @@ void DirectXContext::CreateLightBuffer() {
 
 void DirectXContext::InitializeImGui(HWND hwnd) {
 	// Imguiの初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
-	ImGui_ImplDX12_Init(
-		deviceManager_->GetDevice().Get(),
-		swapChainDesc_.BufferCount,
-		renderTargetManager_->GetRTVDesc_().Format,
-		descriptorHeapManager_->GetSRVHeap().Get(),
-		descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart(),
-		descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
-	);
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+	//ImGui::StyleColorsDark();
+	//ImGui_ImplWin32_Init(hwnd);
+	//ImGui_ImplDX12_Init(
+	//	deviceManager_->GetDevice().Get(),
+	//	swapChainDesc_.BufferCount,
+	//	renderTargetManager_->GetRTVDesc_().Format,
+	//	descriptorHeapManager_->GetSRVHeap().Get(),
+	//	descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart(),
+	//	descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
+	//);
 }

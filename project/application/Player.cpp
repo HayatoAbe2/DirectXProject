@@ -56,9 +56,9 @@ void Player::Draw(GameContext* context, Camera* camera) {
 	model_->SetTransform(transform_);
 	context->DrawEntity(*model_,*camera);
 
-	ImGui::Begin("Player Info");
+	/*ImGui::Begin("Player Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", transform_.translate.x, transform_.translate.y, transform_.translate.z);
 	ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", transform_.rotate.x, transform_.rotate.y, transform_.rotate.z);
 	ImGui::Text("Scale: (%.2f, %.2f, %.2f)", transform_.scale.x, transform_.scale.y, transform_.scale.z);
-	ImGui::End();
+	ImGui::End();*/
 }

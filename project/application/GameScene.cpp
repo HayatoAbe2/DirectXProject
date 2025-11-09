@@ -28,7 +28,6 @@ void GameScene::Initialize() {
 	uvChecker_ = std::make_unique<Entity>(context_->LoadSprite("Resources/uvChecker.png"));
 	uvChecker_->GetSprite()->SetSize({ 256.0f, 256.0f });
 	uvChecker_->GetSprite()->SetTextureRect(0, 0, 128, 128);
-
 	
 	std::shared_ptr<Sprite> sprite = context_->LoadSprite("Resources/monsterBall.png");
 	sprite->SetSize({ 256.0f, 256.0f });

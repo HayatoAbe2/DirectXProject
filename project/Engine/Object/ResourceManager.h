@@ -15,6 +15,7 @@ class Texture;
 class Model;
 class Sprite;
 class DescriptorHeapManager;
+class SRVManager;
 class CommandListManager;
 class Logger;
 class Camera;
@@ -26,7 +27,7 @@ class ResourceManager {
 public:
     ~ResourceManager();
 
-    void Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device,CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager,Logger* logger);
+    void Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device,CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager,SRVManager* srvManager,Logger* logger);
 
     DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
@@ -59,6 +60,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Device> device_ = nullptr;
 	CommandListManager* commandListManager_ = nullptr;
 	DescriptorHeapManager* descriptorHeapManager_ = nullptr;
+    SRVManager* srvManager_ = nullptr;
 
     Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> uploadCmdList_;
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_;

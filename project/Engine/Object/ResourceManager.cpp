@@ -5,6 +5,7 @@
 #include "../Io/Logger.h"
 #include "../Graphics/CommandListManager.h"
 #include "../Graphics/DescriptorHeapManager.h"
+#include "../Graphics/SRVManager.h"
 #include "../Scene/Camera.h"
 
 #include <string>
@@ -23,10 +24,11 @@ ResourceManager::~ResourceManager() {
 	sprites_.clear();
 }
 
-void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, Logger* logger) {
+void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, SRVManager* srvManager, Logger* logger) {
 	device_ = device;
 	commandListManager_ = commandListManager;
 	descriptorHeapManager_ = descriptorHeapManager;
+	srvManager_ = srvManager;
 	logger_ = logger;
 }
 
@@ -170,27 +172,13 @@ Texture* ResourceManager::CreateSRV(Texture* texture) {
 		// コマンドリストを実行
 		commandListManager_->ExecuteAndWait();
 
-		// metaDataを基にSRVの設定
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-		srvDesc.Format = metadata.format;
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-
-		// SRVを作成するDescriptorHeapの場所を決める
-		D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
-		D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-		// 空いている場所まで進める
-		textureSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-		textureSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-		// SRVの生成
-		device_->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
-		currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
+		currentSRVIndex_ = srvManager_->Allocate();
+		srvManager_->CreateTextureSRV(currentSRVIndex_, textureResource.Get(), metadata.format, UINT(metadata.mipLevels));
 
 		// textureResourceをモデルに設定
 		texture->SetResource(textureResource);
 		// SRVのハンドルをモデルに設定
-		texture->SetSRVHandle(textureSrvHandleGPU);
+		texture->SetSRVHandle(srvManager_->GetGPUHandle(currentSRVIndex_));
 	} else {
 		texture->SetSRVHandle({ 0 });
 		texture->SetResource(nullptr);
@@ -200,28 +188,11 @@ Texture* ResourceManager::CreateSRV(Texture* texture) {
 }
 
 Model* ResourceManager::CreateInstancingSRV(Model* model,const int numInstance_) {
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
-	instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	instancingSrvDesc.Buffer.FirstElement = 0;
-	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	instancingSrvDesc.Buffer.NumElements = numInstance_;
-	instancingSrvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
-
-	// SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart();
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart();
-	// 空いている場所まで進める
-	instancingSrvHandleCPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-	instancingSrvHandleGPU.ptr += descriptorHeapManager_->GetSRVHeapSize() * currentSRVIndex_;
-	// SRVの生成
-	device_->CreateShaderResourceView(model->GetInstanceResource().Get(), &instancingSrvDesc, instancingSrvHandleCPU);
-	currentSRVIndex_++; // 次のSRVを使うためにインデックスを進める
-
+	currentSRVIndex_ = srvManager_->Allocate();
+	srvManager_->CreateStructuredBufferSRV(currentSRVIndex_, model->GetInstanceResource().Get(), numInstance_, sizeof(TransformationMatrix));
+	
 	// SRVハンドル
-	model->SetSRVHandle(instancingSrvHandleGPU);
+	model->SetSRVHandle(srvManager_->GetGPUHandle(currentSRVIndex_));
 	return model;
 }
 

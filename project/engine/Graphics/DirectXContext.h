@@ -24,6 +24,7 @@ class RootSignatureManager;
 class ShaderCompiler;
 class RenderTargetManager;
 class DescriptorHeapManager;
+class SRVManager;
 class PipelineStateManager;
 class FixFPS;
 class ResourceManager;
@@ -71,6 +72,7 @@ public:
 	DeviceManager* GetDeviceManager() { return deviceManager_; }
 	CommandListManager* GetCommandListManager() { return commandListManager_; }
 	DescriptorHeapManager* GetDescriptorHeapManager() { return descriptorHeapManager_; }
+	SRVManager* GetSRVManager() { return srvManager_; }
 	PipelineStateManager* GetPipelineStateManager() { return pipelineStateManager_; }
 	RootSignatureManager* GetRootSignatureManager() { return rootSignatureManager_; }
 	Microsoft::WRL::ComPtr<ID3D12Resource> GetLightResource() { return directionalLightResource_; }
@@ -142,6 +144,9 @@ private:
 
 	// RTV設定など
 	RenderTargetManager* renderTargetManager_ = nullptr;
+
+	// SRVマネージャー
+	SRVManager* srvManager_ = nullptr;
 
 	// リソース管理クラス
 	ResourceManager* resourceManager_ = nullptr;

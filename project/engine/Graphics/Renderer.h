@@ -10,6 +10,7 @@
 #include "../Scene/DirectionalLight.h"
 #include "BlendMode.h"
 #include "DirectXContext.h"
+#include "SRVManager.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -80,17 +81,16 @@ public:
 	DeviceManager* GetDeviceManager() { return dxContext_.get()->GetDeviceManager(); }
 	CommandListManager* GetCommandListManager() { return dxContext_.get()->GetCommandListManager(); }
 	DescriptorHeapManager* GetDescriptorHeapManager() { return dxContext_.get()->GetDescriptorHeapManager(); }
-
+	SRVManager* GetSRVManager() { return dxContext_.get()->GetSRVManager(); }
 
 private:
 	std::unique_ptr<DirectXContext> dxContext_ = nullptr;
-	void* mappedCBV_ = nullptr;
 
 	// transform
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformBuffer_;
 	UINT8* mappedTransformData_ = nullptr;
 
 	// CBサイズ
-	static constexpr UINT kCBSize = (sizeof(Matrix4x4) + 255) & ~255;
+	static constexpr UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
 	const UINT kMaxObjects = 4096; // 最大数。もし足りなかったら増やす
 };

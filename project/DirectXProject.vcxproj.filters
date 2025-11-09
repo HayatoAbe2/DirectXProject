@@ -158,8 +158,15 @@
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="application\PlayerBullet.cpp" />
-    <ClCompile Include="engine\Object\Mesh.cpp" />
-    <ClCompile Include="engine\Object\Entity.cpp" />
+    <ClCompile Include="engine\Graphics\SRVManager.cpp">
+      <Filter>Engine\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Object\Mesh.cpp">
+      <Filter>Engine\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Object\Entity.cpp">
+      <Filter>Engine\Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -336,8 +343,15 @@
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
     <ClInclude Include="application\PlayerBullet.h" />
-    <ClInclude Include="engine\Object\Mesh.h" />
-    <ClInclude Include="engine\Object\Entity.h" />
+    <ClInclude Include="engine\Graphics\SRVManager.h">
+      <Filter>Engine\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\Mesh.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\Entity.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

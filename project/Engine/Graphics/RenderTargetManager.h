@@ -16,8 +16,6 @@ public:
 	/// <param name="heapManager">ヒープ管理クラスのインスタンス</param>
 	void InitializeSwapChainBuffers(IDXGISwapChain4* swapChain, ID3D12Device* device, DescriptorHeapManager* heapManager);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);
-
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVHandle(size_t index) const { return rtvHandles_[index]; }
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> GetSwapChainResource(size_t index) { return swapChainResources_[index]; }
