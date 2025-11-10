@@ -54,7 +54,7 @@ public:
 	/// </summary>
 	/// <param name="model">複数インスタンスを持つモデル</param>
 	/// <param name="blendMode">ブレンドモード</param>
-	void DrawModelInstance(Model& model, int blendMode);
+	void DrawModelInstance(Entity* entity, int blendMode);
 
 	void DrawSprite(Entity* entity, int blendMode);
 

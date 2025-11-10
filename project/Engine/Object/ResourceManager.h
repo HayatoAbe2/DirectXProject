@@ -14,6 +14,7 @@
 class Texture;
 class Model;
 class Sprite;
+class InstancedModel;
 class DescriptorHeapManager;
 class SRVManager;
 class CommandListManager;
@@ -41,7 +42,7 @@ public:
 
     Texture* CreateSRV(Texture* texture);
 
-    Model* CreateInstancingSRV(Model* model, const int numInstance_);
+    void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
     
     /// <summary>
     /// モデルのファイル読み込み
@@ -49,7 +50,8 @@ public:
     /// <param name="directoryPath"></param>
     /// <param name="filename"></param>
     /// <returns></returns>
-    std::shared_ptr<Model> LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_ = 1);
+    std::shared_ptr<Model> LoadObjFile(const std::string& directoryPath, const std::string& filename);
+    std::shared_ptr<InstancedModel> LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_);
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
@@ -71,6 +73,7 @@ private:
 	// 作成したリソースのキャッシュ
     std::unordered_map<std::string, Texture*> textures_;
     std::unordered_map<std::string, std::shared_ptr<Model>> models_;
+    std::unordered_map<std::string, std::shared_ptr<InstancedModel>> instancedModels_;
     std::unordered_map<std::string, std::shared_ptr<Sprite>> sprites_;
 };
 

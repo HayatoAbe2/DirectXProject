@@ -13,8 +13,15 @@ Entity::Entity(std::shared_ptr<Model> model) {
 	// ID割り当て&インクリメント
 	id_ = nextId_++;
 }
+Entity::Entity(std::shared_ptr<InstancedModel> instancedModel) {
+	instancedModel_ = instancedModel;
+
+	// ID割り当て&インクリメント
+	id_ = nextId_++;
+}
+
 
 bool Entity::IsRenderable() {
-	return model_ || sprite_;
-	//|| modelInstance_ || spriteInstance_;
+	return model_ || sprite_ || instancedModel_;
+	//|| spriteInstance_;
 }

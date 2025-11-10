@@ -4,14 +4,17 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <memory>
+#include <vector>
 
-class Sprite;
 class Model;
+class Sprite;
+class InstancedModel;
 
 class Entity {
 public:
 	Entity(std::shared_ptr<Sprite> sprite);
 	Entity(std::shared_ptr<Model> model);
+	Entity(std::shared_ptr<InstancedModel> instancedModel);
 
 	///
 	/// トランスフォーム操作
@@ -21,6 +24,7 @@ public:
 	void SetScale(const Vector3& scale) { transform_.translate = scale; }
 	void SetRotate(const Vector3& rotate) { transform_.translate = rotate; }
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
+	void SetInstanceTransforms(const std::vector<Transform>& list) { instanceTransforms_ = list; }
 
 	///
 	/// 描画物設定
@@ -35,8 +39,8 @@ public:
 	std::shared_ptr<Sprite> GetSprite() const { return sprite_; }
 
 	// インスタンスモデル
-	//void SetModelInstance(const std::shared_ptr<ModelInstance>& m) { modelInstance_ = m; }
-	//std::shared_ptr<ModelInstance> GetModelInstance() const { return modelInstance_; }
+	void SetInstancedModel(const std::shared_ptr<InstancedModel>& m) { instancedModel_ = m; }
+	std::shared_ptr<InstancedModel> GetInstancedModel() const { return instancedModel_; }
 
 	// インスタンススプライト
 	//void SetSpriteInstance(const std::shared_ptr<SpriteInstance>& s) { spriteInstance_ = s; }
@@ -44,6 +48,7 @@ public:
 
 	uint32_t GetID() const { return id_; }
 	Transform GetTransform()const { return transform_; }
+	const std::vector<Transform>& GetInstanceTransforms() const { return instanceTransforms_; }
 
 	/// <summary>
 	/// 描画するもの(モデル/スプライト)があるかどうか
@@ -59,12 +64,15 @@ private:
 	// トランスフォーム
 	Transform transform_ = { { 1,1,1 },{}, {} };
 
+	// インスタンス描画用トランスフォーム
+	std::vector<Transform> instanceTransforms_;
+
 	// 描画するもの
 	std::shared_ptr<Model> model_;   // 通常モデル
 	std::shared_ptr<Sprite> sprite_; // 通常スプライト
 
 	// インスタンス描画用
-	//std::shared_ptr<ModelInstance> modelInstance_;   // インスタンスモデル
+	std::shared_ptr<InstancedModel> instancedModel_;   // インスタンスモデル
 	//std::shared_ptr<SpriteInstance> spriteInstance_; // インスタンススプライト
 };
 

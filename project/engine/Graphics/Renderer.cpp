@@ -8,6 +8,7 @@
 #include "DeviceManager.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
+#include "../Object/InstancedModel.h"
 
 #include <cassert>
 #include <format>
@@ -98,9 +99,10 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
 			UpdateSpriteTransform(entity);
 			DrawSprite(&entity, blendMode);
 		}
-		/*if (entity->modelInstance)
-			DrawEntityModelInstanced(*entity);
-		if (entity->spriteInstance)
+		if (entity.GetInstancedModel()) {
+			DrawModelInstance(&entity, blendMode);
+		}
+		/*if (entity->spriteInstance)
 			DrawEntitySpriteInstanced(*entity);*/
 	}
 }
@@ -142,7 +144,7 @@ void Renderer::DrawModel(Entity* entity, int blendMode) {
 	}
 }
 
-void Renderer::DrawModelInstance(Model& model, int blendMode) {
+void Renderer::DrawModelInstance(Entity* entity, int blendMode) {
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
 	auto pso = dxContext_->GetPipelineStateManager()->GetInstancingPSO(blendMode);
 	auto rootSig = dxContext_->GetRootSignatureManager()->GetInstancingRootSignature().Get();
@@ -155,7 +157,7 @@ void Renderer::DrawModelInstance(Model& model, int blendMode) {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
-	for (auto& mesh : model.GetMeshes()) {
+	for (auto& mesh : entity->GetInstancedModel()->GetMeshes()) {
 
 		// マテリアル更新
 		mesh->UpdateMaterial();
@@ -164,17 +166,15 @@ void Renderer::DrawModelInstance(Model& model, int blendMode) {
 		// モデル描画
 		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
 		// wvp用のCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(1, model.GetInstanceCBV());
+		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetInstancedModel()->GetInstanceCBV());
 		// SRVの設定
 		if (mesh->GetTextureSRVHandle().ptr != 0) {
 			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
 		// インスタンス用SRVの設定
-		if (model.IsInstancing()) {
-			cmdList->SetGraphicsRootDescriptorTable(4, model.GetInstanceSRVHandle());
-		}
+		cmdList->SetGraphicsRootDescriptorTable(4, entity->GetInstancedModel()->GetInstanceSRVHandle());
 		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), model.GetNumInstance(), 0, 0);
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetInstancedModel()->GetNumInstance(), 0, 0);
 	}
 }
 

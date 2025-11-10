@@ -12,6 +12,7 @@ class Audio;
 class Entity;
 class Model;
 class Sprite;
+class InstancedModel;
 class Camera;
 class Renderer;
 
@@ -30,7 +31,7 @@ public:
 	///
 
 	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename);
-	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename, const int num);
+	std::shared_ptr<InstancedModel> LoadInstancedModel(const std::string& directoryPath, const std::string& filename, const int num);
 	std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
 
 	///

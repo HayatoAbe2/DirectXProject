@@ -167,6 +167,9 @@
     <ClCompile Include="engine\Object\Entity.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
+    <ClCompile Include="engine\Object\InstancedModel.cpp">
+      <Filter>Engine\Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -350,6 +353,9 @@
       <Filter>Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="engine\Object\Entity.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\InstancedModel.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
   </ItemGroup>

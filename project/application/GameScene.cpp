@@ -5,6 +5,7 @@
 #include "Entity.h"
 #include "Model.h"
 #include "Sprite.h"
+#include "InstancedModel.h"
 #include <numbers>
 
 GameScene::~GameScene() {
@@ -28,11 +29,9 @@ void GameScene::Initialize() {
 	uvChecker_ = std::make_unique<Entity>(context_->LoadSprite("Resources/uvChecker.png"));
 	uvChecker_->GetSprite()->SetSize({ 256.0f, 256.0f });
 	uvChecker_->GetSprite()->SetTextureRect(0, 0, 128, 128);
-	
-	std::shared_ptr<Sprite> sprite = context_->LoadSprite("Resources/monsterBall.png");
-	sprite->SetSize({ 256.0f, 256.0f });
-	sprite->SetPosition({ 256.0f,0.0f });
-	sprite_ = std::make_unique<Entity>(sprite);
+
+	planeModel_ = std::make_unique<Entity>(context_->LoadInstancedModel("Resources", "plane.obj", 10));
+	planeTransforms_.resize(numPlaneInstance_);
 }
 
 void GameScene::Update() {
@@ -41,7 +40,7 @@ void GameScene::Update() {
 	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
 	debugCamera_->Update();
 
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < numPlaneInstance_; ++i) {
 		planeTransforms_[i] = {
 			{1,1,1},{0,float(std::numbers::pi),0},{2.0f + i * 0.1f,i * 0.1f,i * 0.1f}
 		};
@@ -51,4 +50,8 @@ void GameScene::Update() {
 void GameScene::Draw() {
 	player_->Draw(context_,camera_);
 	context_->DrawEntity(*uvChecker_,*camera_);
+
+	planeModel_->SetInstanceTransforms(planeTransforms_);
+	planeModel_->GetInstancedModel()->UpdateInstanceTransform(camera_, planeTransforms_);
+	context_->DrawEntity(*planeModel_, *camera_);
 }

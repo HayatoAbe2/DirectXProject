@@ -5,6 +5,7 @@
 #include "BaseScene.h"
 #include <list>
 #include <memory>
+#include <vector>
 
 class Entity;
 class Renderer;
@@ -30,7 +31,6 @@ private:
 	std::unique_ptr<Entity> playerModel_ = nullptr;
 	std::unique_ptr<Entity> planeModel_ = nullptr;
 	std::unique_ptr<Entity> uvChecker_ = nullptr;
-	std::unique_ptr<Entity> sprite_ = nullptr;
 
 	// プレイヤー
 	Player* player_ = nullptr;
@@ -40,5 +40,5 @@ private:
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
 	int numPlaneInstance_ = 10;
-	Transform planeTransforms_[10]{};
+	std::vector<Transform> planeTransforms_;
 };

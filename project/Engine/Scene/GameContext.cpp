@@ -6,6 +6,7 @@
 #include "../Object/Entity.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
+#include "../Object/InstancedModel.h"
 #include "../Scene/Camera.h"
 
 GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager) {
@@ -23,7 +24,7 @@ std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, 
 	return resourceManager_->LoadObjFile(directoryPath, filename);
 }
 
-std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename,const int num) {
+std::shared_ptr<InstancedModel> GameContext::LoadInstancedModel(const std::string& directoryPath, const std::string& filename,const int num) {
 	return resourceManager_->LoadObjFile(directoryPath, filename,num);
 }
 
