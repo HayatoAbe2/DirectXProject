@@ -14,10 +14,10 @@ public:
     void PreDraw(const Camera& camera);
 
     void SetLifeTime(float lifeTime) { lifeTime_ = lifeTime; }
-    std::shared_ptr<InstancedModel> GetInstancedModel_() { return instancedModel_; };
+    std::shared_ptr<InstancedModel> GetInstancedModel_() const { return instancedModel_; };
 
 private:
     std::vector<Particle> particles_;
     std::shared_ptr<InstancedModel> instancedModel_;
-    float lifeTime_ = 30;
+    float lifeTime_ = 1.0f;
 };

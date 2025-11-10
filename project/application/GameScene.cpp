@@ -38,7 +38,7 @@ void GameScene::Initialize() {
 	uvChecker_->GetSprite()->SetTextureRect(0, 0, 128, 128);
 
 	planeModel_ = std::make_unique<Entity>();
-	planeModel_->SetInstancedModel(context_->LoadInstancedModel("Resources", "plane.obj", 10));
+	planeModel_->SetInstancedModel(context_->LoadInstancedModel("Resources", "suzanne.obj", 10));
 	planeTransforms_.resize(numPlaneInstance_);
 
 	particle_ = std::make_unique<Entity>();
@@ -57,8 +57,8 @@ void GameScene::Update() {
 		};
 	}
 
-	std::uniform_real_distribution<float> distribution(-5.0f, 5.0f);
-	Transform transform = { {1.0f,1.0f,1.0f,},{}, {} };
+	std::uniform_real_distribution<float> distribution(-0.1f, 0.1f);
+	Transform transform = { {1.0f,1.0f,1.0f,},{0,float(std::numbers::pi),0}, {}};
 	Vector3 velocity = {distribution(randomEngine_),distribution(randomEngine_) ,0};
 	particle_->GetParticleSystem()->Emit(transform, velocity);
 	particle_->GetParticleSystem()->Update(1.0f / 60.0f);

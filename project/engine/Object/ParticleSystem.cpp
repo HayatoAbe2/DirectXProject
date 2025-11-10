@@ -5,13 +5,13 @@
 void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
 	instancedModel_ = model;
 	particles_.resize(model->GetNumInstance());
-	for (Particle particle : particles_) {
+	for (Particle& particle : particles_) {
 		particle.transform = { {1.0f,1.0f,1.0f}, {}, {} };
 	}
 }
 
 void ParticleSystem::Update(float deltaTime) {
-	for (Particle particle : particles_) {
+	for (Particle& particle : particles_) {
 		if (particle.alive) {
 			particle.transform.translate += particle.velocity;
 
@@ -35,7 +35,7 @@ void ParticleSystem::PreDraw(const Camera& camera) {
 }
 
 void ParticleSystem::Emit(const Transform& baseTransform, const Vector3& velocity) {
-	for (Particle particle : particles_) {
+	for (Particle& particle : particles_) {
 		if (!particle.alive) {
 			particle.alive = true;
 			particle.lifetime = lifeTime_;

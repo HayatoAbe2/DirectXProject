@@ -2,6 +2,7 @@
 #include "Camera.h"
 
 void InstancedModel::UpdateInstanceTransform(const Camera& camera, const std::vector<Transform> transforms) {
+	numInstance_ = static_cast<uint32_t>(transforms.size());
 	// WVPMatrixを作る
 	for (int i = 0; i < numInstance_; ++i) {
 		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[i]);

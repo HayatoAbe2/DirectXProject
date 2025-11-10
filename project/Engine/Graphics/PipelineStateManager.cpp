@@ -83,7 +83,7 @@ void PipelineStateManager::CreateInstancingPSO() {
 	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	baseDesc.DepthStencilState.DepthEnable = TRUE;
-	baseDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	baseDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 	baseDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	baseDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	baseDesc.NumRenderTargets = 1;
