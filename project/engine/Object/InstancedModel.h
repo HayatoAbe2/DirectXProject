@@ -52,7 +52,7 @@ public:
 	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
-	void UpdateInstanceTransform(Camera* camera, const std::vector<Transform> transforms);
+	void UpdateInstanceTransform(const Camera& camera, const std::vector<Transform> transforms);
 private:
 	// モデルデータ
 	std::string mtlFilePath;

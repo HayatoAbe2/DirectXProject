@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "GameContext.h"
 #include "Entity.h"
+#include "PlayerBullet.h"
 #include "Camera.h"
 #include <numbers>
 #define DIRECTINPUT_VERSION 0x0800
@@ -50,6 +51,8 @@ void Player::Update(GameContext* context) {
 	if (context->IsPress(DIK_DOWN) || context->IsControllerPress(4)) { transform_.scale -= {0.01f, 0.01f, 0.01f}; }
 	if (context->IsPress(DIK_LEFT) ) { transform_.rotate.y += 0.03f; }
 	if (context->IsPress(DIK_RIGHT)) { transform_.rotate.y -= 0.03f; }
+
+	
 }
 
 void Player::Draw(GameContext* context, Camera* camera) {

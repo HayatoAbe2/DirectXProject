@@ -170,6 +170,7 @@
     <ClCompile Include="engine\Object\InstancedModel.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
+    <ClCompile Include="engine\Object\ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -358,6 +359,8 @@
     <ClInclude Include="engine\Object\InstancedModel.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
+    <ClInclude Include="engine\Object\Particle.h" />
+    <ClInclude Include="engine\Object\ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

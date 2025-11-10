@@ -1,12 +1,14 @@
 #pragma once
 #include "MathUtils.h"
 
-class Model;
+class Entity;
+class Camera;
 
 class PlayerBullet {
-	PlayerBullet(Model* model);
+public:
+	PlayerBullet(Entity* model,const Vector3& velocity);
 	void Update();
-	void Draw();
+	void Draw(Camera& camera);
 private:
 	// トランスフォーム
 	Transform transform_{ {1,1,1},{0,0,0},{0,0,0} };
@@ -15,6 +17,6 @@ private:
 	Vector3 velocity_{};
 
 	// モデル
-	Model* model_ = nullptr;
+	Entity* model_ = nullptr;
 };
 

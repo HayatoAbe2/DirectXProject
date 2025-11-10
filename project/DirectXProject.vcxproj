@@ -201,6 +201,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\PlayerBullet.cpp" />
     <ClCompile Include="engine\Object\Mesh.cpp" />
     <ClCompile Include="engine\Graphics\SRVManager.cpp" />
+    <ClCompile Include="engine\Object\ParticleSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -246,6 +247,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Io\Audio.h" />
     <ClInclude Include="engine\Math\Sphere.h" />
     <ClInclude Include="engine\Object\MaterialData.h" />
+    <ClInclude Include="engine\Object\Particle.h" />
     <ClInclude Include="engine\Object\ResourceManager.h" />
     <ClInclude Include="engine\Object\Texture.h" />
     <ClInclude Include="engine\Scene\BaseScene.h" />
@@ -291,6 +293,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\Mesh.h" />
     <ClInclude Include="engine\Graphics\SRVManager.h" />
     <ClInclude Include="engine\Object\InstancedModel.h" />
+    <ClInclude Include="engine\Object\ParticleSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

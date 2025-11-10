@@ -9,12 +9,11 @@
 class Model;
 class Sprite;
 class InstancedModel;
+class ParticleSystem;
 
 class Entity {
 public:
-	Entity(std::shared_ptr<Sprite> sprite);
-	Entity(std::shared_ptr<Model> model);
-	Entity(std::shared_ptr<InstancedModel> instancedModel);
+	Entity();
 
 	///
 	/// トランスフォーム操作
@@ -46,6 +45,9 @@ public:
 	//void SetSpriteInstance(const std::shared_ptr<SpriteInstance>& s) { spriteInstance_ = s; }
 	//std::shared_ptr<SpriteInstance> GetSpriteInstance() const { return spriteInstance_; }
 
+	void SetParticleSystem(const std::shared_ptr<InstancedModel>& m);
+	std::shared_ptr<ParticleSystem> GetParticleSystem() const { return particleSystem_; }
+
 	uint32_t GetID() const { return id_; }
 	Transform GetTransform()const { return transform_; }
 	const std::vector<Transform>& GetInstanceTransforms() const { return instanceTransforms_; }
@@ -74,5 +76,8 @@ private:
 	// インスタンス描画用
 	std::shared_ptr<InstancedModel> instancedModel_;   // インスタンスモデル
 	//std::shared_ptr<SpriteInstance> spriteInstance_; // インスタンススプライト
+
+	// パーティクル
+	std::shared_ptr<ParticleSystem> particleSystem_;
 };
 

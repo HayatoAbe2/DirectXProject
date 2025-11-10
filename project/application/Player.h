@@ -1,10 +1,13 @@
 #pragma once
 #include "Transform.h"
 #include "MathUtils.h"
+#include <vector>
+#include <memory>
 
 class Entity;
 class GameContext;
 class Camera;
+class PlayerBullet;
 
 class Player {
 public:
@@ -44,5 +47,12 @@ private:
 
 	// モデル
 	Entity* model_ = nullptr;
+
+	// 弾
+	//std::vector<std::unique_ptr<PlayerBullet>> bullets_;
+
+	// 射撃
+	int shootCount_ = 0;
+	const int shootTime_ = 5;
 };
 

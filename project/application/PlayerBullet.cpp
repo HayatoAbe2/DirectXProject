@@ -1,12 +1,17 @@
 #include "PlayerBullet.h"
-#include "Model.h"
+#include "GameContext.h"
+#include "Entity.h"
+#include "Camera.h"
+#include "App.h"
 
-PlayerBullet::PlayerBullet(Model* model) {
-	model_ = model;
+PlayerBullet::PlayerBullet(Entity* entity,const Vector3& velocity) {
+	model_ = entity;
+	velocity_ = velocity;
 }
 
 void PlayerBullet::Update() {
+	transform_.translate += velocity_;
 }
 
-void PlayerBullet::Draw() {
+void PlayerBullet::Draw(Camera& camera) {
 }

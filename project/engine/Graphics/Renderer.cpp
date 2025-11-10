@@ -9,6 +9,7 @@
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
 #include "../Object/InstancedModel.h"
+#include "../Object/ParticleSystem.h"
 
 #include <cassert>
 #include <format>
@@ -83,7 +84,7 @@ void Renderer::UpdateSpriteTransform(Entity& entity) {
 	data.World = MakeAffineMatrix(transform);
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, windowSize.x, windowSize.y, 0.0f, 100.0f);
 	data.WVP = Multiply(data.World, projectionMatrix);
-	
+
 	// コピー
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);
 }
@@ -104,6 +105,10 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
 		}
 		/*if (entity->spriteInstance)
 			DrawEntitySpriteInstanced(*entity);*/
+		if (entity.GetParticleSystem()) {
+			entity.GetParticleSystem()->PreDraw(camera);
+			DrawModelInstance(&entity, blendMode);
+		}
 	}
 }
 
@@ -148,7 +153,7 @@ void Renderer::DrawModelInstance(Entity* entity, int blendMode) {
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
 	auto pso = dxContext_->GetPipelineStateManager()->GetInstancingPSO(blendMode);
 	auto rootSig = dxContext_->GetRootSignatureManager()->GetInstancingRootSignature().Get();
-	
+
 	// PSO設定
 	cmdList->SetPipelineState(pso);
 	// RootSignatureを設定
@@ -157,24 +162,46 @@ void Renderer::DrawModelInstance(Entity* entity, int blendMode) {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
-	for (auto& mesh : entity->GetInstancedModel()->GetMeshes()) {
+	if (entity->GetInstancedModel()) {
+		for (auto& mesh : entity->GetInstancedModel()->GetMeshes()) {
 
-		// マテリアル更新
-		mesh->UpdateMaterial();
-		// マテリアルCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
-		// モデル描画
-		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-		// wvp用のCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetInstancedModel()->GetInstanceCBV());
-		// SRVの設定
-		if (mesh->GetTextureSRVHandle().ptr != 0) {
-			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+			// マテリアル更新
+			mesh->UpdateMaterial();
+			// マテリアルCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+			// モデル描画
+			cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+			// wvp用のCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(1, entity->GetInstancedModel()->GetInstanceCBV());
+			// SRVの設定
+			if (mesh->GetTextureSRVHandle().ptr != 0) {
+				cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+			}
+			// インスタンス用SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(4, entity->GetInstancedModel()->GetInstanceSRVHandle());
+			// ドローコール
+			cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetInstancedModel()->GetNumInstance(), 0, 0);
 		}
-		// インスタンス用SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(4, entity->GetInstancedModel()->GetInstanceSRVHandle());
-		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetInstancedModel()->GetNumInstance(), 0, 0);
+	} else {
+		for (auto& mesh : entity->GetParticleSystem()->GetInstancedModel_()->GetMeshes()) {
+
+			// マテリアル更新
+			mesh->UpdateMaterial();
+			// マテリアルCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+			// モデル描画
+			cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+			// wvp用のCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(1, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceCBV());
+			// SRVの設定
+			if (mesh->GetTextureSRVHandle().ptr != 0) {
+				cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
+			}
+			// インスタンス用SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(4, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceSRVHandle());
+			// ドローコール
+			cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetParticleSystem()->GetInstancedModel_()->GetNumInstance(), 0, 0);
+		}
 	}
 }
 
@@ -182,7 +209,7 @@ void Renderer::DrawSprite(Entity* entity, int blendMode) {
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
 	auto pso = dxContext_->GetPipelineStateManager()->GetStandardPSO(blendMode);
 	auto rootSig = dxContext_->GetRootSignatureManager()->GetStandardRootSignature().Get();
-	
+
 	entity->GetSprite()->UpdateMaterial();
 	// PSO設定
 	cmdList->SetPipelineState(pso);

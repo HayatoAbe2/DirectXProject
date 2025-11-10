@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include <random>
 
 class Entity;
 class Renderer;
@@ -31,6 +32,7 @@ private:
 	std::unique_ptr<Entity> playerModel_ = nullptr;
 	std::unique_ptr<Entity> planeModel_ = nullptr;
 	std::unique_ptr<Entity> uvChecker_ = nullptr;
+	std::unique_ptr<Entity> particle_ = nullptr;
 
 	// プレイヤー
 	Player* player_ = nullptr;
@@ -41,4 +43,7 @@ private:
 	DebugCamera* debugCamera_ = nullptr;
 	int numPlaneInstance_ = 10;
 	std::vector<Transform> planeTransforms_;
+
+	std::random_device randomDevice_;
+	std::mt19937 randomEngine_;
 };
