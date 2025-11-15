@@ -20,10 +20,10 @@ public:
 	/// 
 	
 	void SetTransform(const Transform& transform) { transform_ = transform; }
-	void SetScale(const Vector3& scale) { transform_.translate = scale; }
-	void SetRotate(const Vector3& rotate) { transform_.translate = rotate; }
+	void SetScale(const Vector3& scale) { transform_.scale = scale; }
+	void SetRotate(const Vector3& rotate) { transform_.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
-	void SetInstanceTransforms(const std::vector<Transform>& list) { instanceTransforms_ = list; }
+	void SetInstanceTransforms(const std::vector<Transform>& vector) { instanceTransforms_ = vector; }
 
 	///
 	/// 描画物設定

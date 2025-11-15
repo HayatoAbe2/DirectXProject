@@ -10,7 +10,7 @@ class ParticleSystem {
 public:
     void Initialize(const std::shared_ptr<InstancedModel> model);
     void Emit(const Transform& baseTransform, const Vector3& velocity);
-    void Update(float deltaTime);
+    void Update();
     void PreDraw(const Camera& camera);
 
     void SetLifeTime(float lifeTime) { lifeTime_ = lifeTime; }

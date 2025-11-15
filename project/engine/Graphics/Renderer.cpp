@@ -101,6 +101,7 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
 			DrawSprite(&entity, blendMode);
 		}
 		if (entity.GetInstancedModel()) {
+			entity.GetInstancedModel()->UpdateInstanceTransform(camera, entity.GetInstanceTransforms());
 			DrawModelInstance(&entity, blendMode);
 		}
 		/*if (entity->spriteInstance)

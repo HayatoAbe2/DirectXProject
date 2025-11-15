@@ -30,7 +30,7 @@ public:
 	/// リソース管理系
 	///
 
-	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename);
+	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
 	std::shared_ptr<InstancedModel> LoadInstancedModel(const std::string& directoryPath, const std::string& filename, const int num);
 	std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
 

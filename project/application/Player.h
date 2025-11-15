@@ -1,13 +1,17 @@
 #pragma once
 #include "Transform.h"
 #include "MathUtils.h"
+#include "Bullet.h"
+#include "RangedWeapon.h"
 #include <vector>
 #include <memory>
 
 class Entity;
 class GameContext;
 class Camera;
-class PlayerBullet;
+class MapCheck;
+class RangedWeapon;
+class ItemManager;
 
 class Player {
 public:
@@ -23,7 +27,7 @@ public:
 	/// 更新
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
-	void Update(GameContext* context);
+	void Update(GameContext* context,MapCheck* mapCheck,ItemManager* itemManager, std::vector<std::unique_ptr<Bullet>>& bullets);
 
 	/// <summary>
 	/// 描画
@@ -32,27 +36,36 @@ public:
 	/// <param name="camera">カメラ</param>
 	void Draw(GameContext* context, Camera* camera);
 
+	Transform GetTransform() const { return transform_; }
+	float GetRadius() const { return radius_; }
+
+	void SetTransform(const Transform& transform) { transform_ = transform; }
+
+	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
+
 private:
 	// トランスフォーム
-	Transform transform_{ {1,1,1},{0,0,0},{0,0,0} };
-	
-	// 入力方向
-	Vector2 input_ = { 0,0 };
+	Transform transform_;
 
+	// 半径
+	float radius_ = 0.5f;
+	
 	// 速度
 	Vector3 velocity_ = { 0,0,0 };
 
-	// 移動速さ
+	// 移動の速さ
 	float moveSpeed_ = 0.2f;
+
+	// 攻撃の向き
+	Vector3 attackDirection_ = {};
 
 	// モデル
 	Entity* model_ = nullptr;
 
-	// 弾
-	//std::vector<std::unique_ptr<PlayerBullet>> bullets_;
-
 	// 射撃
-	int shootCount_ = 0;
-	const int shootTime_ = 5;
+	int shootCoolTime_ = 0;
+
+	// 所持武器
+	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
 };
 

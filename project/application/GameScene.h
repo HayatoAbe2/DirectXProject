@@ -3,6 +3,8 @@
 #include "DebugCamera.h"
 #include "Camera.h"
 #include "BaseScene.h"
+#include "Bullet.h"
+
 #include <list>
 #include <memory>
 #include <vector>
@@ -12,6 +14,11 @@ class Entity;
 class Renderer;
 class Camera;
 class Player;
+class MapTile;
+class MapCheck;
+class WeaponManager;
+class ItemManager;
+
 // ゲームシーン
 class GameScene : public BaseScene {
 public:
@@ -30,20 +37,32 @@ public:
 private:
 	// 3Dモデル
 	std::unique_ptr<Entity> playerModel_ = nullptr;
-	std::unique_ptr<Entity> planeModel_ = nullptr;
-	std::unique_ptr<Entity> uvChecker_ = nullptr;
-	std::unique_ptr<Entity> particle_ = nullptr;
+	std::unique_ptr<Entity> wall_ = nullptr;
+	std::unique_ptr<Entity> floor_ = nullptr;
+	std::unique_ptr<Entity> skydome_ = nullptr;
 
 	// プレイヤー
 	Player* player_ = nullptr;
 
+	// 弾
+	std::vector<std::unique_ptr<Bullet>> bullets_;
+
+	// マップ
+	MapTile* mapTile_ = nullptr;
+
+	// マップ判定
+	MapCheck* mapCheck_ = nullptr;
+
+	// 武器マネージャー
+	WeaponManager* weaponManager_ = nullptr;
+
+	// アイテムマネージャー
+	ItemManager* itemManager_ = nullptr;
+
 	// カメラ
 	Camera* camera_ = nullptr;
+	float cameraDistance_ = 40.0f;
+
 	// デバッグカメラ
 	DebugCamera* debugCamera_ = nullptr;
-	int numPlaneInstance_ = 10;
-	std::vector<Transform> planeTransforms_;
-
-	std::random_device randomDevice_;
-	std::mt19937 randomEngine_;
 };

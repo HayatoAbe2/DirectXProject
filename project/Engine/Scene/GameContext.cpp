@@ -20,8 +20,8 @@ Vector2 GameContext::GetWindowSize() const {
 	return { float(renderer_->GetWindowWidth()),float(renderer_->GetWindowHeight()) };
 }
 
-std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename) {
-	return resourceManager_->LoadObjFile(directoryPath, filename);
+std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
+	return resourceManager_->LoadObjFile(directoryPath, filename,enableLighting);
 }
 
 std::shared_ptr<InstancedModel> GameContext::LoadInstancedModel(const std::string& directoryPath, const std::string& filename,const int num) {
@@ -84,10 +84,18 @@ bool GameContext::IsControllerPress(uint8_t buttonNumber) {
 	return input_->IsControllerPress(buttonNumber);
 }
 
+/// <summary>
+/// 左スティック
+/// </summary>
+/// <returns>-1~1</returns>
 Vector2 GameContext::GetLeftStick() {
 	return input_->GetLeftStick();
 }
 
+/// <summary>
+/// 右スティック
+/// </summary>
+/// <returns>-1~1</returns>
 Vector2 GameContext::GetRightStick() {
 	return input_->GetRightStick();
 }

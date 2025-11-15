@@ -22,6 +22,10 @@ public:
 	}
 	const Texture* GetTexture() const { return texture_; }
 
+	void SwitchLighting(bool enableLighting) {
+		data_.enableLighting = enableLighting;
+	}
+
 	const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const {
 		if (texture_) {
 			return texture_->GetSRVHandle();

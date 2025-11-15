@@ -21,9 +21,7 @@ ResourceManager::~ResourceManager() {
 		delete texture.second;
 	}
 	textures_.clear();
-	models_.clear();
-	instancedModels_.clear();
-	sprites_.clear();
+	meshes_.clear();
 }
 
 void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, SRVManager* srvManager, Logger* logger) {
@@ -197,124 +195,129 @@ void ResourceManager::CreateInstancingSRV(InstancedModel* model, const int numIn
 	model->SetSRVHandle(srvManager_->GetGPUHandle(currentSRVIndex_));
 }
 
-std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
+	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
+
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = models_.find(fullPath);
-	if (it != models_.end()) {
-		return it->second; // キャッシュにあったのでそれを返す
-	}
+	auto it = meshes_.find(fullPath);
+	if (it != meshes_.end()) {
+		model->AddMeshes(it->second);
+	} else {
 
-	// 変数の宣言
-	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
-	std::vector<Vector4> positions;	// 位置
-	std::vector<Vector3> normals;	// 法線
-	std::vector<Vector2> texcoords; // テクスチャ座標
-	std::vector<VertexData> vertices; // 頂点
+		// 変数の宣言
+		std::vector<Vector4> positions;	// 位置
+		std::vector<Vector3> normals;	// 法線
+		std::vector<Vector2> texcoords; // テクスチャ座標
+		std::vector<VertexData> vertices; // 頂点
 
-	// テクスチャ
-	Texture* texture = new Texture;
+		// テクスチャ
+		Texture* texture = new Texture;
 
-	// ファイルを開く
-	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
-	assert(file.is_open()); // 開けなかったらエラー
+		// ファイルを開く
+		std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+		assert(file.is_open()); // 開けなかったらエラー
 
-	// ファイルを読み、ModelDataを構築
-	std::string line; // ファイルから読んだ1行を格納する
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier; // 先頭の識別子を読む
+		// ファイルを読み、ModelDataを構築
+		std::string line; // ファイルから読んだ1行を格納する
+		while (std::getline(file, line)) {
+			std::string identifier;
+			std::istringstream s(line);
+			s >> identifier; // 先頭の識別子を読む
 
-		// 識別子に応じた処理
-		if (identifier == "v") { // 頂点座標
-			Vector4 position;
-			s >> position.x >> position.y >> position.z;
-			position.x *= -1.0f; // 右手座標系から左手座標系への変換
-			position.w = 1.0f;
-			positions.push_back(position);
-		} else if (identifier == "vt") { // テクスチャ座標
-			Vector2 texcoord;
-			s >> texcoord.x >> texcoord.y;
-			texcoord.y = 1.0f - texcoord.y; // 左下原点から左上原点への変換
-			texcoords.push_back(texcoord);
-		} else if (identifier == "vn") { // 法線
-			Vector3 normal;
-			s >> normal.x >> normal.y >> normal.z;
-			normal.x *= -1.0f; // 右手座標系から左手座標系への変換
-			normals.push_back(normal);
-		} else if (identifier == "f") {
-			VertexData triangle[3];
-			// 面は三角形限定。その他は未対応
-			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
-				std::string vertexDefinition;
-				s >> vertexDefinition;
-				// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
-				std::istringstream v(vertexDefinition);
-				uint32_t elementIndices[3]{};
-				for (int32_t element = 0; element < 3; ++element) {
-					std::string index;
-					std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
-					if (!index.empty()) {
-						elementIndices[element] = std::stoi(index);
+			// 識別子に応じた処理
+			if (identifier == "v") { // 頂点座標
+				Vector4 position;
+				s >> position.x >> position.y >> position.z;
+				position.x *= -1.0f; // 右手座標系から左手座標系への変換
+				position.w = 1.0f;
+				positions.push_back(position);
+			} else if (identifier == "vt") { // テクスチャ座標
+				Vector2 texcoord;
+				s >> texcoord.x >> texcoord.y;
+				texcoord.y = 1.0f - texcoord.y; // 左下原点から左上原点への変換
+				texcoords.push_back(texcoord);
+			} else if (identifier == "vn") { // 法線
+				Vector3 normal;
+				s >> normal.x >> normal.y >> normal.z;
+				normal.x *= -1.0f; // 右手座標系から左手座標系への変換
+				normals.push_back(normal);
+			} else if (identifier == "f") {
+				VertexData triangle[3];
+				// 面は三角形限定。その他は未対応
+				for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+					std::string vertexDefinition;
+					s >> vertexDefinition;
+					// 頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+					std::istringstream v(vertexDefinition);
+					uint32_t elementIndices[3]{};
+					for (int32_t element = 0; element < 3; ++element) {
+						std::string index;
+						std::getline(v, index, '/'); // /区切りでインデックスを読んでいく
+						if (!index.empty()) {
+							elementIndices[element] = std::stoi(index);
+						}
 					}
+					// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+					Vector4 position = positions[elementIndices[0] - 1]; // 1始まりなので-1
+					Vector2 texcoord{};
+					if (!texcoords.empty() && elementIndices[1] > 0) {
+						texcoord = texcoords[elementIndices[1] - 1];
+					}
+					Vector3 normal{};
+					if (!normals.empty() && elementIndices[2] > 0) {
+						normal = normals[elementIndices[2] - 1];
+					}
+					triangle[faceVertex] = { position, texcoord, normal };
 				}
-				// 要素へのIndexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices[0] - 1]; // 1始まりなので-1
-				Vector2 texcoord{};
-				if (!texcoords.empty() && elementIndices[1] > 0) {
-					texcoord = texcoords[elementIndices[1] - 1];
-				}
-				Vector3 normal{};
-				if (!normals.empty() && elementIndices[2] > 0) {
-					normal = normals[elementIndices[2] - 1];
-				}
-				triangle[faceVertex] = { position, texcoord, normal };
+				// 頂点を逆順で登録することで、周り順を逆にする
+				vertices.push_back(triangle[2]);
+				vertices.push_back(triangle[1]);
+				vertices.push_back(triangle[0]);
+
+			} else if (identifier == "mtllib") {
+				// materialTemplateLibraryファイルの名前を取得する
+				std::string materialFilename;
+				s >> materialFilename;
+
+				// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+				texture->SetMtlFilePath(LoadMaterialTemplateFile(directoryPath, materialFilename));
+
+				// SRVを作成
+				texture = CreateSRV(texture);
 			}
-			// 頂点を逆順で登録することで、周り順を逆にする
-			vertices.push_back(triangle[2]);
-			vertices.push_back(triangle[1]);
-			vertices.push_back(triangle[0]);
-
-		} else if (identifier == "mtllib") {
-			// materialTemplateLibraryファイルの名前を取得する
-			std::string materialFilename;
-			s >> materialFilename;
-
-			// 基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
-			texture->SetMtlFilePath(LoadMaterialTemplateFile(directoryPath, materialFilename));
-
-			// SRVを作成
-			texture = CreateSRV(texture);
 		}
+
+		// VertexBuffer作成
+		size_t size = sizeof(VertexData) * vertices.size();
+		Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(size);
+		VertexData* dst = nullptr;
+		vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+		memcpy(dst, vertices.data(), size);
+		vertexBuffer->Unmap(0, nullptr);
+
+		// VBV作成
+		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+		vertexBufferView.SizeInBytes = UINT(size);
+		vertexBufferView.StrideInBytes = sizeof(VertexData);
+
+		// Meshに格納
+		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+		mesh->SetVertices(vertices);			// 頂点
+		mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
+		mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
+
+		// マテリアル初期化
+		std::shared_ptr<Material> material = std::make_shared<Material>();
+		material->Initialize(this, !texcoords.empty(), enableLighting); // テクスチャ座標情報がなければテクスチャ不使用
+		material->SetTexture(texture);	// テクスチャ
+		mesh->SetMaterial(material);
+		model->AddMeshes(mesh);
+
+		// キャッシュに登録
+		meshes_.insert({ fullPath, mesh });
 	}
-
-	// VertexBuffer作成
-	size_t size = sizeof(VertexData) * vertices.size();
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(size);
-	VertexData* dst = nullptr;
-	vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
-	memcpy(dst, vertices.data(), size);
-	vertexBuffer->Unmap(0, nullptr);
-
-	// VBV作成
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = UINT(size);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	// Meshに格納
-	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
-	mesh->SetVertices(vertices);			// 頂点
-	mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
-	mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
-
-	// マテリアル初期化
-	std::shared_ptr<Material> material = std::make_shared<Material>();
-	material->Initialize(this, !texcoords.empty(), true); // テクスチャ座標情報がなければテクスチャ不使用
-	material->SetTexture(texture);	// テクスチャ
-	mesh->SetMaterial(material);
-	model->AddMeshes(mesh);
 
 	// transformリソースを作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource = CreateBufferResource(sizeof(TransformationMatrix));
@@ -324,9 +327,6 @@ std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directory
 	transformationData->WVP = MakeIdentity4x4();
 	transformationData->World = MakeIdentity4x4();
 
-	// キャッシュに登録
-	models_.insert({ fullPath, model });
-
 	return model;
 }
 
@@ -335,10 +335,10 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadObjFile(const std::string& 
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = instancedModels_.find(fullPath);
-	if (it != instancedModels_.end()) {
-		return it->second; // キャッシュにあったのでそれを返す
-	}
+	auto it = meshes_.find(fullPath);
+	//if (it != meshes_.end()) {
+	//	return it->second; // キャッシュにあったのでそれを返す
+	//}
 
 	// 変数の宣言
 	std::shared_ptr<InstancedModel> model = std::make_shared<InstancedModel>(); // 構築するModel
@@ -470,7 +470,7 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadObjFile(const std::string& 
 
 
 	// キャッシュに登録
-	instancedModels_.insert({ fullPath, model });
+	meshes_.insert({ fullPath, mesh });
 
 	return model;
 }
@@ -501,10 +501,10 @@ std::string ResourceManager::LoadMaterialTemplateFile(const std::string& directo
 
 std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// キャッシュにあるか確認
-	auto it = sprites_.find(texturePath);
-	if (it != sprites_.end()) {
-		return it->second; // キャッシュにあったのでそれを返す
-	}
+	//auto it = sprites_.find(texturePath);
+	//if (it != sprites_.end()) {
+	//	return it->second; // キャッシュにあったのでそれを返す
+	//}
 
 
 	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>();
@@ -597,7 +597,7 @@ std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	sprite->SetMaterial(material);
 
 	// キャッシュに登録
-	sprites_.insert({ texturePath, sprite });
+	//sprites_.insert({ texturePath, sprite });
 
 	return sprite;
 }

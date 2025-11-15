@@ -157,7 +157,7 @@
     <ClCompile Include="engine\Graphics\DirectXContext.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="application\PlayerBullet.cpp" />
+    <ClCompile Include="application\Bullet.cpp" />
     <ClCompile Include="engine\Graphics\SRVManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
@@ -171,6 +171,13 @@
       <Filter>Engine\Object</Filter>
     </ClCompile>
     <ClCompile Include="engine\Object\ParticleSystem.cpp" />
+    <ClCompile Include="application\MapTile.cpp" />
+    <ClCompile Include="application\MapCheck.cpp" />
+    <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\FireBall.cpp" />
+    <ClCompile Include="engine\Math\Vector2.cpp" />
+    <ClCompile Include="application\Weapon\WeaponManager.cpp" />
+    <ClCompile Include="application\ItemManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -346,7 +353,7 @@
     <ClInclude Include="engine\Graphics\BlendMode.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="application\PlayerBullet.h" />
+    <ClInclude Include="application\Bullet.h" />
     <ClInclude Include="engine\Graphics\SRVManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
@@ -361,6 +368,13 @@
     </ClInclude>
     <ClInclude Include="engine\Object\Particle.h" />
     <ClInclude Include="engine\Object\ParticleSystem.h" />
+    <ClInclude Include="application\MapTile.h" />
+    <ClInclude Include="application\MapCheck.h" />
+    <ClInclude Include="application\Weapon\RangedWeapon.h" />
+    <ClInclude Include="application\Weapon\Ranged\FireBall.h" />
+    <ClInclude Include="application\Weapon\WeaponManager.h" />
+    <ClInclude Include="application\ItemManager.h" />
+    <ClInclude Include="application\Weapon\WeaponStatus.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

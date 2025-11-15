@@ -7,6 +7,10 @@
 #include "Sprite.h"
 #include "InstancedModel.h"
 #include "ParticleSystem.h"
+#include "MapTile.h"
+#include "MapCheck.h"
+#include "WeaponManager.h"
+#include "ItemManager.h"
 
 #include <numbers>
 
@@ -14,63 +18,74 @@ GameScene::~GameScene() {
 	delete camera_;
 	delete debugCamera_;
 	delete player_;
+	delete mapTile_;
+	delete mapCheck_;
+	delete weaponManager_;
 }
 
 void GameScene::Initialize() {
-	std::mt19937 randomEngine_(randomDevice_());
-
 	debugCamera_ = new DebugCamera;
 	debugCamera_->Initialize(context_);
 	camera_ = new Camera;
-	camera_->transform_.translate = { 0,1,-20 };
-	camera_->transform_.rotate = { -0.1f,0,0};
+	camera_->transform_.translate = { 0,3,-10 };
+	camera_->transform_.rotate = { 0.2f,0,0};
 
 	playerModel_ = std::make_unique<Entity>();
-	playerModel_->SetModel(context_->LoadModel("Resources", "teapot.obj"));
+	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
 
+	// マップ
+	wall_ = std::make_unique<Entity>();
+	wall_->SetInstancedModel(context_->LoadInstancedModel("Resources/Block", "block.obj", 100));
+
+	floor_ = std::make_unique<Entity>();
+	floor_->SetInstancedModel(context_->LoadInstancedModel("Resources/Floor", "floor.obj", 100));
+
+	mapTile_ = new MapTile();
+	mapTile_->Initialize(wall_.get(), floor_.get());
+	mapTile_->LoadCSV("Resources/mapData.csv");
+
+	// マップ判定
+	mapCheck_ = new MapCheck();
+	mapCheck_->Initialize(mapTile_->GetMap(), mapTile_->GetTileSize());
+
+	// 武器マネージャー
+	weaponManager_ = new WeaponManager();
+	weaponManager_->Initilaize(context_);
+
+	// アイテムマネージャー
+	itemManager_ = new ItemManager();
+	itemManager_->Initialize(weaponManager_);
+
+	// プレイヤー
 	player_ = new Player();
 	player_->Initialize(playerModel_.get());
 
-	// スプライト
-	uvChecker_ = std::make_unique<Entity>(); 
-	uvChecker_->SetSprite(context_->LoadSprite("Resources/uvChecker.png"));
-	uvChecker_->GetSprite()->SetSize({ 256.0f, 256.0f });
-	uvChecker_->GetSprite()->SetTextureRect(0, 0, 128, 128);
-
-	planeModel_ = std::make_unique<Entity>();
-	planeModel_->SetInstancedModel(context_->LoadInstancedModel("Resources", "suzanne.obj", 10));
-	planeTransforms_.resize(numPlaneInstance_);
-
-	particle_ = std::make_unique<Entity>();
-	particle_->SetParticleSystem(context_->LoadInstancedModel("Resources", "plane.obj", 10));
+	// 天球
+	skydome_ = std::make_unique<Entity>();
+	skydome_->SetModel(context_->LoadModel("Resources/Skydome", "skydome.obj",false));
 }
 
 void GameScene::Update() {
-	player_->Update(context_);
-
+	// プレイヤー処理
+	player_->Update(context_,mapCheck_,itemManager_,bullets_);
+	
+	// カメラ追従
+	camera_->transform_.translate = player_->GetTransform().translate + Vector3{0,0,-cameraDistance_};
 	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
 	debugCamera_->Update();
 
-	for (int i = 0; i < numPlaneInstance_; ++i) {
-		planeTransforms_[i] = {
-			{1,1,1},{0,float(std::numbers::pi),0},{2.0f + i * 0.1f,i * 0.1f,i * 0.1f}
-		};
+	// 弾の処理
+	for (const auto &bullet : bullets_) {
+		bullet->Update();
 	}
-
-	std::uniform_real_distribution<float> distribution(-0.1f, 0.1f);
-	Transform transform = { {1.0f,1.0f,1.0f,},{0,float(std::numbers::pi),0}, {}};
-	Vector3 velocity = {distribution(randomEngine_),distribution(randomEngine_) ,0};
-	particle_->GetParticleSystem()->Emit(transform, velocity);
-	particle_->GetParticleSystem()->Update(1.0f / 60.0f);
 }
 
 void GameScene::Draw() {
+	context_->DrawEntity(*skydome_, *camera_);
+	mapTile_->Draw(context_, camera_);
 	player_->Draw(context_,camera_);
-	context_->DrawEntity(*uvChecker_,*camera_);
-
-	planeModel_->SetInstanceTransforms(planeTransforms_);
-	planeModel_->GetInstancedModel()->UpdateInstanceTransform(*camera_, planeTransforms_);
-	context_->DrawEntity(*planeModel_, *camera_);
-
-	context_->DrawEntity(*particle_,*camera_);
+	
+	for (const auto& bullet : bullets_) {
+		bullet->Draw(context_,camera_);
+	}
 }

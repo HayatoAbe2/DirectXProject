@@ -10,13 +10,13 @@ void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
 	}
 }
 
-void ParticleSystem::Update(float deltaTime) {
+void ParticleSystem::Update() {
 	for (Particle& particle : particles_) {
 		if (particle.alive) {
 			particle.transform.translate += particle.velocity;
 
 			// 時間
-			particle.lifetime -= deltaTime;
+			particle.lifetime--;
 			if (particle.lifetime < 0) {
 				particle.alive = false;
 			}
