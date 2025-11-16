@@ -27,7 +27,7 @@ public:
 	/// 更新
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
-	void Update(GameContext* context,MapCheck* mapCheck,ItemManager* itemManager, std::vector<std::unique_ptr<Bullet>>& bullets);
+	void Update(GameContext* context,MapCheck* mapCheck,ItemManager* itemManager, Camera* camera, std::vector<std::unique_ptr<Bullet>>& bullets);
 
 	/// <summary>
 	/// 描画
@@ -42,6 +42,9 @@ public:
 	void SetTransform(const Transform& transform) { transform_ = transform; }
 
 	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
+
+	// 被弾
+	void Hit(int damage) { hp_ -= damage; if (hp_ <= 0) {} }
 
 private:
 	// トランスフォーム
@@ -58,6 +61,9 @@ private:
 
 	// 攻撃の向き
 	Vector3 attackDirection_ = {};
+
+	// hp
+	int hp_ = 10;
 
 	// モデル
 	Entity* model_ = nullptr;

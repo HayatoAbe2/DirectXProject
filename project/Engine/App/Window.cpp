@@ -16,7 +16,7 @@ void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 
 	wrc.right = clientWidth;
 	wrc.bottom = clientHeight;
-
+	
 	// ウィンドウクラスを登録
 	RegisterClass(&wc_);
 

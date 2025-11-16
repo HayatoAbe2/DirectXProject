@@ -17,7 +17,9 @@ GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,Resource
 }
 
 Vector2 GameContext::GetWindowSize() const {
-	return { float(renderer_->GetWindowWidth()),float(renderer_->GetWindowHeight()) };
+	RECT rect;
+	GetClientRect(input_->GetHwnd(), &rect);
+	return { float(rect.right),float(rect.bottom) };
 }
 
 std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting) {

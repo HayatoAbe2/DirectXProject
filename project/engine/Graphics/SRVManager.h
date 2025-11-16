@@ -22,6 +22,7 @@ public:
 	void CreateTextureSRV(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT format, UINT mipLevels);
 	void CreateStructuredBufferSRV(uint32_t srvIndex, ID3D12Resource* pResource, UINT numElements, UINT structuredByteStride);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(uint32_t index);
 
 

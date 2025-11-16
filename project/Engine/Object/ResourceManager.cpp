@@ -319,14 +319,6 @@ std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directory
 		meshes_.insert({ fullPath, mesh });
 	}
 
-	// transformリソースを作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource = CreateBufferResource(sizeof(TransformationMatrix));
-	TransformationMatrix* transformationData = nullptr;
-	transformationResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationData));
-	// 単位行列を書き込んでおく
-	transformationData->WVP = MakeIdentity4x4();
-	transformationData->World = MakeIdentity4x4();
-
 	return model;
 }
 

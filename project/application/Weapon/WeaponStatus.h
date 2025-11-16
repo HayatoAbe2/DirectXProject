@@ -9,7 +9,7 @@ struct RangedWeaponStatus {
 	// 射撃中減速
 	float weight;
 	// 弾の大きさ
-	float bulletRadius;
+	float bulletSize;
 	// 弾速
 	float bulletSpeed;
 	// 射撃クールダウン

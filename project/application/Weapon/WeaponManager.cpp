@@ -22,7 +22,7 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		RangedWeaponStatus status;
 		status.damage = 3;
 		status.weight = 0.01f;
-		status.bulletRadius = 0.3f;
+		status.bulletSize = 1.0f;
 		status.bulletSpeed = 0.2f;
 		status.shootCoolTime = 25;
 		status.weaponModel = weaponModels_[int(WEAPON::FireBall)].get();

@@ -282,17 +282,18 @@ void DirectXContext::CreateLightBuffer() {
 }
 
 void DirectXContext::InitializeImGui(HWND hwnd) {
+	int index = srvManager_->Allocate();
 	// Imguiの初期化
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGui::StyleColorsDark();
-	//ImGui_ImplWin32_Init(hwnd);
-	//ImGui_ImplDX12_Init(
-	//	deviceManager_->GetDevice().Get(),
-	//	swapChainDesc_.BufferCount,
-	//	renderTargetManager_->GetRTVDesc_().Format,
-	//	descriptorHeapManager_->GetSRVHeap().Get(),
-	//	descriptorHeapManager_->GetSRVHeap()->GetCPUDescriptorHandleForHeapStart(),
-	//	descriptorHeapManager_->GetSRVHeap()->GetGPUDescriptorHandleForHeapStart()
-	//);
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX12_Init(
+		deviceManager_->GetDevice().Get(),
+		swapChainDesc_.BufferCount,
+		renderTargetManager_->GetRTVDesc_().Format,
+		srvManager_->GetHeap().Get(),
+		srvManager_->GetCPUHandle(index),
+		srvManager_->GetGPUHandle(index)
+	);
 }

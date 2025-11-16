@@ -58,6 +58,10 @@ void SRVManager::CreateStructuredBufferSRV(uint32_t srvIndex, ID3D12Resource* pR
 	device_->CreateShaderResourceView(pResource, &instancingSrvDesc, descHeapManager_->GetCPUDescriptorHandle(descriptorHeap_.Get(),descriptorSize_,srvIndex));
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE SRVManager::GetCPUHandle(uint32_t index) {
+	return descHeapManager_->GetCPUDescriptorHandle(descriptorHeap_.Get(), descriptorSize_, index);
+}
+
 D3D12_GPU_DESCRIPTOR_HANDLE SRVManager::GetGPUHandle(uint32_t index) {
 	return descHeapManager_->GetGPUDescriptorHandle(descriptorHeap_.Get(), descriptorSize_, index);
 }

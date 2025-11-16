@@ -102,6 +102,8 @@ public:
 		return stick;
 	}
 
+	HWND GetHwnd() { return hwnd_; }
+
 private:
 	ComPtr<IDirectInput8> directInput_ = nullptr;
 	ComPtr<IDirectInputDevice8> keyboard_ = nullptr;

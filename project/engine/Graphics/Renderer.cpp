@@ -53,9 +53,9 @@ void Renderer::Finalize() {
 	dxContext_->Finalize();
 
 	// ImGuiの終了処理
-	//ImGui_ImplDX12_Shutdown();
-	//ImGui_ImplWin32_Shutdown();
-	//ImGui::DestroyContext();
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void Renderer::UpdateEntityTransforms(
@@ -237,17 +237,17 @@ void Renderer::BeginFrame() {
 	dxContext_.get()->BeginFrame();
 
 	// ImGuiフレーム
-	/*ImGui_ImplDX12_NewFrame();
+	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();*/
+	ImGui::NewFrame();
 }
 
 void Renderer::EndFrame() {
 	// ImGuiの内部コマンドを生成する
-	//ImGui::Render();
+	ImGui::Render();
 
-	//// 実際のcommandListのImGuiの描画コマンドを読む
-	//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxContext_.get()->GetCommandListManager()->GetCommandList().Get());
+	// 実際のcommandListのImGuiの描画コマンドを読む
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxContext_.get()->GetCommandListManager()->GetCommandList().Get());
 
 	dxContext_.get()->EndFrame();
 }

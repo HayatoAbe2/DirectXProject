@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Weapon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -107,7 +107,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Weapon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,7 +138,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Weapon;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,6 +155,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application\Enemy\Enemy.cpp" />
+    <ClCompile Include="application\Enemy\EnemyManager.cpp" />
+    <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
     <ClCompile Include="engine\Graphics\CommandListManager.cpp" />
     <ClCompile Include="engine\Graphics\DeviceManager.cpp" />
@@ -243,6 +246,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="application\Enemy\Enemy.h" />
+    <ClInclude Include="application\Enemy\EnemyManager.h" />
+    <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="engine\Graphics\DirectXContext.h" />
     <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />

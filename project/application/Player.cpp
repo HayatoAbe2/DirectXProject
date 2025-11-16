@@ -25,7 +25,7 @@ void Player::Initialize(Entity* playerModel) {
 	transform_.translate.z = 1;
 }
 
-void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemManager_, std::vector<std::unique_ptr<Bullet>>& bullets) {
+void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera,std::vector<std::unique_ptr<Bullet>>& bullets) {
 	// 入力方向
 	Vector2 input = { 0,0 };
 
@@ -92,7 +92,7 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 		// 射撃
 		if (context->IsClickLeft()) {
 			if (rangedWeapon_) {
-				rangedWeapon_->Shoot(transform_.translate,attackDirection_,bullets,context);
+				shootCoolTime_ = rangedWeapon_->Shoot(transform_.translate,attackDirection_,bullets,context);
 			}
 		}
 
@@ -112,11 +112,12 @@ void Player::Draw(GameContext* context, Camera* camera) {
 		context->DrawEntity(*rangedWeapon_->GetWeaponModel(), *camera);
 	}
 
-	/*ImGui::Begin("Player Info");
+	ImGui::Begin("Player Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", transform_.translate.x, transform_.translate.y, transform_.translate.z);
 	ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", transform_.rotate.x, transform_.rotate.y, transform_.rotate.z);
 	ImGui::Text("Scale: (%.2f, %.2f, %.2f)", transform_.scale.x, transform_.scale.y, transform_.scale.z);
-	ImGui::End();*/
+	ImGui::Text("HP: %d", hp_);
+	ImGui::End();
 }
 
 void Player::SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon) { rangedWeapon_ = std::move(rangedWeapon); }
