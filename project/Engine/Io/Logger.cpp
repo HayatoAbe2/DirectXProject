@@ -7,6 +7,7 @@ Logger::Logger() {
 	std::filesystem::path outputDir = std::filesystem::current_path().parent_path();
 	// logs フォルダを出力場所に作成
 	std::filesystem::path logDir = outputDir / "generated" / "logs";
+	if(std::filesystem::exists(logDir)){
 	// ログのディレクトリを用意
 	std::filesystem::create_directory(logDir);
 	// 現在時刻を取得(UTC)
@@ -22,6 +23,7 @@ Logger::Logger() {
 	std::filesystem::path logFilePath = logDir / (dateString + ".log");
 	// ファイルを作って書き込み準備
 	logStream_.open(logFilePath);
+	}
 }
 
 Logger::~Logger(){

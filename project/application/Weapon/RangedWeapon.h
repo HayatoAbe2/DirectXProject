@@ -1,10 +1,10 @@
 #pragma once
 #include "MathUtils.h"
 #include "WeaponStatus.h"
+#include "Entity.h"
 #include <vector>
 
 class Player;
-class Entity;
 class Bullet;
 class GameContext;
 
@@ -13,9 +13,10 @@ public:
 	virtual int Shoot(Vector3 pos, Vector3 dir, std::vector<std::unique_ptr<Bullet>>& bullets, GameContext* context) = 0;
 	virtual void Update() = 0;
 
-	Entity* GetWeaponModel() { return status_.weaponModel; }
+	Entity* GetWeaponRenderable() { return renderable_.get(); }
 	
 protected:
 	RangedWeaponStatus status_;
+	std::unique_ptr<Entity> renderable_;
 };
 

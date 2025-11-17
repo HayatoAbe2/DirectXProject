@@ -75,6 +75,7 @@ private:
 	// 作成したリソースのキャッシュ
     std::unordered_map<std::string, Texture*> textures_;
     std::unordered_map<std::string, std::shared_ptr<Mesh>> meshes_;
+    std::unordered_map<std::string, std::shared_ptr<Model>> models_;
     
 };
 

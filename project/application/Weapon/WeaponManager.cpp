@@ -6,15 +6,20 @@
 
 void WeaponManager::Initilaize(GameContext* context) {
 	// 武器のモデル読み込み
-	#pragma region fireBall
-	std::unique_ptr<Entity> fireBall = std::make_unique<Entity>();
-	fireBall->SetModel(context->LoadModel("Resources/Weapons","pistol.obj"));
-	weaponModels_.push_back(std::move(fireBall));
+	#pragma region weapons
+	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "pistol.obj"));
+	#pragma endregion
+
+	// 弾のモデル読み込み
+	#pragma region bullets
+	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "fireBall.obj"));
 	#pragma endregion
 
 }
 
 std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
+	auto renderable = std::make_unique<Entity>();
+	
 	switch (index) {
 	case int(WEAPON::FireBall):
 
@@ -25,9 +30,9 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		status.bulletSize = 1.0f;
 		status.bulletSpeed = 0.2f;
 		status.shootCoolTime = 25;
-		status.weaponModel = weaponModels_[int(WEAPON::FireBall)].get();
-		status.bulletDirectoryPath = "Resources/Bullets";
-		status.bulletFileName = "fireBall.obj";
-		return std::make_unique<FireBall>(status);
+		status.bulletModel = bulletModels_[int(WEAPON::FireBall)];
+		renderable->SetModel(weaponModels_[int(WEAPON::FireBall)]);
+
+		return std::make_unique<FireBall>(status,std::move(renderable));
 	}
 }

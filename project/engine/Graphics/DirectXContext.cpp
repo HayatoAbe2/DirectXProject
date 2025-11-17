@@ -9,6 +9,7 @@
 #include "SRVManager.h"
 #include "PipelineStateManager.h"
 #include "FixFPS.h"
+#include "ImGuiManager.h"
 #include "../Object/Sprite.h"
 #include "../Object/ResourceManager.h"
 
@@ -17,11 +18,6 @@
 #include <dxcapi.h>
 #include <mfobjects.h>
 #include <numbers>
-
-#include "externals/DirectXTex/d3dx12.h"
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
 
 void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	HRESULT hr;
@@ -94,10 +90,22 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	// FPS固定クラス初期化
 	fixFPS_ = new FixFPS;
 	fixFPS_->Initialize();
+
+	imGuiManager_ = new ImGuiManager;
+	int index = srvManager_->Allocate();
+	imGuiManager_->Initialize(&hwnd, deviceManager_->GetDevice().Get(),
+		swapChainDesc_.BufferCount,
+		renderTargetManager_->GetRTVDesc_().Format,
+		srvManager_->GetHeap().Get(),
+		srvManager_->GetCPUHandle(index),
+		srvManager_->GetGPUHandle(index)
+	);
 }
 
 void DirectXContext::Finalize() {
 	if (rootSignatureManager_->GetErrorBlob()) rootSignatureManager_->GetErrorBlob()->Release();
+	imGuiManager_->Finalize();
+	delete imGuiManager_;
 	delete deviceManager_;
 	delete commandListManager_;
 	delete srvManager_;
@@ -109,8 +117,6 @@ void DirectXContext::Finalize() {
 }
 
 void DirectXContext::BeginFrame() {
-
-
 	// これから書き込むバックバッファのインデックスを取得
 	backBufferIndex_ = swapChain_->GetCurrentBackBufferIndex();
 	// TransitionBarrierの設定
@@ -147,10 +153,14 @@ void DirectXContext::BeginFrame() {
 	commandListManager_->GetCommandList()->RSSetViewports(1, &viewport_);
 	// Scissorを設定
 	commandListManager_->GetCommandList()->RSSetScissorRects(1, &scissorRect_);
+
+	imGuiManager_->BeginFrame();
 }
 
 void DirectXContext::EndFrame() {
 	HRESULT hr;
+
+	imGuiManager_->EndFrame(commandListManager_->GetCommandList().Get());
 
 	// 今回はRenderTargetからPresentにする
 	barrier_.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
@@ -279,21 +289,4 @@ void DirectXContext::CreateLightBuffer() {
 	directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
 	directionalLightData_->intensity = 1.0f;
 	directionalLightData_->lightingType = 1;
-}
-
-void DirectXContext::InitializeImGui(HWND hwnd) {
-	int index = srvManager_->Allocate();
-	// Imguiの初期化
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
-	ImGui_ImplDX12_Init(
-		deviceManager_->GetDevice().Get(),
-		swapChainDesc_.BufferCount,
-		renderTargetManager_->GetRTVDesc_().Format,
-		srvManager_->GetHeap().Get(),
-		srvManager_->GetCPUHandle(index),
-		srvManager_->GetGPUHandle(index)
-	);
 }

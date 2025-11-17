@@ -68,13 +68,6 @@ public:
 	/// </summary>
 	void EndFrame();
 
-	/// <summary>
-	/// ImGui初期化
-	/// </summary>
-	/// <param name="hwnd">HWND</param>
-	void InitializeImGui(HWND hwnd) { dxContext_.get()->InitializeImGui(hwnd); };
-
-
 	// getter
 	int32_t GetWindowWidth() { return dxContext_.get()->GetWindowWidth(); }
 	int32_t GetWindowHeight() { return dxContext_.get()->GetWindowHeight(); }

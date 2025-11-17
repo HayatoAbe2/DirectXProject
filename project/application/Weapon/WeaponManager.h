@@ -17,6 +17,7 @@ public:
 		FireBall,
 	};
 private:
-	std::vector<std::unique_ptr<Entity>> weaponModels_;
+	std::vector<std::shared_ptr<Model>> weaponModels_;
+	std::vector<std::shared_ptr<Model>> bulletModels_;
 };
 

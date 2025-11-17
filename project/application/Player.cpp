@@ -5,15 +5,12 @@
 #include "Camera.h"
 #include "MapCheck.h"
 #include "ItemManager.h"
+#include "ImGuiManager.h"
 
 #include <numbers>
 #include <cmath>
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
 
 Player::~Player() {
 
@@ -108,16 +105,18 @@ void Player::Draw(GameContext* context, Camera* camera) {
 	if (rangedWeapon_) {
 		Transform transform = transform_;
 		transform.translate.y += 0.5f;
-		rangedWeapon_->GetWeaponModel()->SetTransform(transform);
-		context->DrawEntity(*rangedWeapon_->GetWeaponModel(), *camera);
+		rangedWeapon_->GetWeaponRenderable()->SetTransform(transform);
+		context->DrawEntity(*rangedWeapon_->GetWeaponRenderable(), *camera);
 	}
 
+#ifdef USE_IMGUI
 	ImGui::Begin("Player Info");
 	ImGui::Text("Position: (%.2f, %.2f, %.2f)", transform_.translate.x, transform_.translate.y, transform_.translate.z);
 	ImGui::Text("Rotation: (%.2f, %.2f, %.2f)", transform_.rotate.x, transform_.rotate.y, transform_.rotate.z);
 	ImGui::Text("Scale: (%.2f, %.2f, %.2f)", transform_.scale.x, transform_.scale.y, transform_.scale.z);
 	ImGui::Text("HP: %d", hp_);
 	ImGui::End();
+#endif
 }
 
 void Player::SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon) { rangedWeapon_ = std::move(rangedWeapon); }

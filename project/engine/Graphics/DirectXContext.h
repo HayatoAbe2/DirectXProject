@@ -28,6 +28,7 @@ class SRVManager;
 class PipelineStateManager;
 class FixFPS;
 class ResourceManager;
+class ImGuiManager;
 
 class DirectXContext {
 public:
@@ -59,12 +60,6 @@ public:
 	/// <param name="sizeInBytes">バッファサイズ</param>
 	/// <returns>作成したリソース</returns>
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
-
-	/// <summary>
-	/// ImGui初期化
-	/// </summary>
-	/// <param name="hwnd"></param>
-	void InitializeImGui(HWND hwnd);
 
 	// アクセサ
 	int32_t GetWindowWidth() { return clientWidth_; }
@@ -162,5 +157,8 @@ private:
 
 	// FPS固定クラス
 	FixFPS* fixFPS_ = nullptr;
+
+	// ImGui管理クラス
+	ImGuiManager* imGuiManager_ = nullptr;
 };
 

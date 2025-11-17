@@ -15,9 +15,7 @@
 
 #include <numbers>
 
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
+#include "ImGuiManager.h"
 
 GameScene::~GameScene() {
 	delete camera_;
@@ -104,8 +102,10 @@ void GameScene::Draw() {
 		bullet->Draw(context_,camera_);
 	}
 
+#ifdef USE_IMGUI
 	ImGui::Begin("Player Info");
 	ImGui::DragFloat3("rot", &camera_->transform_.rotate.x, 0.1f);
 	ImGui::DragFloat3("tra", &camera_->transform_.translate.x, 0.1f);
 	ImGui::End();
+#endif
 }

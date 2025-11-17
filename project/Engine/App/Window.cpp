@@ -43,9 +43,11 @@ void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+#ifdef USE_IMGUI
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
 		return true;
 	}
+#endif
 
 	// メッセージに応じてゲーム固有の処理を行う
 	switch (msg) {

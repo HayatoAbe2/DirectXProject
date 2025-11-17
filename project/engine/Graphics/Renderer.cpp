@@ -18,10 +18,6 @@
 #include <numbers>
 
 #include "externals/DirectXTex/d3dx12.h"
-#include "externals/imgui/imgui.h"
-#include "externals/imgui/imgui_impl_dx12.h"
-#include "externals/imgui/imgui_impl_win32.h"
-
 
 void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	dxContext_ = std::make_unique<DirectXContext>();
@@ -45,17 +41,10 @@ void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	// 一度だけMapして保持
 	HRESULT hr = transformBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedTransformData_));
 	assert(SUCCEEDED(hr));
-
-	InitializeImGui(hwnd);
 }
 
 void Renderer::Finalize() {
 	dxContext_->Finalize();
-
-	// ImGuiの終了処理
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
 }
 
 void Renderer::UpdateEntityTransforms(
@@ -235,19 +224,8 @@ void Renderer::DrawSprite(Entity* entity, int blendMode) {
 
 void Renderer::BeginFrame() {
 	dxContext_.get()->BeginFrame();
-
-	// ImGuiフレーム
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
 }
 
 void Renderer::EndFrame() {
-	// ImGuiの内部コマンドを生成する
-	ImGui::Render();
-
-	// 実際のcommandListのImGuiの描画コマンドを読む
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxContext_.get()->GetCommandListManager()->GetCommandList().Get());
-
 	dxContext_.get()->EndFrame();
 }

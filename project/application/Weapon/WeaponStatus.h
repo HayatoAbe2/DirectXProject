@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
-class Entity;
+#include "Model.h"
 
 struct RangedWeaponStatus {
 	// ダメージ
@@ -14,11 +14,8 @@ struct RangedWeaponStatus {
 	float bulletSpeed;
 	// 射撃クールダウン
 	int shootCoolTime;
-	// 武器モデル
-	Entity* weaponModel;
-	// 弾読み込みに必要な情報
-	std::string bulletDirectoryPath;
-	std::string bulletFileName;
+	// 弾モデル
+	std::shared_ptr<Model> bulletModel;
 };
 
 struct MeleeWeaponStatus {
@@ -29,5 +26,5 @@ struct MeleeWeaponStatus {
 	// 攻撃クールダウン
 	int attackCoolTime;
 	// 武器モデル
-	Entity* weaponModel;
+	std::shared_ptr<Model> weaponModel;
 };

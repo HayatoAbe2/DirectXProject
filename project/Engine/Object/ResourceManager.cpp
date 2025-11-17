@@ -22,6 +22,7 @@ ResourceManager::~ResourceManager() {
 	}
 	textures_.clear();
 	meshes_.clear();
+	models_.clear();
 }
 
 void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, SRVManager* srvManager, Logger* logger) {
@@ -200,9 +201,9 @@ std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directory
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = meshes_.find(fullPath);
-	if (it != meshes_.end()) {
-		model->AddMeshes(it->second);
+	auto it = models_.find(fullPath);
+	if (it != models_.end()) {
+		return it->second;
 	} else {
 
 		// 変数の宣言
@@ -316,7 +317,7 @@ std::shared_ptr<Model> ResourceManager::LoadObjFile(const std::string& directory
 		model->AddMeshes(mesh);
 
 		// キャッシュに登録
-		meshes_.insert({ fullPath, mesh });
+		models_.insert({ fullPath, model });
 	}
 
 	return model;
