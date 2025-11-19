@@ -2,52 +2,58 @@
 #include "Entity.h"
 #include "GameContext.h"
 #include "Camera.h"
-#include "Bullet.h"
+#include "BulletManager.h"
 #include "MapCheck.h"
 #include "Player.h"
-#include "WeaponStatus.h"
 
 #include <numbers>
 #include <cmath>
 
-Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos) {
+Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, std::unique_ptr<RangedWeapon> rWeapon) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
-
-	/*std::unique_ptr<Entity> fireBall = std::make_unique<Entity>();
-	fireBall->SetModel(context->LoadModel("Resources/Weapons", "pistol.obj"));
-	weaponModels_.push_back(std::move(fireBall));
-	bulletStatus_.damage = 3;
-	bulletStatus_.weight = 0.01f;
-	bulletStatus_.bulletSize = 1.0f;
-	bulletStatus_.bulletSpeed = 0.2f;
-	bulletStatus_.shootCoolTime = 25;
-	bulletStatus_.weaponModel = ;
-	bulletStatus_.bulletDirectoryPath = "Resources/Bullets";
-	bulletStatus_.bulletFileName = "fireBall.obj";
-	*/
+	rangedWeapon_ = std::move(rWeapon);
 }
 
-void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player,std::vector<std::unique_ptr<Bullet>>& bullets) {
+void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player,BulletManager* bulletManager) {
+
 	// 移動
-	Vector3 velocity{};
+	if (target_) {
+		actionChangeTimer_++;
+		if (actionChangeTimer_ > actionChangeInterval_) {
+			actionChangeTimer_ = 0;
+
+			Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
+			velocity_.x = direction.x * moveSpeed_;
+			velocity_.z = direction.y * moveSpeed_;
+		}
+	} else {
+		actionChangeTimer_ = 0;
+		velocity_ = { 0,0,0 };
+	}
 
 	// 速度をもとに移動
 	Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
-	pos.x += velocity.x;
+	pos.x += velocity_.x;
 	mapCheck->ResolveCollisionX(pos, radius_);
-	pos.y += velocity.z;
+	pos.y += velocity_.z;
 	mapCheck->ResolveCollisionY(pos, radius_);
 	model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y});
 
-	if (velocity.x != 0 || velocity.z != 0) {
-		model_->SetRotate({ 0,-std::atan2(velocity.z, velocity.x) + float(std::numbers::pi) / 2.0f,0 });
+	if (velocity_.x != 0 || velocity_.z != 0) {
+		model_->SetRotate({ 0,-std::atan2(velocity_.z, velocity_.x) + float(std::numbers::pi) / 2.0f,0 });
 	}
 
+	// ターゲット発見
 	if(Length(player->GetTransform().translate - model_->GetTransform().translate) < searchRadius_){
 		target_ = player;
+		loseSightTimer_ = 0;
 	} else {
-		target_ = nullptr;
+		// 見失う
+		loseSightTimer_++;
+		if (loseSightTimer_ > loseSightTime_) {
+			target_ = nullptr;
+		}
 	}
 
 	if (target_) {
@@ -55,26 +61,36 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player,std:
 		attackDirection_ = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
 		model_->SetRotate({ 0,-std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f,0 });
  
+		if (loseSightRadius_ < Length(target_->GetTransform().translate - model_->GetTransform().translate)) {
+			target_ = nullptr;
+			searchRadius_ = defaultSearchRadius_;
+		}
 	}
 
-	if (attackCoolTime_ <= 0) {
+	if (attackCoolTimer_ <= 0) {
 		// 射撃
-		/*if (target_) {
-
-			auto bulletModel = std::make_unique<Entity>();
-			bulletModel->SetTranslate(model_->GetTransform().translate);
-			bulletModel->SetModel(context->LoadModel("Resources/Bullets/FireBall","fireBall.obj"));
-
-			std::unique_ptr newBullet = std::make_unique<Bullet>(std::move(bulletModel), attackDirection_* bulletSpeed_, status);
-			bullets.push_back(std::move(newBullet));
-			return status_.shootCoolTime;
-		}*/
-
+		if (target_) {
+			attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context,true);
+		}
 	} else {
-		attackCoolTime_--;
+		attackCoolTimer_--;
 	}
 }
 
 void Enemy::Draw(GameContext* context, Camera* camera) {
 	context->DrawEntity(*model_, *camera);
+
+	//model_->SetColor({ 1.0f,0.2f,0.2f,1.0f });
+}
+
+void Enemy::Hit(int damage) {
+	hp_ -= damage; if (hp_ <= 0) { isDead_ = true; }
+	
+	// 強制的に発見
+	if (target_ == nullptr) {
+		searchRadius_ *= 10.0f;
+	}
+	
+	// ダメージを受けたら赤くする
+	model_->SetColor({ 1.0f,0.2f,0.2f,1.0f });
 }

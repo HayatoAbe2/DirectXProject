@@ -23,17 +23,26 @@ public:
 	/// 更新処理
 	/// </summary>
 	virtual void Update() = 0;
-	
+
 	/// <summary>
 	/// 描画処理
 	/// </summary>
 	virtual void Draw() = 0;
 
 	// 終了チェック
-	virtual bool IsFinished() const { return finished_; };
+	virtual bool IsFinished() {
+		if (finished_) {
+			finished_ = false;
+			return true;
+		}
+		return false;
+	};
 
 	// コンテキストをセット
 	virtual void SetGameContext(GameContext* gameContext) { context_ = gameContext; }
+
+	// 次のシーンを取得
+	virtual BaseScene* GetNextScene() const { return nextScene_; }
 
 protected:
 	// コンテキスト
@@ -41,5 +50,8 @@ protected:
 
 	// シーンの終了
 	bool finished_ = false;
+
+	// 次シーン
+	BaseScene* nextScene_ = nullptr;
 };
 

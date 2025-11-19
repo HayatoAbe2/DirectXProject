@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <random>
 
 class ResourceManager;
 class Input;
@@ -65,11 +66,18 @@ public:
 	Vector2 GetLeftStick();
 	Vector2 GetRightStick();
 
+	/// 
+	/// 乱数
+	///
 
+	int RandomInt(int min, int max);
+	float RandomFloat(float min, float max);
 
 private:
 	Renderer* renderer_ = nullptr;
 	Audio* audio_ = nullptr;
 	Input* input_ = nullptr;
 	ResourceManager* resourceManager_ = nullptr;
+	std::random_device randomDevice_;
+	std::mt19937 randomEngine_;
 };

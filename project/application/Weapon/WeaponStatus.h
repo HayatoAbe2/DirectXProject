@@ -6,7 +6,7 @@
 struct RangedWeaponStatus {
 	// ダメージ
 	int damage;
-	// 射撃中減速
+	// 射撃中減速率
 	float weight;
 	// 弾の大きさ
 	float bulletSize;
@@ -14,6 +14,8 @@ struct RangedWeaponStatus {
 	float bulletSpeed;
 	// 射撃クールダウン
 	int shootCoolTime;
+	// 弾の生存時間
+	int bulletLifeTime;
 	// 弾モデル
 	std::shared_ptr<Model> bulletModel;
 };

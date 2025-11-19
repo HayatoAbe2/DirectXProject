@@ -3,36 +3,50 @@
 #include "WeaponStatus.h"
 #include "RangedWeapon.h"
 #include "FireBall.h"
+#include "AssaultRifle.h"
 
 void WeaponManager::Initilaize(GameContext* context) {
 	// 武器のモデル読み込み
-	#pragma region weapons
+#pragma region weapons
 	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "pistol.obj"));
-	#pragma endregion
+	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "assaultRifle.obj"));
+#pragma endregion
 
 	// 弾のモデル読み込み
-	#pragma region bullets
+#pragma region bullets
 	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "fireBall.obj"));
-	#pragma endregion
+	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
+#pragma endregion
 
 }
 
 std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 	auto renderable = std::make_unique<Entity>();
-	
-	switch (index) {
-	case int(WEAPON::FireBall):
+	RangedWeaponStatus status;
 
-	default:
-		RangedWeaponStatus status;
+	switch (index) {
+	case 0:
 		status.damage = 3;
-		status.weight = 0.01f;
-		status.bulletSize = 1.0f;
+		status.weight = 0.2f;
+		status.bulletSize = 0.8f;
 		status.bulletSpeed = 0.2f;
 		status.shootCoolTime = 25;
+		status.bulletLifeTime = 300;
 		status.bulletModel = bulletModels_[int(WEAPON::FireBall)];
 		renderable->SetModel(weaponModels_[int(WEAPON::FireBall)]);
+		return std::make_unique<FireBall>(status, std::move(renderable));
+		break;
 
-		return std::make_unique<FireBall>(status,std::move(renderable));
+	default:
+		status.damage = 2;
+		status.weight = 0.4f;
+		status.bulletSize = 0.4f;
+		status.bulletSpeed = 0.5f;
+		status.shootCoolTime = 6;
+		status.bulletLifeTime = 120;
+		status.bulletModel = bulletModels_[int(WEAPON::AssaultRifle)];
+		renderable->SetModel(weaponModels_[int(WEAPON::AssaultRifle)]);
+		return std::make_unique<AssaultRifle>(status, std::move(renderable));
+		break;
 	}
 }

@@ -182,6 +182,11 @@
     <ClCompile Include="application\Enemy\EnemyManager.cpp" />
     <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
+    <ClCompile Include="application\EffectManager.cpp" />
+    <ClCompile Include="application\BulletManager.cpp" />
+    <ClCompile Include="application\TitleScene.cpp" />
+    <ClCompile Include="application\Item.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -383,6 +388,11 @@
     <ClInclude Include="application\Enemy\EnemyManager.h" />
     <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
+    <ClInclude Include="application\EffectManager.h" />
+    <ClInclude Include="application\BulletManager.h" />
+    <ClInclude Include="application\TitleScene.h" />
+    <ClInclude Include="application\Item.h" />
+    <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

@@ -15,9 +15,10 @@ public:
 		RightWall,
 		UpWall,
 		BottomWall,
+		Goal,
 	};
 
-	void Initialize(Entity* wall,Entity* floor);
+	void Initialize(Entity* wall,Entity* floor,Entity* goal);
 	void LoadCSV(const std::string& filePath);
 
 	void Draw(GameContext* context, Camera* camera);
@@ -35,5 +36,6 @@ private:
 
 	Entity* wall_ = nullptr;
 	Entity* floor_ = nullptr;
+	Entity* goal_ = nullptr;
 };
 

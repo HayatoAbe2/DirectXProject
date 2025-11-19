@@ -22,7 +22,7 @@ void Window::Initialize(int32_t clientWidth, int32_t clientHeight) {
 
 	hwnd_ = CreateWindow(
 		wc_.lpszClassName,		// 利用するクラス名
-		L"GE3",					// タイトルバーの文字
+		L"LE2A_02_アベ_ハヤト",	// タイトルバーの文字
 		WS_OVERLAPPEDWINDOW,	// ウィンドウスタイル
 		CW_USEDEFAULT,			// 表示X座標
 		CW_USEDEFAULT,			// 表示Y座標

@@ -33,6 +33,7 @@ void SceneManager::Update() {
 			currentScene_ = nullptr;
 
 			// シーン切り替え
+			Initialize();
 		}
 	}
 }

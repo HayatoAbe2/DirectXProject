@@ -158,6 +158,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Enemy\Enemy.cpp" />
     <ClCompile Include="application\Enemy\EnemyManager.cpp" />
     <ClCompile Include="application\CollisionChecker.cpp" />
+    <ClCompile Include="application\EffectManager.cpp" />
+    <ClCompile Include="application\BulletManager.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
     <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
     <ClCompile Include="engine\Graphics\CommandListManager.cpp" />
     <ClCompile Include="engine\Graphics\DeviceManager.cpp" />
@@ -208,6 +211,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Weapon\Ranged\FireBall.cpp" />
     <ClCompile Include="application\ItemManager.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
+    <ClCompile Include="application\Item.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\Math\Matrix4x4.cpp" />
     <ClCompile Include="engine\Object\Model.cpp" />
@@ -227,6 +231,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\MapCheck.cpp" />
     <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
     <ClCompile Include="application\Weapon\WeaponManager.cpp" />
+    <ClCompile Include="application\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -264,6 +269,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Enemy\Enemy.h" />
     <ClInclude Include="application\Enemy\EnemyManager.h" />
     <ClInclude Include="application\CollisionChecker.h" />
+    <ClInclude Include="application\EffectManager.h" />
+    <ClInclude Include="application\BulletManager.h" />
+    <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
     <ClInclude Include="engine\Graphics\DirectXContext.h" />
     <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />
@@ -330,6 +338,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\ItemManager.h" />
     <ClInclude Include="application\Weapon\WeaponStatus.h" />
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
+    <ClInclude Include="application\TitleScene.h" />
+    <ClInclude Include="application\Item.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

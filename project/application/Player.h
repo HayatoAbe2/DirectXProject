@@ -1,7 +1,6 @@
 #pragma once
 #include "Transform.h"
 #include "MathUtils.h"
-#include "Bullet.h"
 #include "RangedWeapon.h"
 #include <vector>
 #include <memory>
@@ -12,6 +11,7 @@ class Camera;
 class MapCheck;
 class RangedWeapon;
 class ItemManager;
+class BulletManager;
 
 class Player {
 public:
@@ -21,13 +21,13 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="playerModel">モデル</param>
-	void Initialize(Entity* playerModel);
+	void Initialize(Entity* playerModel, GameContext* context);
 
 	/// <summary>
 	/// 更新
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
-	void Update(GameContext* context,MapCheck* mapCheck,ItemManager* itemManager, Camera* camera, std::vector<std::unique_ptr<Bullet>>& bullets);
+	void Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera, BulletManager* bulletManager);
 
 	/// <summary>
 	/// 描画
@@ -36,34 +36,44 @@ public:
 	/// <param name="camera">カメラ</param>
 	void Draw(GameContext* context, Camera* camera);
 
-	Transform GetTransform() const { return transform_; }
-	float GetRadius() const { return radius_; }
-
-	void SetTransform(const Transform& transform) { transform_ = transform; }
-
-	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
-
 	// 被弾
 	void Hit(int damage) { hp_ -= damage; if (hp_ <= 0) {} }
 
+	Transform GetTransform() const { return transform_; }
+	float GetRadius() const { return radius_; }
+	float GetInteractRadius() const { return interactRadius_; }
+	void SetTransform(const Transform& transform) { transform_ = transform; }
+	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
+	bool IsDead() { return hp_ <= 0; }
+
+
 private:
+	// 操作説明
+	std::unique_ptr<Entity> control_ = nullptr;
+	std::unique_ptr<Entity> life_ = nullptr;
+
 	// トランスフォーム
 	Transform transform_;
 
 	// 半径
 	float radius_ = 0.5f;
+
+	// アイテム取得範囲
+	float interactRadius_ = 1.5f;
 	
 	// 速度
 	Vector3 velocity_ = { 0,0,0 };
 
 	// 移動の速さ
 	float moveSpeed_ = 0.2f;
-
+	const float defaultMoveSpeed_ = 0.2f;
+	
 	// 攻撃の向き
 	Vector3 attackDirection_ = {};
 
 	// hp
-	int hp_ = 10;
+	int hp_ = 30;
+	int maxHp_ = 30;
 
 	// モデル
 	Entity* model_ = nullptr;

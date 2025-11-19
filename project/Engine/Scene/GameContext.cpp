@@ -14,6 +14,8 @@ GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,Resource
 	audio_ = audio;
 	input_ = input;
 	resourceManager_ = resourceManager;
+	
+	std::mt19937 randomEngine_(randomDevice_());
 }
 
 Vector2 GameContext::GetWindowSize() const {
@@ -100,6 +102,16 @@ Vector2 GameContext::GetLeftStick() {
 /// <returns>-1~1</returns>
 Vector2 GameContext::GetRightStick() {
 	return input_->GetRightStick();
+}
+
+int GameContext::RandomInt(int min, int max) {
+	std::uniform_int_distribution<int> distribution(min, max);
+	return distribution(randomEngine_);
+}
+
+float GameContext::RandomFloat(float min, float max) {
+	std::uniform_real_distribution<float> distribution(min,max);
+	return distribution(randomEngine_);
 }
 
 

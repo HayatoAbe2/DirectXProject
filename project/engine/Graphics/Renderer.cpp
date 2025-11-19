@@ -50,6 +50,8 @@ void Renderer::Finalize() {
 void Renderer::UpdateEntityTransforms(
 	const Entity& entity,
 	const Camera& camera) {
+
+	// トランスフォーム更新
 	TransformationMatrix data;
 	data.World = MakeAffineMatrix(entity.GetTransform());
 	data.WVP = data.World

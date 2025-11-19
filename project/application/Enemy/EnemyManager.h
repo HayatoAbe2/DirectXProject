@@ -8,14 +8,17 @@
 class GameContext;
 class MapCheck;
 class Player;
-class Bullet;
+class BulletManager;
+class WeaponManager;
 
 class EnemyManager {
 public:
 	void Initialize(GameContext* context);
-	void Update(GameContext* context, MapCheck* mapCheck, Player* player, std::vector<std::unique_ptr<Bullet>>& bullets);
+	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager);
 	void Draw(GameContext* context, Camera* camera);
-	void Spawn(Vector3 pos,GameContext* context);
+	void Spawn(Vector3 pos,GameContext* context,WeaponManager* weaponManager, int enemyType);
+
+	std::vector<Enemy*> GetEnemies();
 private:
 	std::vector<std::unique_ptr<Enemy>> enemies_ = {};
 

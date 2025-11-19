@@ -6,14 +6,16 @@
 
 class Player;
 class Bullet;
+class BulletManager;
 class GameContext;
 
 class RangedWeapon {
 public:
-	virtual int Shoot(Vector3 pos, Vector3 dir, std::vector<std::unique_ptr<Bullet>>& bullets, GameContext* context) = 0;
+	virtual int Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context,bool isEnemyBullet) = 0;
 	virtual void Update() = 0;
 
-	Entity* GetWeaponRenderable() { return renderable_.get(); }
+	Entity* GetWeaponModel() { return renderable_.get(); }
+	RangedWeaponStatus GetStatus() { return status_; }
 	
 protected:
 	RangedWeaponStatus status_;

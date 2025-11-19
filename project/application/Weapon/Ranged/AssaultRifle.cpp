@@ -1,10 +1,10 @@
-#include "FireBall.h"
+#include "AssaultRifle.h"
 #include "Bullet.h"
 #include "BulletManager.h"
 #include "GameContext.h"
 #include "Entity.h"
 
-int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
 	auto bullet = std::make_unique<Entity>();
 	bullet->SetTranslate(pos);
 	bullet->SetModel(status_.bulletModel);
@@ -12,6 +12,6 @@ int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, Game
 	return status_.shootCoolTime;
 }
 
-void FireBall::Update() {
+void AssaultRifle::Update() {
 }
 

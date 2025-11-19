@@ -8,9 +8,10 @@
 #include <sstream>
 #include <memory>
 
-void MapTile::Initialize(Entity* wall, Entity* floor) {
+void MapTile::Initialize(Entity* wall, Entity* floor,Entity* goal) {
     wall_ = wall;
     floor_ = floor;
+    goal_ = goal;
 }
 
 void MapTile::LoadCSV(const std::string& filePath) {
@@ -46,27 +47,62 @@ void MapTile::LoadCSV(const std::string& filePath) {
     std::reverse(map_.begin(), map_.end());
 
     // トランスフォーム設定
-    std::vector<Transform> transforms;
+    std::vector<Transform> transformsFloor;
+    std::vector<Transform> transformsWall;
+    std::vector<Transform> transformsGoal;
     for (int x = 0; x < mapWidth_; ++x) {
         for (int y = 0; y < mapHeight_; ++y) {
-            Transform transform;
+            // 床
+            Transform transformFloor;
             if (map_[y][x] == Tile::Floor) {
-                transform.translate.x = float(x) * tileSize_ + tileSize_/2.0f;
-                transform.translate.y = -tileSize_;
-                transform.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
-                transform.scale = { tileSize_,tileSize_ ,tileSize_ };
+                transformFloor.translate.x = float(x) * tileSize_ + tileSize_/2.0f;
+                transformFloor.translate.y = -tileSize_;
+                transformFloor.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
+                transformFloor.scale = { tileSize_,tileSize_ ,tileSize_ };
             } else {
-                transform.translate.y = 200.0f;
+                transformFloor.translate.y = 200.0f;
             }
-            transforms.push_back(transform);
+            transformsFloor.push_back(transformFloor);
+
+			// 壁
+            Transform transformWall;
+            if (map_[y][x] == Tile::LeftWall ||
+                map_[y][x] == Tile::RightWall || 
+                map_[y][x] == Tile::UpWall || 
+                map_[y][x] == Tile::BottomWall) {
+                transformWall.translate.x = float(x) * tileSize_ + tileSize_ / 2.0f;
+                transformWall.translate.y = 0;
+                transformWall.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
+                transformWall.scale = { tileSize_,tileSize_ ,tileSize_ };
+
+                // 方向に応じて回転
+
+            } else {
+                transformWall.translate.y = 200.0f;
+            }
+            transformsWall.push_back(transformWall);
+
+
+            // ゴール
+            Transform transformGoal;
+            if (map_[y][x] == Tile::Goal) {
+                transformGoal.translate.x = float(x) * tileSize_ + tileSize_ / 2.0f;
+                transformGoal.translate.y = 0;
+                transformGoal.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
+                transformGoal.scale = { tileSize_,tileSize_ ,tileSize_ };
+            } else {
+                transformGoal.translate.y = 200.0f;
+            }
+            transformsGoal.push_back(transformGoal);
         }
     }
-    floor_->SetInstanceTransforms(transforms);
-    wall_->SetInstanceTransforms(transforms);
-    
+    floor_->SetInstanceTransforms(transformsFloor);
+    wall_->SetInstanceTransforms(transformsWall);
+	goal_->SetInstanceTransforms(transformsGoal);
 }
 
 void MapTile::Draw(GameContext* context,Camera* camera) {
     context->DrawEntity(*wall_, *camera);
     context->DrawEntity(*floor_, *camera);
+	context->DrawEntity(*goal_, *camera);
 }

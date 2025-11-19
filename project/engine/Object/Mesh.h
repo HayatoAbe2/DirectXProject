@@ -44,6 +44,7 @@ public:
 	const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const { return material_->GetTextureSRVHandle(); }
 	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialCBV() { return material_->GetCBV()->GetGPUVirtualAddress(); }
 	void UpdateMaterial() { material_->UpdateGPU(); }
+	Material* GetMaterial() { return material_.get(); }
 
 private:
 	// 頂点

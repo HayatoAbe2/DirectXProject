@@ -109,3 +109,77 @@ void MapCheck::ResolveCollisionY(Vector2& pos, float radius) {
     float maxY = mapH * tileSize_;
     pos.y = std::clamp(pos.y, minY + radius, maxY - radius);
 }
+
+bool MapCheck::IsHitWall(const Vector2& pos, float radius) {
+    int mapH = static_cast<int>(map_.size());
+    int mapW = static_cast<int>(map_[0].size());
+
+    // キャラのAABB（更新後）
+    float charMinX = pos.x - radius;
+    float charMaxX = pos.x + radius;
+    float charMinY = pos.y - radius;
+    float charMaxY = pos.y + radius;
+
+    // 衝突しそうな範囲だけループ（効率化）
+    int startY = std::max(0, static_cast<int>(charMinY / tileSize_));
+    int endY = std::min(mapH - 1, static_cast<int>(charMaxY / tileSize_));
+    int startX = std::max(0, static_cast<int>(charMinX / tileSize_));
+    int endX = std::min(mapW - 1, static_cast<int>(charMaxX / tileSize_));
+
+    for (int y = startY; y <= endY; ++y) {
+        for (int x = startX; x <= endX; ++x) {
+            if (map_[y][x] == MapTile::Tile::Floor) continue;
+            if (map_[y][x] == MapTile::Tile::None) continue;
+
+            // タイルAABB
+            float tileMinX = x * tileSize_;
+            float tileMinY = y * tileSize_;
+            float tileMaxX = tileMinX + tileSize_;
+            float tileMaxY = tileMinY + tileSize_;
+
+			// 重なっていれば衝突
+            if (charMaxX > tileMinX || charMinX < tileMaxX &&
+                charMaxY > tileMinY || charMinY < tileMaxY) {
+				return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool MapCheck::IsGoal(const Vector2& pos, float radius) {
+    int mapH = static_cast<int>(map_.size());
+    int mapW = static_cast<int>(map_[0].size());
+
+    // キャラのAABB（更新後）
+    float charMinX = pos.x - radius;
+    float charMaxX = pos.x + radius;
+    float charMinY = pos.y - radius;
+    float charMaxY = pos.y + radius;
+
+    // 衝突しそうな範囲だけループ（効率化）
+    int startY = std::max(0, static_cast<int>(charMinY / tileSize_));
+    int endY = std::min(mapH - 1, static_cast<int>(charMaxY / tileSize_));
+    int startX = std::max(0, static_cast<int>(charMinX / tileSize_));
+    int endX = std::min(mapW - 1, static_cast<int>(charMaxX / tileSize_));
+
+    for (int y = startY; y <= endY; ++y) {
+        for (int x = startX; x <= endX; ++x) {
+            if (map_[y][x] == MapTile::Tile::Goal) {
+
+                // タイルAABB
+                float tileMinX = x * tileSize_;
+                float tileMinY = y * tileSize_;
+                float tileMaxX = tileMinX + tileSize_;
+                float tileMaxY = tileMinY + tileSize_;
+
+                // 重なっていれば衝突
+                if (charMaxX > tileMinX || charMinX < tileMaxX &&
+                    charMaxY > tileMinY || charMinY < tileMaxY) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "Transform.h"
+#include "MathUtils.h"
 
 #include <wrl.h>
 #include <d3d12.h>
@@ -52,6 +53,9 @@ public:
 	Transform GetTransform()const { return transform_; }
 	const std::vector<Transform>& GetInstanceTransforms() const { return instanceTransforms_; }
 
+	void SetColor(const Vector4& color) { color_ = color; }
+	Vector4 GetColor() const { return color_; }
+
 	/// <summary>
 	/// 描画するもの(モデル/スプライト)があるかどうか
 	/// </summary>
@@ -65,6 +69,9 @@ private:
 
 	// トランスフォーム
 	Transform transform_ = { { 1,1,1 },{}, {} };
+
+	// 色
+	Vector4 color_ = { 1,1,1,1 };
 
 	// インスタンス描画用トランスフォーム
 	std::vector<Transform> instanceTransforms_;
