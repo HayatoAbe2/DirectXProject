@@ -21,7 +21,7 @@ void RootSignatureManager::CreateStandardRootSignature() {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	// RootParameter作成
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+	D3D12_ROOT_PARAMETER rootParameters[5] = {};
 
 	// 0(マテリアルCBV)
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;		// CBVを使う
@@ -45,10 +45,16 @@ void RootSignatureManager::CreateStandardRootSignature() {
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;							// Tableの中身の配列を指定
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);				// Tableで利用する数
 
-	//
+	// ライト
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;		// CBVを使う
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;		// PixelShaderで使う
 	rootParameters[3].Descriptor.ShaderRegister = 1;						// レジスタ番号1を使う
+
+	// カメラ
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;		// CBVを使う
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;		// PixelShaderで使う
+	rootParameters[4].Descriptor.ShaderRegister = 2;						// レジスタ番号2を使う
+
 
 	// -------------------------
 

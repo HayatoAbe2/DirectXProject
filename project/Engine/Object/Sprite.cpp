@@ -17,6 +17,7 @@ void Sprite::UpdateTransform(Vector2 windowSize) {
 	// WVPMatrixを作る
 	transformationData_->WVP = worldViewProjectionMatrix;
 	transformationData_->World = worldMatrix;
+	//transformationData_->WorldInverseTranspose = Transpose(Inverse(worldMatrix));
 }
 
 void Sprite::SetTextureRect(float x, float y, float w, float h) {

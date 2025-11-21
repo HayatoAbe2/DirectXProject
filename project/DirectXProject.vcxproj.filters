@@ -395,6 +395,7 @@
     <ClInclude Include="application\Item.h" />
     <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
+    <ClInclude Include="engine\Graphics\CameraForGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

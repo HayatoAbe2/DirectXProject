@@ -11,6 +11,7 @@
 #include "BlendMode.h"
 #include "DirectXContext.h"
 #include "SRVManager.h"
+#include "CameraForGPU.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -86,4 +87,9 @@ private:
 	// CBサイズ
 	static constexpr UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
 	const UINT kMaxObjects = 4096; // 最大数。もし足りなかったら増やす
+
+	// カメラ位置(GPU転送)
+	CameraForGPU* cameraData_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraBuffer_;
+
 };

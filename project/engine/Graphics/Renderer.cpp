@@ -41,6 +41,10 @@ void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	// 一度だけMapして保持
 	HRESULT hr = transformBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedTransformData_));
 	assert(SUCCEEDED(hr));
+
+	// カメラバッファ作成
+	cameraBuffer_ = dxContext_->CreateBufferResource(sizeof(CameraForGPU));
+	cameraBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 }
 
 void Renderer::Finalize() {
@@ -57,6 +61,7 @@ void Renderer::UpdateEntityTransforms(
 	data.WVP = data.World
 		* camera.viewMatrix_
 		* camera.projectionMatrix_;
+	//data.WorldInverseTranspose = Transpose(Inverse(data.World));
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);
 }
 
@@ -75,12 +80,15 @@ void Renderer::UpdateSpriteTransform(Entity& entity) {
 	data.World = MakeAffineMatrix(transform);
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, windowSize.x, windowSize.y, 0.0f, 100.0f);
 	data.WVP = Multiply(data.World, projectionMatrix);
+	//data.WorldInverseTranspose = Transpose(Inverse(data.World));
 
 	// コピー
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);
 }
 
 void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
+	cameraData_->position = camera.transform_.translate;
+
 	if (entity.IsRenderable()) {
 		// 各描画対象があれば描画する
 		if (entity.GetModel()) {
@@ -113,7 +121,7 @@ void Renderer::DrawModel(Entity* entity, int blendMode) {
 	cmdList->SetPipelineState(pso);
 	// RootSignatureを設定
 	cmdList->SetGraphicsRootSignature(rootSig);
-	// トポロジを三角形に設定a
+	// トポロジを三角形に設定
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
@@ -136,6 +144,8 @@ void Renderer::DrawModel(Entity* entity, int blendMode) {
 		}
 		// ライト
 		cmdList->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
+		// カメラ
+		cmdList->SetGraphicsRootConstantBufferView(4, cameraBuffer_->GetGPUVirtualAddress());
 		// ドローコール
 		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
 	}

@@ -273,6 +273,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\EffectManager.h" />
     <ClInclude Include="application\BulletManager.h" />
     <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
+    <ClInclude Include="engine\Graphics\CameraForGPU.h" />
     <ClInclude Include="engine\Graphics\DirectXContext.h" />
     <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />

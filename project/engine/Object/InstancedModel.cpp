@@ -9,5 +9,7 @@ void InstancedModel::UpdateInstanceTransform(const Camera& camera, const std::ve
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(camera.viewMatrix_, camera.projectionMatrix_));
 		instanceTransformationData_[i].WVP = worldViewProjectionMatrix;
 		instanceTransformationData_[i].World = worldMatrix;
+		//instanceTransformationData_[i].WorldInverseTranspose = Transpose(Inverse(worldMatrix));
+		
 	}
 }
