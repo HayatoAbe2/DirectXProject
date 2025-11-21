@@ -21,7 +21,7 @@ void Player::Initialize(Entity* playerModel,GameContext* context) {
 	model_ = playerModel;
 	transform_.translate.x = 1;
 	transform_.translate.z = 1;
-	transform_.scale.y = 1.0f;
+	transform_.scale.y = 4.0f;
 
 	// 操作
 	control_ = std::make_unique<Entity>();

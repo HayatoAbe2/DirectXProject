@@ -11,4 +11,5 @@ struct MaterialData {
 	Matrix4x4 uvTransform;
 	float shininess = 32;
 	UINT useTexture;
+	float padding2[2];
 };

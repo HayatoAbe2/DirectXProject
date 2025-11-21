@@ -3,6 +3,7 @@
 struct TransformationMatrix{
     float32_t4x4 WVP;
     float32_t4x4 World;
+    float32_t4x4 WorldInverseTranspose;
 };
 StructuredBuffer<TransformationMatrix> gTransformationMatrices : register(t1);
 

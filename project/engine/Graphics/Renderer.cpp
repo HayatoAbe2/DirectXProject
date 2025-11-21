@@ -61,7 +61,7 @@ void Renderer::UpdateEntityTransforms(
 	data.WVP = data.World
 		* camera.viewMatrix_
 		* camera.projectionMatrix_;
-	//data.WorldInverseTranspose = Transpose(Inverse(data.World));
+	data.WorldInverseTranspose = Transpose(Inverse(data.World));
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);
 }
 
@@ -80,7 +80,7 @@ void Renderer::UpdateSpriteTransform(Entity& entity) {
 	data.World = MakeAffineMatrix(transform);
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, windowSize.x, windowSize.y, 0.0f, 100.0f);
 	data.WVP = Multiply(data.World, projectionMatrix);
-	//data.WorldInverseTranspose = Transpose(Inverse(data.World));
+	data.WorldInverseTranspose = Transpose(Inverse(data.World));
 
 	// コピー
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);

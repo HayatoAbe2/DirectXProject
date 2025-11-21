@@ -453,7 +453,7 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadObjFile(const std::string& 
 	for (int i = 0; i < numInstance; ++i) {
 		transformData[i].World = MakeIdentity4x4();
 		transformData[i].WVP = MakeIdentity4x4();
-		//transformData[i].WorldInverseTranspose = MakeIdentity4x4();
+		transformData[i].WorldInverseTranspose = MakeIdentity4x4();
 		model->AddInstanceTransform();
 	}
 	instanceTransformResource->Unmap(0, nullptr);
@@ -575,7 +575,7 @@ std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// 単位行列を書き込んでおく
 	transformationData->WVP = MakeIdentity4x4();
 	transformationData->World = MakeIdentity4x4();
-	//transformationData->WorldInverseTranspose = MakeIdentity4x4();
+	transformationData->WorldInverseTranspose = MakeIdentity4x4();
 
 	sprite->SetTransformData(transformationData);
 	sprite->SetTransformResource(transformationResource);
