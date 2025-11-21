@@ -187,6 +187,7 @@
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="application\Item.cpp" />
     <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
+    <ClCompile Include="engine\Object\ParticleField.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -393,6 +394,7 @@
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="application\Item.h" />
     <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
+    <ClInclude Include="engine\Object\ParticleField.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

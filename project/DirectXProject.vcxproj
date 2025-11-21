@@ -232,6 +232,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
     <ClCompile Include="application\Weapon\WeaponManager.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
+    <ClCompile Include="engine\Object\ParticleField.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -340,6 +341,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="application\Item.h" />
+    <ClInclude Include="engine\Object\ParticleField.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

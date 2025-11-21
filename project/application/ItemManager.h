@@ -20,6 +20,7 @@ public:
 	
 private:
 	std::unique_ptr<Entity> control_ = nullptr;
+	std::unique_ptr<Entity> particles_ = nullptr;
 	WeaponManager* weaponManager_ = nullptr;
 	std::vector<std::unique_ptr<Item>> items_;
 	bool canInteract_ = true;

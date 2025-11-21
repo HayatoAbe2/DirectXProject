@@ -5,6 +5,6 @@
 struct Particle {
     Transform transform;
     Vector3 velocity;
-    float lifetime;
+    int lifetime;
     bool alive = false;
 };

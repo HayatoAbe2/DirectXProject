@@ -15,6 +15,11 @@ void ParticleSystem::Update() {
 		if (particle.alive) {
 			particle.transform.translate += particle.velocity;
 
+			// フィールドの影響
+			for (const std::unique_ptr<ParticleField>& field : fields_) {
+				field->Update(&particle);
+			}
+
 			// 時間
 			particle.lifetime--;
 			if (particle.lifetime < 0) {

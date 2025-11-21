@@ -1,5 +1,6 @@
 #pragma once
 #include "Particle.h"
+#include "ParticleField.h"
 #include <vector>
 #include <memory>
 
@@ -13,11 +14,16 @@ public:
     void Update();
     void PreDraw(const Camera& camera);
 
-    void SetLifeTime(float lifeTime) { lifeTime_ = lifeTime; }
+    void SetLifeTime(int lifeTime) { lifeTime_ = lifeTime; }
     std::shared_ptr<InstancedModel> GetInstancedModel_() const { return instancedModel_; };
+
+	void AddField(std::unique_ptr<ParticleField> field) {
+		fields_.push_back(std::move(field));
+	}
 
 private:
     std::vector<Particle> particles_;
     std::shared_ptr<InstancedModel> instancedModel_;
-    float lifeTime_ = 1.0f;
+	std::vector<std::unique_ptr<ParticleField>> fields_;
+    int lifeTime_ = 1;
 };

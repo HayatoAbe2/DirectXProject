@@ -4,6 +4,7 @@
 #include "RangedWeapon.h"
 #include "GameContext.h"
 #include "Sprite.h"
+#include "ParticleSystem.h"
 
 void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) {
 	weaponManager_ = weaponManager;
@@ -13,6 +14,14 @@ void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) 
 	control_->SetSprite(context->LoadSprite("Resources/Control/f.png"));
 	control_->GetSprite()->SetSize({ 30,30 });
 	control_->GetSprite()->SetPosition({ 640 - 15,720 - 450 });
+
+	particles_ = std::make_unique<Entity>();
+	particles_->SetParticleSystem(context->LoadInstancedModel("Resources/Tiles", "sphere.obj", 50));
+	particles_->GetParticleSystem()->SetLifeTime(3);
+	std::unique_ptr<ParticleField> field = std::make_unique<ParticleField>();
+	field->SetAcceleration({ 0,0,0.5f });
+	field->SetArea({ { -10.0f,0.0f,-10.0f }, { 10.0f,0.0f,10.0f } });
+	particles_->GetParticleSystem()->AddField(std::move(field));
 }
 
 void ItemManager::Update(Player* player) {
@@ -24,6 +33,9 @@ void ItemManager::Update(Player* player) {
 		),
 		items_.end()
 	);
+
+	particles_->GetParticleSystem()->Emit({ {1.0f,1.0f,1.0f},{0,0,0},{0,0,0} }, { 0.3f,0,0 });
+	particles_->GetParticleSystem()->Update();
 
 	// 最短のアイテムを探す
 	int closestIndex = -1;
@@ -52,6 +64,8 @@ void ItemManager::Draw(GameContext* context, Camera* camera) {
 	if (canInteract_) {
 		context->DrawEntity(*control_, *camera);
 	}
+
+	context->DrawEntity(*particles_, *camera);
 }
 
 void ItemManager::Interact(Player* player) {
