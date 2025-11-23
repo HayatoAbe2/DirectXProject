@@ -113,54 +113,27 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(siz
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;		// uploadHeapを使う
 	// 頂点リソースの設定
-	D3D12_RESOURCE_DESC vertexResourceDesc{};
+	D3D12_RESOURCE_DESC resourceDesc{};
 	// バッファリソース。テクスチャの場合はまた別の設定をする
-	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Alignment = 0;
-	vertexResourceDesc.Width = sizeInBytes;					// リソースのサイズ
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Alignment = 0;
+	resourceDesc.Width = sizeInBytes;					// リソースのサイズ
 	// バッファの場合はこれらは1にする決まり
-	vertexResourceDesc.Height = 1;
-	vertexResourceDesc.DepthOrArraySize = 1;
-	vertexResourceDesc.MipLevels = 1;
-	vertexResourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
 	// バッファの場合はこれにする決まり
-	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	// 実際にリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
 	HRESULT hr = device_->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		&resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&vertexResource));
 	assert(SUCCEEDED(hr));
 
 	return vertexResource;
 }
-
-Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResourceDefault(size_t sizeInBytes) {
-	D3D12_HEAP_PROPERTIES defaultHeapProps{};
-	defaultHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-	D3D12_RESOURCE_DESC bufferDesc{};
-	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	bufferDesc.Width = sizeInBytes;
-	bufferDesc.Height = 1;
-	bufferDesc.DepthOrArraySize = 1;
-	bufferDesc.MipLevels = 1;
-	bufferDesc.SampleDesc.Count = 1;
-	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> gpuResource;
-	HRESULT hr = device_->CreateCommittedResource(
-		&defaultHeapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&bufferDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST, // コピー待ち状態
-		nullptr,
-		IID_PPV_ARGS(&gpuResource)
-	);
-	assert(SUCCEEDED(hr));
-	return gpuResource;
-}
-
 
 Texture* ResourceManager::CreateSRV(Texture* texture) {
 	if (!texture->GetMtlPath().empty()) {

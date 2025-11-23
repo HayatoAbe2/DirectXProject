@@ -1,6 +1,7 @@
 #pragma once
 #include "MathUtils.h"
 #include "../Graphics/BlendMode.h"
+#include "../Object/Lights/PointLight.h"
 
 #include <cstdint>
 #include <string>
@@ -8,6 +9,7 @@
 #include <random>
 
 class ResourceManager;
+class LightManager;
 class Input;
 class Audio;
 class Entity;
@@ -19,7 +21,7 @@ class Renderer;
 
 class GameContext {
 public:
-	GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager);
+	GameContext(Renderer* renderer, Audio* audio, Input* input, ResourceManager* resourceManager, LightManager* lightManager);
 
 	///
 	/// ウィンドウ情報
@@ -36,10 +38,11 @@ public:
 	std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
 
 	///
-	/// トランスフォーム更新
+	/// ライトの操作
 	///
 
-
+	PointLight& AddPointLight();
+	void RemovePointLight(int index);
 
 	///
 	/// 描画系 
@@ -78,6 +81,7 @@ private:
 	Audio* audio_ = nullptr;
 	Input* input_ = nullptr;
 	ResourceManager* resourceManager_ = nullptr;
+	LightManager* lightManager_ = nullptr;
 	std::random_device randomDevice_;
 	std::mt19937 randomEngine_;
 };

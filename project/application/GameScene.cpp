@@ -39,6 +39,10 @@ void GameScene::Initialize() {
 	camera_ = new Camera;
 	camera_->transform_.rotate = { float(std::numbers::pi) / 2.0f,0,0 };
 
+	auto& pointLight = context_->AddPointLight();
+	pointLight.position = {3,0,3};
+	pointLight.intensity = 1.0f;
+
 	playerModel_ = std::make_unique<Entity>();
 	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
 

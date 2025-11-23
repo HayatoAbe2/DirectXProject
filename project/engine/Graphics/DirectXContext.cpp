@@ -83,8 +83,6 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	// PSOマネージャー
 	pipelineStateManager_->Initialize(deviceManager_->GetDevice(), rootSignatureManager_->GetStandardRootSignature(), rootSignatureManager_->GetInstancingRootSignature());
 
-	CreateLightBuffer();
-
 	SetViewportAndScissor();
 
 	// FPS固定クラス初期化
@@ -278,15 +276,4 @@ void DirectXContext::SetViewportAndScissor() {
 	scissorRect_.right = LONG(clientWidth_);
 	scissorRect_.top = 0;
 	scissorRect_.bottom = LONG(clientHeight_);
-}
-
-void DirectXContext::CreateLightBuffer() {
-	// DirectionalLight用のResource
-	directionalLightResource_ = CreateBufferResource(sizeof(DirectionalLight));
-	// 書き込むためのアドレスを取得
-	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
-	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData_->direction = Normalize({ 0.2f, -0.6f, 1.5f });
-	directionalLightData_->intensity = 1.0f;
-	directionalLightData_->lightingType = 1;
 }

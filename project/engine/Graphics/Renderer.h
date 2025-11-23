@@ -7,7 +7,7 @@
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
 #include "../Object/VertexData.h"
-#include "../Scene/DirectionalLight.h"
+#include "../Object/LightManager.h"
 #include "BlendMode.h"
 #include "DirectXContext.h"
 #include "SRVManager.h"
@@ -41,14 +41,13 @@ public:
 
 	void UpdateSpriteTransform(Entity& entity);
 
-	void DrawEntity(Entity& entity, const Camera& camera, int blendMode);
+	void DrawEntity(Entity& entity, const Camera& camera, LightManager* lightManager, int blendMode);
 
-	void DrawModel(Entity* entity, int blendMode);
-	
 	/// <summary>
 	/// モデル描画
 	/// </summary>
 	/// <param name="blendMode">ブレンドモード</param>
+	void DrawModel(Entity* entity, LightManager* lightManager, int blendMode);
 
 	/// <summary>
 	/// インスタンスモデル描画

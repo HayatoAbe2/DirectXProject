@@ -86,14 +86,15 @@ void Renderer::UpdateSpriteTransform(Entity& entity) {
 	memcpy(mappedTransformData_ + kCBSize * entity.GetID(), &data, kCBSize);
 }
 
-void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
+void Renderer::DrawEntity(Entity& entity, const Camera& camera, LightManager* lightManager, int blendMode) {
 	cameraData_->position = camera.transform_.translate;
+	lightManager->Update();
 
 	if (entity.IsRenderable()) {
 		// 各描画対象があれば描画する
 		if (entity.GetModel()) {
 			UpdateEntityTransforms(entity, camera);
-			DrawModel(&entity, blendMode);
+			DrawModel(&entity, lightManager,blendMode);
 		}
 		if (entity.GetSprite()) {
 			UpdateSpriteTransform(entity);
@@ -112,7 +113,7 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, int blendMode) {
 	}
 }
 
-void Renderer::DrawModel(Entity* entity, int blendMode) {
+void Renderer::DrawModel(Entity* entity, LightManager* lightManager, int blendMode) {
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
 	auto pso = dxContext_->GetPipelineStateManager()->GetStandardPSO(blendMode);
 	auto rootSig = dxContext_->GetRootSignatureManager()->GetStandardRootSignature().Get();
@@ -142,10 +143,10 @@ void Renderer::DrawModel(Entity* entity, int blendMode) {
 		if (mesh->GetTextureSRVHandle().ptr != 0) {
 			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
-		// ライト
-		cmdList->SetGraphicsRootConstantBufferView(3, dxContext_.get()->GetLightResource()->GetGPUVirtualAddress());
 		// カメラ
-		cmdList->SetGraphicsRootConstantBufferView(4, cameraBuffer_->GetGPUVirtualAddress());
+		cmdList->SetGraphicsRootConstantBufferView(3, cameraBuffer_->GetGPUVirtualAddress());
+		// ライト
+		cmdList->SetGraphicsRootConstantBufferView(4, lightManager->GetLightResource()->GetGPUVirtualAddress());
 		// ドローコール
 		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
 	}

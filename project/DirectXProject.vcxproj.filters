@@ -188,6 +188,7 @@
     <ClCompile Include="application\Item.cpp" />
     <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
+    <ClCompile Include="engine\Object\LightManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -300,7 +301,7 @@
     <ClInclude Include="engine\Scene\DebugCamera.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Scene\DirectionalLight.h">
+    <ClInclude Include="engine\Object\Lights\DirectionalLight.h">
       <Filter>Engine\Scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\Scene\GameContext.h">
@@ -396,6 +397,9 @@
     <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
     <ClInclude Include="engine\Graphics\CameraForGPU.h" />
+    <ClInclude Include="engine\Object\LightManager.h" />
+    <ClInclude Include="engine\Object\Lights\PointLight.h" />
+    <ClInclude Include="engine\Object\Lights\LightsForGPU.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

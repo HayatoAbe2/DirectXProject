@@ -39,8 +39,6 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
-    Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResourceDefault(size_t sizeInBytes);
-
     Texture* CreateSRV(Texture* texture);
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);

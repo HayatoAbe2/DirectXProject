@@ -3,17 +3,19 @@
 #include "../Io/Audio.h"
 #include "../Io/Input.h"
 #include "../Object/ResourceManager.h"
+#include "../Object/LightManager.h"
 #include "../Object/Entity.h"
 #include "../Object/Model.h"
 #include "../Object/Sprite.h"
 #include "../Object/InstancedModel.h"
 #include "../Scene/Camera.h"
 
-GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager) {
+GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input,ResourceManager* resourceManager,LightManager* lightManager) {
 	renderer_ = renderer;
 	audio_ = audio;
 	input_ = input;
 	resourceManager_ = resourceManager;
+	lightManager_ = lightManager;
 	
 	std::mt19937 randomEngine_(randomDevice_());
 }
@@ -36,8 +38,16 @@ std::shared_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {
 	return resourceManager_->LoadSprite(texturePath);
 }
 
+PointLight& GameContext::AddPointLight() {
+	return lightManager_->AddPointLight();
+}
+
+void GameContext::RemovePointLight(int index) {
+	lightManager_->RemovePointLight(index);
+}
+
 void GameContext::DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode) {
-	renderer_->DrawEntity(entity, camera,static_cast<int>(blendMode));
+	renderer_->DrawEntity(entity, camera,lightManager_,static_cast<int>(blendMode));
 }
 
 bool GameContext::IsTrigger(uint8_t keyNumber) {
@@ -113,5 +123,3 @@ float GameContext::RandomFloat(float min, float max) {
 	std::uniform_real_distribution<float> distribution(min,max);
 	return distribution(randomEngine_);
 }
-
-

@@ -31,6 +31,7 @@ class Audio;
 class Input;
 class Renderer;
 class ResourceManager;
+class LightManager;
 class SceneManager;
 class GameContext;
 
@@ -77,6 +78,9 @@ private:
 
 	// リソース管理
 	ResourceManager* resourceManager_ = nullptr;
+
+	// ライト管理
+	LightManager* lightManager_ = nullptr;
 
 	// ゲームシーンから利用できるデータや関数
 	GameContext* gameContext_ = nullptr;

@@ -6,7 +6,7 @@
 #include "../Object/Model.h"
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
-#include "../Scene/DirectionalLight.h"
+#include "../Object/LightManager.h"
 #include "../Object/VertexData.h"
 #include "BlendMode.h"
 
@@ -70,7 +70,6 @@ public:
 	SRVManager* GetSRVManager() { return srvManager_; }
 	PipelineStateManager* GetPipelineStateManager() { return pipelineStateManager_; }
 	RootSignatureManager* GetRootSignatureManager() { return rootSignatureManager_; }
-	Microsoft::WRL::ComPtr<ID3D12Resource> GetLightResource() { return directionalLightResource_; }
 
 private:
 
@@ -84,11 +83,6 @@ private:
 	/// Viewport,Scissor設定
 	/// </summary>
 	void SetViewportAndScissor();
-
-	/// <summary>
-	/// DirectionalLight初期化
-	/// </summary>
-	void CreateLightBuffer();
 
 	/// <summary>
 	/// TextureResource作成
@@ -123,10 +117,6 @@ private:
 
 	// シザー矩形
 	D3D12_RECT scissorRect_ = {};
-
-	// ライト
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_ = nullptr;
-	DirectionalLight* directionalLightData_;
 
 	// ログクラス
 	Logger* logger_;

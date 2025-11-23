@@ -212,6 +212,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\ItemManager.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
     <ClCompile Include="application\Item.cpp" />
+    <ClCompile Include="engine\Object\LightManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\Math\Matrix4x4.cpp" />
     <ClCompile Include="engine\Object\Model.cpp" />
@@ -284,15 +285,17 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\App\App.h" />
     <ClInclude Include="engine\Io\Audio.h" />
     <ClInclude Include="engine\Math\Sphere.h" />
+    <ClInclude Include="engine\Object\Lights\LightsForGPU.h" />
     <ClInclude Include="engine\Object\MaterialData.h" />
     <ClInclude Include="engine\Object\Particle.h" />
+    <ClInclude Include="engine\Object\Lights\PointLight.h" />
     <ClInclude Include="engine\Object\ResourceManager.h" />
     <ClInclude Include="engine\Object\Texture.h" />
     <ClInclude Include="engine\Scene\BaseScene.h" />
     <ClInclude Include="engine\Scene\Camera.h" />
     <ClInclude Include="engine\Scene\DebugCamera.h" />
     <ClInclude Include="engine\Graphics\DescriptorHeapManager.h" />
-    <ClInclude Include="engine\Scene\DirectionalLight.h" />
+    <ClInclude Include="engine\Object\Lights\DirectionalLight.h" />
     <ClInclude Include="engine\Io\DumpExporter.h" />
     <ClInclude Include="engine\Scene\GameContext.h" />
     <ClInclude Include="engine\Object\Entity.h" />
@@ -343,6 +346,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="application\Item.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
+    <ClInclude Include="engine\Object\LightManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

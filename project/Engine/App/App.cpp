@@ -7,6 +7,7 @@
 #include "../Io/Audio.h"
 #include "../Io/Input.h"
 #include "../Object/ResourceManager.h"
+#include "../Object/LightManager.h"
 #include "../Scene/SceneManager.h"
 #include "../Scene/GameContext.h"
 
@@ -71,8 +72,11 @@ void App::Initialize() {
 	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), renderer_->GetSRVManager(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Initialization complete.\n"));
 
+	lightManager_ = new LightManager();
+	lightManager_->Initialize(resourceManager_);
+
 	// コンテキスト
-	GameContext* gameContext_ = new GameContext(renderer_, audio_, input_, resourceManager_);
+	GameContext* gameContext_ = new GameContext(renderer_, audio_, input_, resourceManager_,lightManager_);
 
 	// シーンマネージャー
 	sceneManager_ = new SceneManager(gameContext_);
@@ -136,6 +140,9 @@ void App::Finalize() {
 	// 入力
 	delete input_;
 	logger_->Log(logger_->GetStream(), std::format("[Input] Shutdown complete.\n"));
+
+	delete lightManager_;
+	logger_->Log(logger_->GetStream(), std::format("[LightManager] Shutdown complete.\n"));
 
 	delete resourceManager_;
 	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Shutdown complete.\n"));
