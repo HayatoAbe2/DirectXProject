@@ -209,6 +209,8 @@
     <FxCompile Include="Resources\shaders\Particle.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\Instance.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\Instance.VS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -413,5 +415,6 @@
     <None Include="Resources\shaders\Particle.hlsli">
       <Filter>Shader</Filter>
     </None>
+    <None Include="Resources\shaders\Instance.hlsli" />
   </ItemGroup>
 </Project>

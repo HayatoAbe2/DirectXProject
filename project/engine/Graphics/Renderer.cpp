@@ -94,7 +94,7 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, LightManager* li
 		// 各描画対象があれば描画する
 		if (entity.GetModel()) {
 			UpdateEntityTransforms(entity, camera);
-			DrawModel(&entity, lightManager,blendMode);
+			DrawModel(&entity, lightManager, blendMode);
 		}
 		if (entity.GetSprite()) {
 			UpdateSpriteTransform(entity);
@@ -102,13 +102,13 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, LightManager* li
 		}
 		if (entity.GetInstancedModel()) {
 			entity.GetInstancedModel()->UpdateInstanceTransform(camera, entity.GetInstanceTransforms());
-			DrawModelInstance(&entity, blendMode);
+			DrawModelInstance(&entity, lightManager, blendMode);
 		}
 		/*if (entity->spriteInstance)
 			DrawEntitySpriteInstanced(*entity);*/
 		if (entity.GetParticleSystem()) {
 			entity.GetParticleSystem()->PreDraw(camera);
-			DrawModelInstance(&entity, blendMode);
+			DrawModelParticle(&entity,blendMode);
 		}
 	}
 }
@@ -152,7 +152,7 @@ void Renderer::DrawModel(Entity* entity, LightManager* lightManager, int blendMo
 	}
 }
 
-void Renderer::DrawModelInstance(Entity* entity, int blendMode) {
+void Renderer::DrawModelInstance(Entity* entity, LightManager* lightManager, int blendMode) {
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
 	auto pso = dxContext_->GetPipelineStateManager()->GetInstancingPSO(blendMode);
 	auto rootSig = dxContext_->GetRootSignatureManager()->GetInstancingRootSignature().Get();
@@ -165,46 +165,62 @@ void Renderer::DrawModelInstance(Entity* entity, int blendMode) {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
-	if (entity->GetInstancedModel()) {
-		for (auto& mesh : entity->GetInstancedModel()->GetMeshes()) {
+	for (auto& mesh : entity->GetInstancedModel()->GetMeshes()) {
 
-			// マテリアル更新
-			mesh->UpdateMaterial();
-			// マテリアルCBufferの場所を設定
-			cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
-			// モデル描画
-			cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-			// wvp用のCBufferの場所を設定
-			cmdList->SetGraphicsRootConstantBufferView(1, entity->GetInstancedModel()->GetInstanceCBV());
-			// SRVの設定
-			if (mesh->GetTextureSRVHandle().ptr != 0) {
-				cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
-			}
-			// インスタンス用SRVの設定
-			cmdList->SetGraphicsRootDescriptorTable(4, entity->GetInstancedModel()->GetInstanceSRVHandle());
-			// ドローコール
-			cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetInstancedModel()->GetNumInstance(), 0, 0);
+		// マテリアル更新
+		mesh->UpdateMaterial();
+		// マテリアルCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		// モデル描画
+		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// wvp用のCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetInstancedModel()->GetInstanceCBV());
+		// SRVの設定
+		if (mesh->GetTextureSRVHandle().ptr != 0) {
+			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
-	} else {
-		for (auto& mesh : entity->GetParticleSystem()->GetInstancedModel_()->GetMeshes()) {
+		// インスタンス用SRVの設定
+		cmdList->SetGraphicsRootDescriptorTable(3, entity->GetInstancedModel()->GetInstanceSRVHandle());
+		// カメラ
+		cmdList->SetGraphicsRootConstantBufferView(4, cameraBuffer_->GetGPUVirtualAddress());
+		// ライト
+		cmdList->SetGraphicsRootConstantBufferView(5, lightManager->GetLightResource()->GetGPUVirtualAddress());
+		// ドローコール
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetInstancedModel()->GetNumInstance(), 0, 0);
+	}
+}
 
-			// マテリアル更新
-			mesh->UpdateMaterial();
-			// マテリアルCBufferの場所を設定
-			cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
-			// モデル描画
-			cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-			// wvp用のCBufferの場所を設定
-			cmdList->SetGraphicsRootConstantBufferView(1, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceCBV());
-			// SRVの設定
-			if (mesh->GetTextureSRVHandle().ptr != 0) {
-				cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
-			}
-			// インスタンス用SRVの設定
-			cmdList->SetGraphicsRootDescriptorTable(4, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceSRVHandle());
-			// ドローコール
-			cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetParticleSystem()->GetInstancedModel_()->GetNumInstance(), 0, 0);
+void Renderer::DrawModelParticle(Entity* entity, int blendMode) {
+	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
+	auto pso = dxContext_->GetPipelineStateManager()->GetParticlePSO(blendMode);
+	auto rootSig = dxContext_->GetRootSignatureManager()->GetParticleRootSignature().Get();
+
+	// PSO設定
+	cmdList->SetPipelineState(pso);
+	// RootSignatureを設定
+	cmdList->SetGraphicsRootSignature(rootSig);
+	// トポロジを三角形に設定
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 各メッシュを描画
+	for (auto& mesh : entity->GetParticleSystem()->GetInstancedModel_()->GetMeshes()) {
+
+		// マテリアル更新
+		mesh->UpdateMaterial();
+		// マテリアルCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(0, mesh->GetMaterialCBV());
+		// モデル描画
+		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// wvp用のCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceCBV());
+		// SRVの設定
+		if (mesh->GetTextureSRVHandle().ptr != 0) {
+			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
+		// インスタンス用SRVの設定
+		cmdList->SetGraphicsRootDescriptorTable(3, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceSRVHandle());
+		// ドローコール
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetParticleSystem()->GetInstancedModel_()->GetNumInstance(), 0, 0);
 	}
 }
 

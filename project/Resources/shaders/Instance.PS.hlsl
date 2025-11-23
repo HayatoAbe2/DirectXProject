@@ -1,4 +1,4 @@
-#include "object3d.hlsli"
+#include "Instance.hlsli"
 
 struct Material
 {
@@ -41,7 +41,6 @@ SamplerState gSampler : register(s0);
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<Camera> gCamera : register(b1);
 ConstantBuffer<Light> gLight : register(b2);
-
 struct PixelShaderOutput
 {
     float32_t4 color : SV_TARGET0;
@@ -53,28 +52,15 @@ PixelShaderOutput main(VertexShaderOutput input)
     
     // マテリアル
     float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
-    float4 baseColor;
     if (gMaterial.useTexture != 0)
     {
         float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-        
-        if (textureColor.a < 0.1f)
-        {
-            discard;
-        }
-        
-        baseColor = gMaterial.color * textureColor;
+              
+        output.color = gMaterial.color * textureColor;
     }
     else
     {
-        baseColor = gMaterial.color;
-    }
-    
-    output.color = baseColor;
-    
-    if (output.color.a == 0.0f)
-    {
-        discard;
+        output.color = gMaterial.color;
     }
     
     // ライティング
@@ -113,7 +99,6 @@ PixelShaderOutput main(VertexShaderOutput input)
         
         output.color.rgb *= lighting;
     }
-
     
     return output;
 }

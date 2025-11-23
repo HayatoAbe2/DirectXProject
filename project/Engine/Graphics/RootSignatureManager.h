@@ -18,6 +18,7 @@ public:
 
 	void CreateStandardRootSignature();
 	void CreateInstancingRootSignature();
+	void CreateParticleRootSignature();
 
 	/// <summary>
 	/// RootSignatureを取得
@@ -25,6 +26,7 @@ public:
 	/// <returns></returns>
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetStandardRootSignature() { return standardRootSignature_.Get(); }
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetInstancingRootSignature() { return instancingRootSignature_.Get(); }
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> GetParticleRootSignature() { return particleRootSignature_.Get(); }
 
 	/// <summary>
 	/// errorBlobを取得
@@ -36,10 +38,13 @@ private:
 
 	ID3DBlob* signatureBlob_ = nullptr;
 	ID3DBlob* signatureBlobInstancing_ = nullptr;
+	ID3DBlob* signatureBlobParticle_ = nullptr;
 	ID3DBlob* errorBlob_ = nullptr;
 	ID3DBlob* errorBlobInstancing_ = nullptr;
+	ID3DBlob* errorBlobParticle_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> standardRootSignature_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> instancingRootSignature_ = nullptr; // インスタンス描画用
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> particleRootSignature_ = nullptr; // パーティクル用
 
 	// ログ出力
 	Logger* logger_ = nullptr;
