@@ -72,6 +72,7 @@ void App::Initialize() {
 	resourceManager_->Initialize(renderer_->GetDeviceManager()->GetDevice(), renderer_->GetCommandListManager(), renderer_->GetDescriptorHeapManager(), renderer_->GetSRVManager(),logger_);
 	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Initialization complete.\n"));
 
+	// ライト
 	lightManager_ = new LightManager();
 	lightManager_->Initialize(resourceManager_);
 

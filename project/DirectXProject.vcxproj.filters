@@ -402,6 +402,7 @@
     <ClInclude Include="engine\Object\LightManager.h" />
     <ClInclude Include="engine\Object\Lights\PointLight.h" />
     <ClInclude Include="engine\Object\Lights\LightsForGPU.h" />
+    <ClInclude Include="engine\Object\Lights\SpotLight.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

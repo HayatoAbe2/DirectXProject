@@ -39,9 +39,15 @@ void GameScene::Initialize() {
 	camera_ = new Camera;
 	camera_->transform_.rotate = { float(std::numbers::pi) / 2.0f,0,0 };
 
-	auto& pointLight = context_->AddPointLight();
+	int pointLightID = context_->AddPointLight();
+	auto& pointLight = context_->GetPointLight(pointLightID);
 	pointLight.position = {3,0,3};
 	pointLight.intensity = 1.0f;
+
+	int spotLightID = context_->AddSpotLight();
+	auto& spotLight = context_->GetSpotLight(spotLightID);
+	spotLight.position = { 4,0,12 };
+	spotLight.intensity = 1.0f;
 
 	playerModel_ = std::make_unique<Entity>();
 	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
@@ -188,5 +194,7 @@ void GameScene::Draw() {
 	ImGui::DragFloat3("rot", &camera_->transform_.rotate.x, 0.1f);
 	ImGui::DragFloat3("tra", &camera_->transform_.translate.x, 0.1f);
 	ImGui::End();
+
+	context_->DrawLightImGui();
 #endif
 }

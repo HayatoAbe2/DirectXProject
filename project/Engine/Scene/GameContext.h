@@ -1,7 +1,7 @@
 #pragma once
 #include "MathUtils.h"
 #include "../Graphics/BlendMode.h"
-#include "../Object/Lights/PointLight.h"
+#include "../Object/Lights/LightsForGPU.h"
 
 #include <cstdint>
 #include <string>
@@ -41,8 +41,13 @@ public:
 	/// ライトの操作
 	///
 
-	PointLight& AddPointLight();
+	int AddPointLight();
 	void RemovePointLight(int index);
+	PointLight& GetPointLight(int index);
+	int AddSpotLight();
+	void RemoveSpotLight(int index);
+	SpotLight& GetSpotLight(int index);
+	void DrawLightImGui();
 
 	///
 	/// 描画系 

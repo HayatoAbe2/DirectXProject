@@ -38,12 +38,32 @@ std::shared_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {
 	return resourceManager_->LoadSprite(texturePath);
 }
 
-PointLight& GameContext::AddPointLight() {
-	return lightManager_->AddPointLight();
+int GameContext::AddPointLight() {
+	return lightManager_->AddPointLight(resourceManager_);
 }
 
 void GameContext::RemovePointLight(int index) {
-	lightManager_->RemovePointLight(index);
+	lightManager_->RemovePointLight(index,resourceManager_);
+}
+
+PointLight& GameContext::GetPointLight(int index) {
+	return lightManager_->GetPointLight(index);
+}
+
+int GameContext::AddSpotLight() {
+	return lightManager_->AddSpotLight(resourceManager_);
+}
+
+void GameContext::RemoveSpotLight(int index) {
+	lightManager_->RemoveSpotLight(index, resourceManager_);
+}
+
+SpotLight& GameContext::GetSpotLight(int index) {
+	return lightManager_->GetSpotLight(index);
+}
+
+void GameContext::DrawLightImGui() {
+	lightManager_->DrawImGui();
 }
 
 void GameContext::DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode) {
