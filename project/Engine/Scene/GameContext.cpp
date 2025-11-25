@@ -27,11 +27,11 @@ Vector2 GameContext::GetWindowSize() const {
 }
 
 std::shared_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
-	return resourceManager_->LoadObjFile(directoryPath, filename,enableLighting);
+	return resourceManager_->LoadModelFile(directoryPath, filename,enableLighting);
 }
 
 std::shared_ptr<InstancedModel> GameContext::LoadInstancedModel(const std::string& directoryPath, const std::string& filename,const int num) {
-	return resourceManager_->LoadObjFile(directoryPath, filename,num);
+	return resourceManager_->LoadModelFile(directoryPath, filename,num);
 }
 
 std::shared_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {

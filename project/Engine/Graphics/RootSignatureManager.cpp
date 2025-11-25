@@ -167,7 +167,7 @@ void RootSignatureManager::CreateInstancingRootSignature() {
 }
 
 void RootSignatureManager::CreateParticleRootSignature() {
-	D3D12_ROOT_PARAMETER rootParameters[5] = {};
+	D3D12_ROOT_PARAMETER rootParameters[4] = {};
 
 	// 0 (PS:マテリアルCBV)
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;

@@ -50,8 +50,8 @@ public:
     /// <param name="directoryPath"></param>
     /// <param name="filename"></param>
     /// <returns></returns>
-    std::shared_ptr<Model> LoadObjFile(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
-    std::shared_ptr<InstancedModel> LoadObjFile(const std::string& directoryPath, const std::string& filename,const int numInstance_);
+    std::shared_ptr<Model> LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
+    std::shared_ptr<InstancedModel> LoadModelFile(const std::string& directoryPath, const std::string& filename,const int numInstance_);
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
