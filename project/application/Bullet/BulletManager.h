@@ -16,7 +16,7 @@ public:
 	void Update(MapCheck* mapCheck);
 	void Draw(GameContext* context, Camera* camera);
 
-	void AddBullet(std::unique_ptr<Entity> model, const Vector3& velocity, const RangedWeaponStatus& status, bool isEnemyBullet);
+	void AddBullet(std::unique_ptr<Bullet> newBullet);
 	std::vector<Bullet*> GetBullets();
 private:
 	// 弾

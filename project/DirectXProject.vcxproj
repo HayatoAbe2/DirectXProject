@@ -27,6 +27,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -80,7 +81,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;$(ProjectDir)application\Bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -109,7 +110,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;$(ProjectDir)application\Bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -142,7 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Ranged;$(ProjectDir)application\Enemy;$(ProjectDir)application\Bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,6 +153,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
       <AdditionalOptions>/ignore:4098 %(AdditionalOptions)</AdditionalOptions>
       <LinkTimeCodeGeneration />
+      <AdditionalLibraryDirectories>$(ProjectDir)externals\assimp\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxcompiler.dll" "$(TargetDir)dxcompiler.dll"
@@ -163,7 +166,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Enemy\EnemyManager.cpp" />
     <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="application\EffectManager.cpp" />
-    <ClCompile Include="application\BulletManager.cpp" />
+    <ClCompile Include="application\Bullet\BulletManager.cpp" />
     <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
     <ClCompile Include="engine\Graphics\DirectXContext.cpp" />
     <ClCompile Include="engine\Graphics\CommandListManager.cpp" />
@@ -217,6 +220,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
     <ClCompile Include="application\Item.cpp" />
     <ClCompile Include="engine\Object\LightManager.cpp" />
+    <ClCompile Include="application\Bullet\FireBullet.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\Math\Matrix4x4.cpp" />
     <ClCompile Include="engine\Object\Model.cpp" />
@@ -228,7 +232,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Math\Vector4.cpp" />
     <ClCompile Include="engine\App\Window.cpp" />
     <ClCompile Include="application\Player.cpp" />
-    <ClCompile Include="application\Bullet.cpp" />
+    <ClCompile Include="application\Bullet\Bullet.cpp" />
     <ClCompile Include="engine\Object\Mesh.cpp" />
     <ClCompile Include="engine\Graphics\SRVManager.cpp" />
     <ClCompile Include="engine\Object\ParticleSystem.cpp" />
@@ -238,6 +242,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Weapon\WeaponManager.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
+    <ClCompile Include="application\Bullet\NormalBullet.cpp" />
+    <ClCompile Include="Sword.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -286,7 +292,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Enemy\EnemyManager.h" />
     <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="application\EffectManager.h" />
-    <ClInclude Include="application\BulletManager.h" />
+    <ClInclude Include="application\Bullet\BulletManager.h" />
     <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
     <ClInclude Include="engine\Graphics\CameraForGPU.h" />
     <ClInclude Include="engine\Graphics\DirectXContext.h" />
@@ -345,7 +351,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\App\Window.h" />
     <ClInclude Include="application\Player.h" />
     <ClInclude Include="engine\Graphics\FixFPS.h" />
-    <ClInclude Include="application\Bullet.h" />
+    <ClInclude Include="application\Bullet\Bullet.h" />
     <ClInclude Include="engine\Object\Mesh.h" />
     <ClInclude Include="engine\Graphics\SRVManager.h" />
     <ClInclude Include="engine\Object\InstancedModel.h" />
@@ -362,6 +368,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Item.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
     <ClInclude Include="engine\Object\LightManager.h" />
+    <ClInclude Include="application\Bullet\FireBullet.h" />
+    <ClInclude Include="application\Bullet\NormalBullet.h" />
+    <ClInclude Include="Sword.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

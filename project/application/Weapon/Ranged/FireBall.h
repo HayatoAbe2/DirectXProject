@@ -8,11 +8,10 @@ class BulletManager;
 
 class FireBall : public RangedWeapon {
 public:
-	FireBall(const RangedWeaponStatus& status, std::unique_ptr<Entity> renderable) { status_ = status; renderable_ = std::move(renderable); }
+	FireBall(const RangedWeaponStatus& status, std::unique_ptr<Entity> model,GameContext* context);
 	int Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) override;
 	void Update() override;
 
 private:
-	
 };
 

@@ -39,11 +39,11 @@ std::shared_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {
 }
 
 int GameContext::AddPointLight() {
-	return lightManager_->AddPointLight(resourceManager_);
+	return lightManager_->AddPointLight();
 }
 
 void GameContext::RemovePointLight(int index) {
-	lightManager_->RemovePointLight(index,resourceManager_);
+	lightManager_->RemovePointLight(index);
 }
 
 PointLight& GameContext::GetPointLight(int index) {
@@ -51,11 +51,11 @@ PointLight& GameContext::GetPointLight(int index) {
 }
 
 int GameContext::AddSpotLight() {
-	return lightManager_->AddSpotLight(resourceManager_);
+	return lightManager_->AddSpotLight();
 }
 
 void GameContext::RemoveSpotLight(int index) {
-	lightManager_->RemoveSpotLight(index, resourceManager_);
+	lightManager_->RemoveSpotLight(index);
 }
 
 SpotLight& GameContext::GetSpotLight(int index) {

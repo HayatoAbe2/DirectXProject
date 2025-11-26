@@ -3,12 +3,21 @@
 #include "BulletManager.h"
 #include "GameContext.h"
 #include "Entity.h"
+#include "FireBullet.h"
+
+FireBall::FireBall(const RangedWeaponStatus& status, std::unique_ptr<Entity> model, GameContext* context) {
+	status_ = status;
+	model_ = std::move(model);
+}
 
 int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
 	auto bullet = std::make_unique<Entity>();
 	bullet->SetTranslate(pos);
 	bullet->SetModel(status_.bulletModel);
-	bulletManager->AddBullet(std::move(bullet), dir, status_, isEnemyBullet);
+	std::unique_ptr<FireBullet> newBullet = std::make_unique<FireBullet>(std::move(bullet), dir, status_, isEnemyBullet);
+	newBullet->Initialize(context);
+
+	bulletManager->AddBullet(std::move(newBullet));
 	return status_.shootCoolTime;
 }
 

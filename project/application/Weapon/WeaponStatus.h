@@ -25,6 +25,8 @@ struct MeleeWeaponStatus {
 	int damage;
 	// 攻撃中減速
 	float weight;
+	// 攻撃の前隙
+	int chargeTime;
 	// 攻撃クールダウン
 	int attackCoolTime;
 	// 武器モデル

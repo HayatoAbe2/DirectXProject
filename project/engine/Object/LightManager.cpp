@@ -6,6 +6,15 @@ void LightManager::Initialize(ResourceManager* rm) {
 	UINT cbSize = (sizeof(LightsForGPU) + 255) & ~255; // 256 の倍数に丸める
 	lightResource_ = rm->CreateBufferResource(cbSize);
 	lightResource_->Map(0, nullptr, reinterpret_cast<void**>(&lightData_));
+	
+	pointLightsData_.resize(maxPointLights);
+	spotLightsData_.resize(maxSpotLights);
+	for (int i = 0; i < maxPointLights; i++) {
+		isPointFree[i] = true;
+	}
+	for (int i = 0; i < maxSpotLights; i++) {
+		isSpotFree[i] = true;
+	}
 }
 
 void LightManager::Update() {
@@ -13,38 +22,26 @@ void LightManager::Update() {
 	lightData_->directionalLight = directionalLightData_;
 
 	// PointLight
-	int plCount = (int)pointLightsData_.size();
-	plCount = (std::min)(plCount, maxPointLights);
-
-	for (int i = 0; i < plCount; i++)
-	{
-		lightData_->pointLights[i] = pointLightsData_[i];
-	}
-
-	// 未使用ライトを無効化
-	for (int i = plCount; i < maxPointLights; i++)
-	{
-		lightData_->pointLights[i].intensity = 0;
+	for (int i = 0; i < maxPointLights; i++) {
+		if (isPointFree[i]) {
+			lightData_->pointLights[i].intensity = 0;
+		} else {
+			lightData_->pointLights[i] = pointLightsData_[i];
+		}
 	}
 
 	// SpotLight
-	int slCount = (int)spotLightsData_.size();
-	slCount = (std::min)(slCount, maxSpotLights);
-
-	for (int i = 0; i < slCount; i++)
-	{
-		lightData_->spotLights[i] = spotLightsData_[i];
-	}
-
-	// 未使用ライトを無効化
-	for (int i = slCount; i < maxSpotLights; i++)
-	{
-		lightData_->spotLights[i].intensity = 0;
+	for (int i = 0; i < maxSpotLights; i++) {
+		if (isSpotFree[i]) {
+			lightData_->spotLights[i].intensity = 0;
+		} else {
+			lightData_->spotLights[i] = spotLightsData_[i];
+		}
 	}
 }
 
 void LightManager::DrawImGui() {
-	#ifdef USEIMGUI
+#ifdef USEIMGUI
 
 	if (ImGui::CollapsingHeader("DirectionalLight")) {
 		Vector3 dlDir = directionalLightData_.direction;
@@ -100,6 +97,6 @@ void LightManager::DrawImGui() {
 			ImGui::PopID();
 		}
 	}
-	#endif
+#endif
 }
 

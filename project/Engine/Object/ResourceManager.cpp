@@ -15,9 +15,7 @@
 #include <iostream>
 #include <format>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+
 
 ResourceManager::~ResourceManager() {
 	// キャッシュしているリソースを解放
@@ -139,7 +137,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(siz
 	return vertexResource;
 }
 
-Texture* ResourceManager::CreateSRV(Texture* texture) {
+std::shared_ptr<Texture> ResourceManager::CreateSRV(std::shared_ptr<Texture> texture) {
 	if (!texture->GetMtlPath().empty()) {
 		// Textureを読んで転送する
 		DirectX::ScratchImage mipImages = LoadTexture(texture->GetMtlPath());
@@ -180,13 +178,27 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 	std::string fullPath = directoryPath + "/" + filename;
 	auto it = models_.find(fullPath);
 	if (it != models_.end()) {
-		return it->second;
+		auto templateModel = it->second;
+		for (auto& mesh : templateModel->GetMeshes()) {
+			std::shared_ptr<Mesh> newMesh = std::make_shared<Mesh>(*mesh);
+			auto oldMat = mesh->GetMaterial();
+			auto newMat = std::make_shared<Material>(*oldMat); // 新しいマテリアル
+
+			bool useTexture = (oldMat->GetTexture() != nullptr);
+			newMat->Initialize(this, useTexture, enableLighting);
+
+			// Texture は共有（shared_ptr を想定）
+			newMat->SetTexture(oldMat->GetTexture());
+
+			newMesh->SetMaterial(newMat);
+			model->AddMeshes(newMesh);
+		}
+		return model;
 	} else {
 		std::vector<VertexData> vertices; // 頂点
-		Texture* texture = new Texture;	// テクスチャ
+		std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
 
 		// assimpでobjを読む
-		Assimp::Importer importer;
 		std::string filePath = directoryPath + "/" + filename;
 		// obj->DirectX12変換
 		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
@@ -276,7 +288,7 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	//}
 
 	std::vector<VertexData> vertices; // 頂点
-	Texture* texture = new Texture;	// テクスチャ
+	std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
 
 	// assimpでobjを読む
 	Assimp::Importer importer;
@@ -486,7 +498,7 @@ std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	sprite->SetTransformResource(transformationResource);
 
 	// TexturePathを設定
-	Texture* texture = new Texture;
+	std::shared_ptr<Texture> texture = std::make_shared<Texture>();
 	texture->SetMtlFilePath(texturePath);
 	texture = CreateSRV(texture);
 

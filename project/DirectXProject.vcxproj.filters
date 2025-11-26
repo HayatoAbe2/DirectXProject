@@ -34,6 +34,12 @@
     <Filter Include="Application">
       <UniqueIdentifier>{c381eca7-9f7a-40ac-9542-05ab135be227}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\Weapon">
+      <UniqueIdentifier>{c3adab7c-86e9-419f-8f9b-ff3ec8e859f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Bullet">
+      <UniqueIdentifier>{0d04984b-3623-4d05-8bbc-cbb9719c4ad4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -157,7 +163,6 @@
     <ClCompile Include="engine\Graphics\DirectXContext.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="application\Bullet.cpp" />
     <ClCompile Include="engine\Graphics\SRVManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
@@ -174,21 +179,39 @@
     <ClCompile Include="application\MapTile.cpp" />
     <ClCompile Include="application\MapCheck.cpp" />
     <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
-    <ClCompile Include="application\Weapon\Ranged\FireBall.cpp" />
     <ClCompile Include="engine\Math\Vector2.cpp" />
-    <ClCompile Include="application\Weapon\WeaponManager.cpp" />
     <ClCompile Include="application\ItemManager.cpp" />
     <ClCompile Include="application\Enemy\Enemy.cpp" />
     <ClCompile Include="application\Enemy\EnemyManager.cpp" />
     <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
     <ClCompile Include="application\EffectManager.cpp" />
-    <ClCompile Include="application\BulletManager.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="application\Item.cpp" />
-    <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
     <ClCompile Include="engine\Object\LightManager.cpp" />
+    <ClCompile Include="application\Bullet\Bullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Bullet\BulletManager.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Bullet\FireBullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\Ranged\AssaultRifle.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\Ranged\FireBall.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\WeaponManager.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Bullet\NormalBullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="Sword.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -366,7 +389,6 @@
     <ClInclude Include="engine\Graphics\BlendMode.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="application\Bullet.h" />
     <ClInclude Include="engine\Graphics\SRVManager.h">
       <Filter>Engine\Graphics</Filter>
     </ClInclude>
@@ -384,25 +406,45 @@
     <ClInclude Include="application\MapTile.h" />
     <ClInclude Include="application\MapCheck.h" />
     <ClInclude Include="application\Weapon\RangedWeapon.h" />
-    <ClInclude Include="application\Weapon\Ranged\FireBall.h" />
-    <ClInclude Include="application\Weapon\WeaponManager.h" />
     <ClInclude Include="application\ItemManager.h" />
-    <ClInclude Include="application\Weapon\WeaponStatus.h" />
     <ClInclude Include="application\Enemy\Enemy.h" />
     <ClInclude Include="application\Enemy\EnemyManager.h" />
     <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
     <ClInclude Include="application\EffectManager.h" />
-    <ClInclude Include="application\BulletManager.h" />
     <ClInclude Include="application\TitleScene.h" />
     <ClInclude Include="application\Item.h" />
-    <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
     <ClInclude Include="engine\Graphics\CameraForGPU.h" />
     <ClInclude Include="engine\Object\LightManager.h" />
     <ClInclude Include="engine\Object\Lights\PointLight.h" />
     <ClInclude Include="engine\Object\Lights\LightsForGPU.h" />
     <ClInclude Include="engine\Object\Lights\SpotLight.h" />
+    <ClInclude Include="application\Bullet\Bullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Bullet\BulletManager.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Bullet\FireBullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\Ranged\AssaultRifle.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\Ranged\FireBall.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\WeaponManager.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\WeaponStatus.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Bullet\NormalBullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="Sword.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

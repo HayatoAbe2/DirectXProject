@@ -39,16 +39,6 @@ void GameScene::Initialize() {
 	camera_ = new Camera;
 	camera_->transform_.rotate = { float(std::numbers::pi) / 2.0f,0,0 };
 
-	int pointLightID = context_->AddPointLight();
-	auto& pointLight = context_->GetPointLight(pointLightID);
-	pointLight.position = {3,0,3};
-	pointLight.intensity = 1.0f;
-
-	int spotLightID = context_->AddSpotLight();
-	auto& spotLight = context_->GetSpotLight(spotLightID);
-	spotLight.position = { 4,0,12 };
-	spotLight.intensity = 1.0f;
-
 	playerModel_ = std::make_unique<Entity>();
 	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
 
@@ -109,14 +99,14 @@ void GameScene::Initialize() {
 	fade_->GetSprite()->SetSize(context_->GetWindowSize() + Vector2{20,80});
 	fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,0.0f });
 
-	enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
+	/*enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
 	enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
 	enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
 	enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
-	enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);*/
 
-	itemManager_->Spawn({ 3,0,3 }, context_, int(WeaponManager::WEAPON::FireBall));
-	itemManager_->Spawn({ 4,0,12 }, context_, int(WeaponManager::WEAPON::AssaultRifle));
+	itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::FireBall));
+	itemManager_->Spawn({ 4,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
 }
 
 void GameScene::Update() {
@@ -140,7 +130,7 @@ void GameScene::Update() {
 
 	// カメラ追従
 	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,50,0 };
-	camera_->UpdateCamera(context_->GetWindowSize(), *debugCamera_);
+	camera_->UpdateCamera(context_, *debugCamera_);
 	debugCamera_->Update();
 
 	// 敵
@@ -149,7 +139,6 @@ void GameScene::Update() {
 	// 弾の処理
 	bulletManager_->Update(mapCheck_);
 	for (const auto& bullet : bulletManager_->GetBullets()) {
-		bullet->Update(mapCheck_);
 
 		// 当たり判定
 		collisionChecker_->Check(player_, bullet);
@@ -185,7 +174,7 @@ void GameScene::Draw() {
 	player_->Draw(context_, camera_);
 	enemyManager_->Draw(context_, camera_);
 	bulletManager_->Draw(context_, camera_);
-	itemManager_->Draw(context_, camera_);
+	itemManager_->Draw(camera_);
 	effectManager_->Draw(context_, camera_);
 	context_->DrawEntity(*fade_,*camera_);
 

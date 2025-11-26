@@ -20,5 +20,6 @@ public:
 private:
 	std::vector<std::shared_ptr<Model>> weaponModels_;
 	std::vector<std::shared_ptr<Model>> bulletModels_;
+	GameContext* context_ = nullptr;
 };
 

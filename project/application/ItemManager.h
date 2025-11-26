@@ -14,11 +14,13 @@ class ItemManager {
 public:
 	void Initialize(WeaponManager* weaponManager, GameContext* context);
 	void Update(Player* player);
-	void Draw(GameContext* context, Camera* camera);
+	void Draw(Camera* camera);
 	void Interact(Player* player);
-	void Spawn(Vector3 pos, GameContext* context, int index);
+	void Spawn(Vector3 pos,int index);
+	void Drop(Vector3 pos,std::unique_ptr<RangedWeapon> weapon);
 	
 private:
+	GameContext* context_ = nullptr;
 	std::unique_ptr<Entity> control_ = nullptr;
 	std::unique_ptr<Entity> particles_ = nullptr;
 	WeaponManager* weaponManager_ = nullptr;

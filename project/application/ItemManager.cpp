@@ -8,20 +8,13 @@
 
 void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) {
 	weaponManager_ = weaponManager;
+	context_ = context;
 
 	// 操作
 	control_ = std::make_unique<Entity>();
 	control_->SetSprite(context->LoadSprite("Resources/Control/f.png"));
 	control_->GetSprite()->SetSize({ 30,30 });
 	control_->GetSprite()->SetPosition({ 640 - 15,720 - 450 });
-
-	particles_ = std::make_unique<Entity>();
-	particles_->SetParticleSystem(context->LoadInstancedModel("Resources/Tiles", "sphere.obj", 50));
-	particles_->GetParticleSystem()->SetLifeTime(3);
-	std::unique_ptr<ParticleField> field = std::make_unique<ParticleField>();
-	field->SetAcceleration({ 0,0,0.5f });
-	field->SetArea({ { -10.0f,0.0f,-10.0f }, { 10.0f,0.0f,10.0f } });
-	particles_->GetParticleSystem()->AddField(std::move(field));
 }
 
 void ItemManager::Update(Player* player) {
@@ -33,9 +26,6 @@ void ItemManager::Update(Player* player) {
 		),
 		items_.end()
 	);
-
-	particles_->GetParticleSystem()->Emit({ {1.0f,1.0f,1.0f},{0,0,0},{0,0,0} }, { 0.3f,0,0 });
-	particles_->GetParticleSystem()->Update();
 
 	// 最短のアイテムを探す
 	int closestIndex = -1;
@@ -56,16 +46,14 @@ void ItemManager::Update(Player* player) {
 	}
 }
 
-void ItemManager::Draw(GameContext* context, Camera* camera) {
+void ItemManager::Draw(Camera* camera) {
 	for (const auto& item : items_) {
-		item->Draw(context, camera);
+		item->Draw(context_, camera);
 	}
 
 	if (canInteract_) {
-		context->DrawEntity(*control_, *camera);
+		context_->DrawEntity(*control_, *camera);
 	}
-
-	context->DrawEntity(*particles_, *camera);
 }
 
 void ItemManager::Interact(Player* player) {
@@ -82,13 +70,21 @@ void ItemManager::Interact(Player* player) {
 
 	// 取得範囲内なら取る
 	if (player->GetInteractRadius() >= closestDistance) {
+		Drop(player->GetTransform().translate, player->DropRangedWeapon());
 		player->SetWeapon(std::move(items_[closestIndex]->GetRangedWeapon()));
 		items_[closestIndex]->Erase();
 	}
 }
 
-void ItemManager::Spawn(Vector3 pos, GameContext* context, int index) {
+void ItemManager::Spawn(Vector3 pos, int index) {
 	auto rangedWeapon = std::move(weaponManager_->GetRangedWeapon(index));
-	auto newItem = std::make_unique<Item>(std::move(rangedWeapon), pos);
+	auto newItem = std::make_unique<Item>(std::move(rangedWeapon), pos,context_);
 	items_.push_back(std::move(newItem));
+}
+
+void ItemManager::Drop(Vector3 pos, std::unique_ptr<RangedWeapon> weapon) {
+	if (weapon) {
+		auto newItem = std::make_unique<Item>(std::move(weapon), pos, context_);
+		items_.push_back(std::move(newItem));
+	}
 }

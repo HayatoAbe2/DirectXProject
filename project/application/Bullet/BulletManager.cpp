@@ -27,8 +27,7 @@ void BulletManager::Draw(GameContext* context, Camera* camera) {
 	}
 }
 
-void BulletManager::AddBullet(std::unique_ptr<Entity> model, const Vector3& velocity, const RangedWeaponStatus& status, bool isEnemyBullet) {
-	std::unique_ptr newBullet = std::make_unique<Bullet>(std::move(model), velocity, status, isEnemyBullet);
+void BulletManager::AddBullet(std::unique_ptr<Bullet> newBullet) {
 	bullets_.push_back(std::move(newBullet));
 }
 

@@ -14,11 +14,11 @@ public:
 	virtual int Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context,bool isEnemyBullet) = 0;
 	virtual void Update() = 0;
 
-	Entity* GetWeaponModel() { return renderable_.get(); }
+	Entity* GetWeaponModel() { return model_.get(); }
 	RangedWeaponStatus GetStatus() { return status_; }
 	
 protected:
 	RangedWeaponStatus status_;
-	std::unique_ptr<Entity> renderable_;
+	std::unique_ptr<Entity> model_;
 };
 

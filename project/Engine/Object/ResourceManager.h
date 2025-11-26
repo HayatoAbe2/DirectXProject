@@ -11,6 +11,10 @@
 #include "externals/DirectXTex/d3dx12.h"
 #include "externals/DirectXTex/DirectXTex.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 class Texture;
 class Mesh;
 class Model;
@@ -39,7 +43,7 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
-    Texture* CreateSRV(Texture* texture);
+    std::shared_ptr<Texture> CreateSRV(std::shared_ptr<Texture> texture);
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
 
@@ -74,7 +78,8 @@ private:
     std::unordered_map<std::string, Texture*> textures_;
     std::unordered_map<std::string, std::shared_ptr<Mesh>> meshes_;
     std::unordered_map<std::string, std::shared_ptr<Model>> models_;
-    
+
+    Assimp::Importer importer;
 };
 
 

@@ -30,7 +30,7 @@ public:
 	/// <param name="camera">カメラ</param>
 	void Draw(GameContext* context, Camera* camera);
 
-	void Hit(int damage);
+	void Hit(int damage,Vector3 from);
 
 	Transform GetTransform() const { return model_->GetTransform(); }
 	float GetRadius() const { return radius_; }
@@ -83,7 +83,7 @@ private:
 	bool isDead_ = false;
 
 	// スタン時間
-	int stunTime_ = 0;
+	int stunTimer_ = 0;
 
 	// 行動変更タイマー
 	int actionChangeTimer_ = 0;

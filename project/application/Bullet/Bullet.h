@@ -11,16 +11,16 @@ class MapCheck;
 class Bullet {
 public:
 	Bullet(std::unique_ptr<Entity> model,const Vector3& direction,const RangedWeaponStatus& status,bool isEnemyBullet);
-	void Update(MapCheck* mapCheck);
-	void Draw(GameContext* context,Camera* camera);
-	void Hit();
+	virtual void Update(MapCheck* mapCheck);
+	virtual void Draw(GameContext* context,Camera* camera);
+	virtual void Hit();
 
 	bool IsEnemyBullet() { return isEnemyBullet_; }
 	Transform GetTransform() { return model_->GetTransform(); }
 	int GetDamage() { return status_.damage; }
 	bool IsDead() { return isDead_; }
 	
-private:
+protected:
 	// 速度
 	Vector3 velocity_{};
 

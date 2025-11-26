@@ -10,7 +10,7 @@ void CollisionChecker::Check(Player* player, Bullet* bullet) {
 	
 	if (Length(player->GetTransform().translate - bullet->GetTransform().translate) <=
 		player->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
-		player->Hit(bullet->GetDamage());
+		player->Hit(bullet->GetDamage(),bullet->GetTransform().translate);
 		bullet->Hit();
 	}
 }
@@ -21,7 +21,7 @@ void CollisionChecker::Check(Enemy* enemy, Bullet* bullet) {
 
 	if (Length(enemy->GetTransform().translate - bullet->GetTransform().translate) <=
 		enemy->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
-		enemy->Hit(bullet->GetDamage());
+		enemy->Hit(bullet->GetDamage(),bullet->GetTransform().translate);
 		bullet->Hit();
 	}
 }

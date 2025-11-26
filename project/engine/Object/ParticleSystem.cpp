@@ -5,9 +5,6 @@
 void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
 	instancedModel_ = model;
 	particles_.resize(model->GetNumInstance());
-	for (Particle& particle : particles_) {
-		particle.transform = { {1.0f,1.0f,1.0f}, {}, {} };
-	}
 }
 
 void ParticleSystem::Update() {
@@ -20,19 +17,25 @@ void ParticleSystem::Update() {
 				field->Update(&particle);
 			}
 
+			if (fadeout_) {
+			}
+
 			// 時間
 			particle.lifetime--;
 			if (particle.lifetime < 0) {
 				particle.alive = false;
 			}
+
 		}
 	}
 }
 
 void ParticleSystem::PreDraw(const Camera& camera) {
 	std::vector<Transform> transforms;
-	for (const Particle& particle : particles_) {
+
+	for (Particle& particle : particles_) {
 		if (particle.alive) {
+			particle.transform.rotate = -camera.transform_.rotate;
 			transforms.push_back(particle.transform);
 		}
 	}

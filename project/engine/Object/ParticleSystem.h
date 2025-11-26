@@ -26,4 +26,5 @@ private:
     std::shared_ptr<InstancedModel> instancedModel_;
 	std::vector<std::unique_ptr<ParticleField>> fields_;
     int lifeTime_ = 1;
+    bool fadeout_ = true;
 };

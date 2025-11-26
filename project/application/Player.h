@@ -37,12 +37,13 @@ public:
 	void Draw(GameContext* context, Camera* camera);
 
 	// 被弾
-	void Hit(int damage) { hp_ -= damage; if (hp_ <= 0) {} }
+	void Hit(int damage, Vector3 from);
 
 	Transform GetTransform() const { return transform_; }
 	float GetRadius() const { return radius_; }
 	float GetInteractRadius() const { return interactRadius_; }
 	void SetTransform(const Transform& transform) { transform_ = transform; }
+	std::unique_ptr<RangedWeapon> DropRangedWeapon() { return std::move(rangedWeapon_); };
 	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
 	bool IsDead() { return hp_ <= 0; }
 
@@ -74,6 +75,9 @@ private:
 	// hp
 	int hp_ = 30;
 	int maxHp_ = 30;
+
+	// スタン時間
+	int stunTimer_ = 0;
 
 	// モデル
 	Entity* model_ = nullptr;
