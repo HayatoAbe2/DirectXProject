@@ -79,7 +79,7 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 		}
 
 		// アイテム取得
-		if (context->IsPress(DIK_F)) {
+		if (context->IsTrigger(DIK_F)) {
 			itemManager_->Interact(this);
 		}
 

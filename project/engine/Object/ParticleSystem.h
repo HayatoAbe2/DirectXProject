@@ -14,7 +14,8 @@ public:
     void Update();
     void PreDraw(const Camera& camera);
 
-    void SetLifeTime(int lifeTime) { lifeTime_ = lifeTime; }
+    void SetColor(const Vector4& color);
+    void SetLifeTime(int lifeTime) { maxLifeTime_ = lifeTime; }
     std::shared_ptr<InstancedModel> GetInstancedModel_() const { return instancedModel_; };
 
 	void AddField(std::unique_ptr<ParticleField> field) {
@@ -25,6 +26,5 @@ private:
     std::vector<Particle> particles_;
     std::shared_ptr<InstancedModel> instancedModel_;
 	std::vector<std::unique_ptr<ParticleField>> fields_;
-    int lifeTime_ = 1;
-    bool fadeout_ = true;
+    int maxLifeTime_ = 1;
 };

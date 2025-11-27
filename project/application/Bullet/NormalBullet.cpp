@@ -8,8 +8,8 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 	// マップ当たり判定
 	Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
 
-	lifeTime_--;
-	if (lifeTime_ <= 0 || mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
+	maxLifeTime_--;
+	if (maxLifeTime_ <= 0 || mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
 		Hit();
 	}
 }

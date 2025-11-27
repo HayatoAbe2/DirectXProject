@@ -1,7 +1,7 @@
 #pragma once
 #include "Material.h"
 #include "VertexData.h"
-#include "TransformationMatrix.h"
+#include "InstanceGPUData.h"
 #include "Texture.h"
 #include "Mesh.h"
 
@@ -49,10 +49,10 @@ public:
 		instanceTransforms_[index] = transform;
 	}
 
-	void SetInstanceTransformData(TransformationMatrix* data) { instanceTransformationData_ = data; }
+	void SetInstanceTransformData(InstanceGPUData* data) { instanceTransformationData_ = data; }
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
-	void UpdateInstanceTransform(const Camera& camera, const std::vector<Transform>& transforms);
+	void UpdateInstanceTransform(const Camera& camera, const std::vector<Transform>& transforms,std::vector<Vector4>& color);
 private:
 	// モデルデータ
 	std::string mtlFilePath;
@@ -65,6 +65,6 @@ private:
 	D3D12_GPU_DESCRIPTOR_HANDLE instanceSRVHandleGPU_;
 	std::vector<Transform> instanceTransforms_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformationResource_ = nullptr;
-	TransformationMatrix* instanceTransformationData_ = nullptr;
+	InstanceGPUData* instanceTransformationData_ = nullptr;
 };
 

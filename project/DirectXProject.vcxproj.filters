@@ -211,7 +211,7 @@
     <ClCompile Include="application\Bullet\NormalBullet.cpp">
       <Filter>Application\Bullet</Filter>
     </ClCompile>
-    <ClCompile Include="Sword.cpp" />
+    <ClCompile Include="application\Weapon\Melee\Sword.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -444,7 +444,8 @@
     <ClInclude Include="application\Bullet\NormalBullet.h">
       <Filter>Application\Bullet</Filter>
     </ClInclude>
-    <ClInclude Include="Sword.h" />
+    <ClInclude Include="application\Weapon\Melee\Sword.h" />
+    <ClInclude Include="engine\Object\InstanceGPUData.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

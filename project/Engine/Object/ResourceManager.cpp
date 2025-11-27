@@ -25,6 +25,7 @@ ResourceManager::~ResourceManager() {
 	textures_.clear();
 	meshes_.clear();
 	models_.clear();
+	instancedModels_.clear();
 }
 
 void ResourceManager::Initialize(const Microsoft::WRL::ComPtr<ID3D12Device>& device, CommandListManager* commandListManager, DescriptorHeapManager* descriptorHeapManager, SRVManager* srvManager, Logger* logger) {
@@ -165,13 +166,13 @@ std::shared_ptr<Texture> ResourceManager::CreateSRV(std::shared_ptr<Texture> tex
 
 void ResourceManager::CreateInstancingSRV(InstancedModel* model, const int numInstance_) {
 	currentSRVIndex_ = srvManager_->Allocate();
-	srvManager_->CreateStructuredBufferSRV(currentSRVIndex_, model->GetInstanceResource().Get(), numInstance_, sizeof(TransformationMatrix));
+	srvManager_->CreateStructuredBufferSRV(currentSRVIndex_, model->GetInstanceResource().Get(), numInstance_, sizeof(InstanceGPUData));
 
 	// SRVハンドル
 	model->SetSRVHandle(srvManager_->GetGPUHandle(currentSRVIndex_));
 }
 
-std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {	
+std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
 	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
 
 	// キャッシュにあるか確認
@@ -198,6 +199,7 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		std::vector<VertexData> vertices; // 頂点
 		std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
 
+		Assimp::Importer importer;
 		// assimpでobjを読む
 		std::string filePath = directoryPath + "/" + filename;
 		// obj->DirectX12変換
@@ -363,8 +365,8 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 
 	model->SetNumInstance(numInstance);
 	// インスタンス数分のtransformリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(TransformationMatrix) * numInstance);
-	TransformationMatrix* transformData = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(InstanceGPUData) * numInstance);
+	InstanceGPUData* transformData = nullptr;
 	instanceTransformResource->Map(0, nullptr, reinterpret_cast<void**>(&transformData));
 	// 単位行列を書き込んでおく
 	for (int i = 0; i < numInstance; ++i) {
@@ -373,12 +375,11 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 		transformData[i].WorldInverseTranspose = MakeIdentity4x4();
 		model->AddInstanceTransform();
 	}
-	instanceTransformResource->Unmap(0, nullptr);
+	//instanceTransformResource->Unmap(0, nullptr);
 
 	model->SetInstanceResource(instanceTransformResource);
 	model->SetInstanceTransformData(transformData);
 	CreateInstancingSRV(model.get(), numInstance);
-
 
 	// キャッシュに登録
 	meshes_.insert({ fullPath, mesh });

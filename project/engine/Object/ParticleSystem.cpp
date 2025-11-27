@@ -13,40 +13,45 @@ void ParticleSystem::Update() {
 			particle.transform.translate += particle.velocity;
 
 			// フィールドの影響
-			for (const std::unique_ptr<ParticleField>& field : fields_) {
+			for (const auto& field : fields_) {
 				field->Update(&particle);
 			}
 
-			if (fadeout_) {
-			}
-
 			// 時間
-			particle.lifetime--;
-			if (particle.lifetime < 0) {
+			particle.lifeTime--;
+			if (particle.lifeTime < 0) {
 				particle.alive = false;
 			}
-
 		}
 	}
 }
 
 void ParticleSystem::PreDraw(const Camera& camera) {
 	std::vector<Transform> transforms;
+	std::vector<Vector4> colors;
 
 	for (Particle& particle : particles_) {
-		if (particle.alive) {
-			particle.transform.rotate = -camera.transform_.rotate;
-			transforms.push_back(particle.transform);
-		}
+
+		particle.transform.rotate = -camera.transform_.rotate;
+		transforms.push_back(particle.transform);
+
+		particle.color.w = float(particle.lifeTime) / float(maxLifeTime_);
+		colors.push_back(particle.color);
 	}
-	instancedModel_->UpdateInstanceTransform(camera, transforms);
+	instancedModel_->UpdateInstanceTransform(camera, transforms, colors);
+}
+
+void ParticleSystem::SetColor(const Vector4& color) {
+	for (Particle& particle : particles_) {
+		particle.color = color;
+	}
 }
 
 void ParticleSystem::Emit(const Transform& baseTransform, const Vector3& velocity) {
 	for (Particle& particle : particles_) {
 		if (!particle.alive) {
 			particle.alive = true;
-			particle.lifetime = lifeTime_;
+			particle.lifeTime = maxLifeTime_;
 			particle.transform = baseTransform;
 			particle.velocity = velocity;
 			break;

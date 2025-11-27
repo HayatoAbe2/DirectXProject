@@ -243,7 +243,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
     <ClCompile Include="application\Bullet\NormalBullet.cpp" />
-    <ClCompile Include="Sword.cpp" />
+    <ClCompile Include="application\Weapon\Melee\Sword.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -310,6 +310,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\MaterialData.h" />
     <ClInclude Include="engine\Object\Particle.h" />
     <ClInclude Include="engine\Object\Lights\PointLight.h" />
+    <ClInclude Include="engine\Object\InstanceGPUData.h" />
     <ClInclude Include="engine\Object\ResourceManager.h" />
     <ClInclude Include="engine\Object\Texture.h" />
     <ClInclude Include="engine\Scene\BaseScene.h" />
@@ -370,7 +371,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\LightManager.h" />
     <ClInclude Include="application\Bullet\FireBullet.h" />
     <ClInclude Include="application\Bullet\NormalBullet.h" />
-    <ClInclude Include="Sword.h" />
+    <ClInclude Include="application\Weapon\Melee\Sword.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

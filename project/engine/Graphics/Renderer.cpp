@@ -101,7 +101,13 @@ void Renderer::DrawEntity(Entity& entity, const Camera& camera, LightManager* li
 			DrawSprite(&entity, blendMode);
 		}
 		if (entity.GetInstancedModel()) {
-			entity.GetInstancedModel()->UpdateInstanceTransform(camera, entity.GetInstanceTransforms());
+			// デフォルト色
+			std::vector<Vector4> colors;
+			colors.resize(entity.GetInstancedModel()->GetNumInstance());
+			for (auto& color : colors) {
+				color = { 1,1,1,1 };
+			}
+			entity.GetInstancedModel()->UpdateInstanceTransform(camera, entity.GetInstanceTransforms(),colors);
 			DrawModelInstance(&entity, lightManager, blendMode);
 		}
 		/*if (entity->spriteInstance)

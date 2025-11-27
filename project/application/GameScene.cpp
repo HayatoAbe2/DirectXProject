@@ -31,6 +31,7 @@ GameScene::~GameScene() {
 	delete weaponManager_;
 	delete itemManager_;
 	delete collisionChecker_;
+	delete effectManager_;
 }
 
 void GameScene::Initialize() {
@@ -99,11 +100,11 @@ void GameScene::Initialize() {
 	fade_->GetSprite()->SetSize(context_->GetWindowSize() + Vector2{20,80});
 	fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,0.0f });
 
-	/*enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
-	enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-	enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
-	enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
-	enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);*/
+	//enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
+	//enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
+	//enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
+	//enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
 
 	itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::FireBall));
 	itemManager_->Spawn({ 4,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));

@@ -1,7 +1,7 @@
 #include "InstancedModel.h"
 #include "Camera.h"
 
-void InstancedModel::UpdateInstanceTransform(const Camera& camera, const std::vector<Transform>& transforms) {
+void InstancedModel::UpdateInstanceTransform(const Camera& camera, const std::vector<Transform>& transforms,std::vector<Vector4>& color) {
 	numInstance_ = static_cast<int>(transforms.size());
 	// WVPMatrixを作る
 	for (int i = 0; i < numInstance_; ++i) {
@@ -10,6 +10,6 @@ void InstancedModel::UpdateInstanceTransform(const Camera& camera, const std::ve
 		instanceTransformationData_[i].WVP = worldViewProjectionMatrix;
 		instanceTransformationData_[i].World = worldMatrix;
 		instanceTransformationData_[i].WorldInverseTranspose = Transpose(Inverse(worldMatrix));
-		
+		instanceTransformationData_[i].Color = color[i];
 	}
 }

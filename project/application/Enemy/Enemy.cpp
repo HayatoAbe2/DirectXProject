@@ -91,6 +91,14 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 		length -= 0.05f;
 		if (length < 0) { length = 0; }
 		velocity_ = Normalize(velocity_) * length;
+
+		// 速度をもとに移動
+		Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
+		pos.x += velocity_.x;
+		mapCheck->ResolveCollisionX(pos, radius_);
+		pos.y += velocity_.z;
+		mapCheck->ResolveCollisionY(pos, radius_);
+		model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 	}
 }
 

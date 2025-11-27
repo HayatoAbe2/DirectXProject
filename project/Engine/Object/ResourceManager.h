@@ -78,8 +78,7 @@ private:
     std::unordered_map<std::string, Texture*> textures_;
     std::unordered_map<std::string, std::shared_ptr<Mesh>> meshes_;
     std::unordered_map<std::string, std::shared_ptr<Model>> models_;
-
-    Assimp::Importer importer;
+    std::unordered_map<std::string, std::shared_ptr<InstancedModel>> instancedModels_;
 };
 
 

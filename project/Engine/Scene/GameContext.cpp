@@ -67,7 +67,7 @@ void GameContext::DrawLightImGui() {
 }
 
 void GameContext::DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode) {
-	renderer_->DrawEntity(entity, camera,lightManager_,static_cast<int>(blendMode));
+   renderer_->DrawEntity(entity, camera,lightManager_,static_cast<int>(blendMode));
 }
 
 bool GameContext::IsTrigger(uint8_t keyNumber) {
