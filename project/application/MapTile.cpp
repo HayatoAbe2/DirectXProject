@@ -2,16 +2,22 @@
 #include "GameContext.h"
 #include "Camera.h"
 #include "Entity.h"
+#include "ParticleSystem.h"
 
 #include <cassert>
 #include <fstream>
 #include <sstream>
 #include <memory>
 
-void MapTile::Initialize(Entity* wall, Entity* floor,Entity* goal) {
+void MapTile::Initialize(Entity* wall, Entity* floor,Entity* goal,GameContext* context) {
     wall_ = wall;
     floor_ = floor;
     goal_ = goal;
+
+    particle_ = std::make_unique<Entity>();
+    particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Goal", "goalEffect.obj", particleNum_));
+    particle_->GetParticleSystem()->SetLifeTime(25);
+    particle_->GetParticleSystem()->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
 }
 
 void MapTile::LoadCSV(const std::string& filePath) {
@@ -49,7 +55,7 @@ void MapTile::LoadCSV(const std::string& filePath) {
     // トランスフォーム設定
     std::vector<Transform> transformsFloor;
     std::vector<Transform> transformsWall;
-    std::vector<Transform> transformsGoal;
+    Transform transformGoal;
     for (int x = 0; x < mapWidth_; ++x) {
         for (int y = 0; y < mapHeight_; ++y) {
             // 床
@@ -84,25 +90,42 @@ void MapTile::LoadCSV(const std::string& filePath) {
 
 
             // ゴール
-            Transform transformGoal;
             if (map_[y][x] == Tile::Goal) {
                 transformGoal.translate.x = float(x) * tileSize_ + tileSize_ / 2.0f;
                 transformGoal.translate.y = 0;
                 transformGoal.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
                 transformGoal.scale = { tileSize_,tileSize_ ,tileSize_ };
-            } else {
-                transformGoal.translate.y = 200.0f;
             }
-            transformsGoal.push_back(transformGoal);
         }
     }
     floor_->SetInstanceTransforms(transformsFloor);
     wall_->SetInstanceTransforms(transformsWall);
-	goal_->SetInstanceTransforms(transformsGoal);
+	goal_->SetTransform(transformGoal);
+}
+
+void MapTile::Update(GameContext* context) {
+    emitTimer_++;
+    if (emitTimer_ >= emitTime_) {
+        // パーティクル
+        for (int i = 0; i < 1; ++i) {
+            Vector3 randomVector = {
+            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+            };
+            Transform transform = goal_->GetTransform();
+            transform.translate += randomVector;
+            transform.scale = { 0.5f,1.2f,1.2f };
+            particle_->GetParticleSystem()->Emit(transform, { 0,0.5f,0 });
+        }
+        emitTimer_ = 0;
+    }
+    particle_->GetParticleSystem()->Update();
 }
 
 void MapTile::Draw(GameContext* context,Camera* camera) {
     context->DrawEntity(*wall_, *camera);
     context->DrawEntity(*floor_, *camera);
 	context->DrawEntity(*goal_, *camera);
+	context->DrawEntity(*particle_, *camera,BlendMode::Add);
 }

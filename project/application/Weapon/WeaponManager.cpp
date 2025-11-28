@@ -28,11 +28,11 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 
 	switch (index) {
 	case 0:
-		status.damage = 3;
+		status.damage = 8;
 		status.weight = 0.2f;
-		status.bulletSize = 0.8f;
+		status.bulletSize = 1.2f;
 		status.bulletSpeed = 0.4f;
-		status.shootCoolTime = 25;
+		status.shootCoolTime = 60;
 		status.bulletLifeTime = 300;
 		status.bulletModel = bulletModels_[int(WEAPON::FireBall)];
 		model->SetModel(weaponModels_[int(WEAPON::FireBall)]);

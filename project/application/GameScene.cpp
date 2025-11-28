@@ -51,11 +51,11 @@ void GameScene::Initialize() {
 	floor_->SetInstancedModel(context_->LoadInstancedModel("Resources/Floor", "floor.obj", 1000));
 
 	goal_ = std::make_unique<Entity>();
-	goal_->SetInstancedModel(context_->LoadInstancedModel("Resources/Tiles", "sphere.obj", 1000));
+	goal_->SetModel(context_->LoadModel("Resources/Tiles", "sphere.obj"));
 
 
 	mapTile_ = new MapTile();
-	mapTile_->Initialize(wall_.get(), floor_.get(),goal_.get());
+	mapTile_->Initialize(wall_.get(), floor_.get(),goal_.get(),context_);
 	mapTile_->LoadCSV("Resources/mapData.csv");
 
 	// マップ判定
@@ -167,6 +167,9 @@ void GameScene::Update() {
 			finished_ = true;
 		}
 	}
+
+	// マップ
+	mapTile_->Update(context_);
 }
 
 void GameScene::Draw() {

@@ -375,7 +375,6 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 		transformData[i].WorldInverseTranspose = MakeIdentity4x4();
 		model->AddInstanceTransform();
 	}
-	//instanceTransformResource->Unmap(0, nullptr);
 
 	model->SetInstanceResource(instanceTransformResource);
 	model->SetInstanceTransformData(transformData);

@@ -9,12 +9,12 @@ void BulletManager::Initialize(EffectManager* effectManager) {
 
 void BulletManager::Update(MapCheck* mapCheck) {
 	for (const auto& bullet : bullets_) {
-		bullet->Update(mapCheck);
+			bullet->Update(mapCheck);
 	}
 	bullets_.erase(
 		std::remove_if(bullets_.begin(), bullets_.end(),
 			[](const std::unique_ptr<Bullet>& bullet) {
-				return bullet->IsDead();
+				return bullet->CanErase();
 			}
 		),
 		bullets_.end()
@@ -32,7 +32,7 @@ void BulletManager::AddBullet(std::unique_ptr<Bullet> newBullet) {
 }
 
 std::vector<Bullet*> BulletManager::GetBullets() {
-	std::vector<Bullet*> bullets; bullets_;
+	std::vector<Bullet*> bullets;
 	for (const auto& bullet : bullets_) {
 		bullets.push_back(bullet.get());
 	}

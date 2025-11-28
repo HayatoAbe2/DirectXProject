@@ -6,7 +6,7 @@
 
 void CollisionChecker::Check(Player* player, Bullet* bullet) {
 	// 敵の弾でなかったら判定しない
-	if (!bullet->IsEnemyBullet()) { return; }
+	if (!bullet->IsEnemyBullet() || bullet->IsDead()) { return; }
 	
 	if (Length(player->GetTransform().translate - bullet->GetTransform().translate) <=
 		player->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
@@ -17,7 +17,7 @@ void CollisionChecker::Check(Player* player, Bullet* bullet) {
 
 void CollisionChecker::Check(Enemy* enemy, Bullet* bullet) {
 	// 敵の弾だったら判定しない
-	if (bullet->IsEnemyBullet()) { return; }
+	if (bullet->IsEnemyBullet() || bullet->IsDead()) { return; }
 
 	if (Length(enemy->GetTransform().translate - bullet->GetTransform().translate) <=
 		enemy->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
