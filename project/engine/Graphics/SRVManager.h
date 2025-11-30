@@ -46,7 +46,7 @@ private:
 	uint32_t descriptorSize_;
 
 	// 最大数
-	const uint32_t kMaxSRVCount_ = 512;
+	const uint32_t kMaxSRVCount_ = 1024;
 
 	// 次のindex
 	uint32_t useIndex_ = 0;

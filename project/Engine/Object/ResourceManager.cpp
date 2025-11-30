@@ -284,10 +284,45 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = meshes_.find(fullPath);
-	//if (it != meshes_.end()) {
-	//	return it->second; // キャッシュにあったのでそれを返す
-	//}
+	auto it = instancedModels_.find(fullPath);
+	if (it != instancedModels_.end()) {
+		auto templateModel = it->second;
+		for (auto& mesh : templateModel->GetMeshes()) {
+			std::shared_ptr<Mesh> newMesh = std::make_shared<Mesh>(*mesh);
+			auto oldMat = mesh->GetMaterial();
+			auto newMat = std::make_shared<Material>(*oldMat); // 新しいマテリアル
+
+			bool useTexture = (oldMat->GetTexture() != nullptr);
+			newMat->Initialize(this, useTexture, true);
+
+			// Texture は共有（shared_ptr を想定）
+			newMat->SetTexture(oldMat->GetTexture());
+
+			newMesh->SetMaterial(newMat);
+			model->AddMeshes(newMesh);
+
+			model->SetNumInstance(numInstance);
+			// インスタンス数分のtransformリソース
+			Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(InstanceGPUData) * numInstance);
+			InstanceGPUData* transformData = nullptr;
+			instanceTransformResource->Map(0, nullptr, reinterpret_cast<void**>(&transformData));
+			// 単位行列を書き込んでおく
+			for (int i = 0; i < numInstance; ++i) {
+				transformData[i].World = MakeIdentity4x4();
+				transformData[i].WVP = MakeIdentity4x4();
+				transformData[i].WorldInverseTranspose = MakeIdentity4x4();
+				model->AddInstanceTransform();
+			}
+
+			model->SetInstanceResource(instanceTransformResource);
+			model->SetInstanceTransformData(transformData);
+			CreateInstancingSRV(model.get(), numInstance);
+		}
+		std::ostringstream oss;
+		oss << "cached model ptr=" << model.get() << " use_count=" << model.use_count() << "\n";
+		OutputDebugStringA(oss.str().c_str());
+		return model; // キャッシュにあったのでそれを返す
+	}
 
 	std::vector<VertexData> vertices; // 頂点
 	std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
@@ -380,8 +415,12 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	model->SetInstanceTransformData(transformData);
 	CreateInstancingSRV(model.get(), numInstance);
 
+	std::ostringstream oss;
+	oss << "new model ptr=" << model.get() << " use_count=" << model.use_count() << "\n";
+	OutputDebugStringA(oss.str().c_str());
+
 	// キャッシュに登録
-	meshes_.insert({ fullPath, mesh });
+	instancedModels_.insert({ fullPath, model });
 
 	return model;
 }

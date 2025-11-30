@@ -4,6 +4,10 @@
 #include "Bullet.h"
 #include "Entity.h"
 
+BulletManager::~BulletManager() {
+	bullets_.clear();
+}
+
 void BulletManager::Initialize(EffectManager* effectManager) {
 }
 

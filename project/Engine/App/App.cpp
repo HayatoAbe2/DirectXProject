@@ -22,9 +22,6 @@ void App::Initialize() {
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 	assert(SUCCEEDED(hr));
 
-	// MFの初期化
-	MFStartup(MF_VERSION);
-
 	// ダンプ作成機能
 	dumpExporter_ = new DumpExporter();
 	// クラッシュ時ダンプファイルに記録する
@@ -135,7 +132,6 @@ void App::Finalize() {
 
 	audio_->Finalize();
 	delete audio_;
-	MFShutdown();
 	logger_->Log(logger_->GetStream(), std::format("[Audio] Shutdown complete.\n"));
 
 	// 入力

@@ -8,6 +8,7 @@ class Camera;
 
 class Item {
 public:
+	~Item();
 	Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context);
 	void Draw(GameContext* context, Camera* camera);
 

@@ -20,7 +20,6 @@
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"Dbghelp.lib")
-#pragma comment(lib, "mfplat.lib")
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "mfuuid.lib")
 

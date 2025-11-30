@@ -8,6 +8,10 @@ Entity::Entity() {
 	id_ = nextId_++;
 }
 
+Entity::~Entity() {
+	particleSystem_.reset();
+}
+
 
 void Entity::SetParticleSystem(const std::shared_ptr<InstancedModel>& m) {
 	particleSystem_ = std::make_shared<ParticleSystem>();

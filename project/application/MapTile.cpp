@@ -9,14 +9,19 @@
 #include <sstream>
 #include <memory>
 
+MapTile::~MapTile() {
+    context_->RemoveSpotLight(lightIndex_);
+}
+
 void MapTile::Initialize(Entity* wall, Entity* floor,Entity* goal,GameContext* context) {
     wall_ = wall;
     floor_ = floor;
     goal_ = goal;
+    context_ = context;
 
     particle_ = std::make_unique<Entity>();
     particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Goal", "goalEffect.obj", particleNum_));
-    particle_->GetParticleSystem()->SetLifeTime(25);
+    particle_->GetParticleSystem()->SetLifeTime(40);
     particle_->GetParticleSystem()->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
 }
 
@@ -95,6 +100,22 @@ void MapTile::LoadCSV(const std::string& filePath) {
                 transformGoal.translate.y = 0;
                 transformGoal.translate.z = float(y) * tileSize_ + tileSize_ / 2.0f;
                 transformGoal.scale = { tileSize_,tileSize_ ,tileSize_ };
+
+                lightIndex_ = context_->AddSpotLight();
+                auto& spotLight = context_->GetSpotLight(lightIndex_);
+                spotLight.position = transformGoal.translate + Vector3{ 0.0f,3.0f,0.0f };
+                spotLight.direction = { 0,-1.0f,0 };
+                spotLight.intensity = 1.0f;
+                spotLight.color = { 1,1,0,0.3f };
+                spotLight.distance = 10.0f;
+                spotLight.decay = 0.9f;
+                spotLight.cosAngle = 0.32f;
+                spotLight.cosFalloffStart = 1.1f;
+
+                std::unique_ptr<ParticleField> particleField = std::make_unique<ParticleField>();
+                particleField->SetCheckArea(false);
+                particleField->SetRotateXZ(0.15f,{ x * tileSize_ + tileSize_ / 2.0f,0,y * tileSize_ + tileSize_ / 2.0f });
+                particle_->GetParticleSystem()->AddField(std::move(particleField));
             }
         }
     }
@@ -103,19 +124,19 @@ void MapTile::LoadCSV(const std::string& filePath) {
 	goal_->SetTransform(transformGoal);
 }
 
-void MapTile::Update(GameContext* context) {
+void MapTile::Update() {
     emitTimer_++;
     if (emitTimer_ >= emitTime_) {
         // パーティクル
         for (int i = 0; i < 1; ++i) {
-            Vector3 randomVector = {
-            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-            context->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-            };
+            Vector3 randomVector = Normalize({
+            context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+            0.0f,
+            context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f)
+            }) * particleRange_ / 2.0f;
             Transform transform = goal_->GetTransform();
             transform.translate += randomVector;
-            transform.scale = { 0.5f,1.2f,1.2f };
+            transform.scale = { 0.5f,4.0f,4.0f };
             particle_->GetParticleSystem()->Emit(transform, { 0,0.5f,0 });
         }
         emitTimer_ = 0;
@@ -123,9 +144,9 @@ void MapTile::Update(GameContext* context) {
     particle_->GetParticleSystem()->Update();
 }
 
-void MapTile::Draw(GameContext* context,Camera* camera) {
-    context->DrawEntity(*wall_, *camera);
-    context->DrawEntity(*floor_, *camera);
-	context->DrawEntity(*goal_, *camera);
-	context->DrawEntity(*particle_, *camera,BlendMode::Add);
+void MapTile::Draw(Camera* camera) {
+    context_->DrawEntity(*wall_, *camera);
+    context_->DrawEntity(*floor_, *camera);
+	context_->DrawEntity(*goal_, *camera);
+	context_->DrawEntity(*particle_, *camera,BlendMode::Add);
 }

@@ -1,6 +1,7 @@
 #include "ParticleSystem.h"
 #include "Camera.h"
 #include "InstancedModel.h"
+#include <numbers>
 
 void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
 	instancedModel_ = model;
@@ -32,7 +33,7 @@ void ParticleSystem::PreDraw(const Camera& camera) {
 
 	for (Particle& particle : particles_) {
 
-		particle.transform.rotate = -camera.transform_.rotate;
+		particle.transform.rotate = camera.transform_.rotate;
 		transforms.push_back(particle.transform);
 
 		particle.color.w = float(particle.lifeTime) / float(maxLifeTime_);

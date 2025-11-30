@@ -6,43 +6,45 @@ void NormalBullet::Initialize(GameContext* context) {
 	context_ = context;
 	particle_ = std::make_unique<Entity>();
 	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
-	particle_->GetParticleSystem()->SetLifeTime(7);
-	particle_->GetParticleSystem()->SetColor({ 0.2f, 0.03f, 0.0f, 1.0f });
+	particle_->GetParticleSystem()->SetLifeTime(2);
+	particle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
 
 	hitParticle_ = std::make_unique<Entity>();
-	hitParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
+	hitParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", hitParticleNum_));
 	hitParticle_->GetParticleSystem()->SetLifeTime(hitParticleLifeTime);
 	hitParticle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
-	particleField_->SetUseArea(false);
+	particleField_->SetCheckArea(false);
 }
 
 void NormalBullet::Update(MapCheck* mapCheck) {
-	model_->SetTranslate(model_->GetTransform().translate + velocity_);
+	if (!isDead_) {
+		model_->SetTranslate(model_->GetTransform().translate + velocity_);
 
-	// マップ当たり判定
-	Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
+		// マップ当たり判定
+		Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
 
-	maxLifeTime_--;
-	if (maxLifeTime_ <= 0) {
-		canErase_ = true;
-	}
+		maxLifeTime_--;
+		if (maxLifeTime_ <= 0) {
+			canErase_ = true;
+		}
 
-	if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
-		Hit();
-	}
+		if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
+			Hit();
+		}
 
-	// パーティクル
-	for (int i = 0; i < 20; ++i) {
-		Vector3 randomVector = {
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		};
-		Transform transform = model_->GetTransform();
-		transform.translate += randomVector + velocity_ * 0.5f;
-		transform.scale = { 1.5f,1.5f,1.5f };
-		particle_->GetParticleSystem()->Emit(transform, -velocity_ * 0.2f);
+		// パーティクル
+		for (int i = 0; i < 50; ++i) {
+			Vector3 randomVector = {
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			};
+			Transform transform = model_->GetTransform();
+			transform.translate += randomVector + velocity_ * 0.5f;
+			transform.scale = { 1.0f,1.0f,1.0f };
+			particle_->GetParticleSystem()->Emit(transform, -velocity_ * 0.5f);
+		}
 	}
 	particle_->GetParticleSystem()->Update();
 
@@ -56,7 +58,9 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 }
 
 void NormalBullet::Draw(GameContext* context, Camera* camera) {
-	context->DrawEntity(*model_, *camera, BlendMode::Add);
+	if (!isDead_) {
+		context->DrawEntity(*model_, *camera, BlendMode::Add);
+	}
 
 	// パーティクル
 	context->DrawEntity(*particle_, *camera, BlendMode::Add);
@@ -65,10 +69,9 @@ void NormalBullet::Draw(GameContext* context, Camera* camera) {
 
 void NormalBullet::Hit() {
 	isDead_ = true;
-	canErase_ = true;
 
 	// 飛散パーティクル
-	particleField_->SetGravity(-0.5f, model_->GetTransform().translate);
+	particleField_->SetGravity(-0.4f, model_->GetTransform().translate);
 	hitParticle_->GetParticleSystem()->AddField(std::move(particleField_));
 	for (int i = 0; i < hitParticleNum_; ++i) {
 		Vector3 randomVector = {

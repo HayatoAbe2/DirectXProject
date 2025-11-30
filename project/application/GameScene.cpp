@@ -38,7 +38,7 @@ void GameScene::Initialize() {
 	debugCamera_ = new DebugCamera;
 	debugCamera_->Initialize(context_);
 	camera_ = new Camera;
-	camera_->transform_.rotate = { float(std::numbers::pi) / 2.0f,0,0 };
+	camera_->transform_.rotate = { 1.0f,0,0 };
 
 	playerModel_ = std::make_unique<Entity>();
 	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
@@ -100,14 +100,14 @@ void GameScene::Initialize() {
 	fade_->GetSprite()->SetSize(context_->GetWindowSize() + Vector2{20,80});
 	fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,0.0f });
 
-	//enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
-	//enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-	//enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
-	//enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
+	enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
 	enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
 
 	itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::FireBall));
-	itemManager_->Spawn({ 4,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
+	itemManager_->Spawn({ 24,0,18 }, int(WeaponManager::WEAPON::AssaultRifle));
 }
 
 void GameScene::Update() {
@@ -130,7 +130,7 @@ void GameScene::Update() {
 	}
 
 	// カメラ追従
-	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,50,0 };
+	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,30,-19 };
 	camera_->UpdateCamera(context_, *debugCamera_);
 	debugCamera_->Update();
 
@@ -169,12 +169,12 @@ void GameScene::Update() {
 	}
 
 	// マップ
-	mapTile_->Update(context_);
+	mapTile_->Update();
 }
 
 void GameScene::Draw() {
 	context_->DrawEntity(*skydome_, *camera_);
-	mapTile_->Draw(context_, camera_);
+	mapTile_->Draw(camera_);
 	player_->Draw(context_, camera_);
 	enemyManager_->Draw(context_, camera_);
 	bulletManager_->Draw(context_, camera_);

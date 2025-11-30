@@ -3,6 +3,7 @@
 #include "ParticleField.h"
 class FireBullet : public Bullet{
 public:
+	~FireBullet();
 	FireBullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {};
 	void Initialize(GameContext* context);

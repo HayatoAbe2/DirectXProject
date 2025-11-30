@@ -17,12 +17,12 @@ private:
 
 	std::unique_ptr<Entity> particle_;
 	const int particleNum_ = 150;
-	float particleRange_ = 1.0f;
+	float particleRange_ = 0.7f;
 
 	std::unique_ptr<Entity> hitParticle_;
-	const int hitParticleNum_ = 30;
+	const int hitParticleNum_ = 10;
 	float hitParticleRange_ = 1.0f;
-	int hitParticleLifeTime = 10;
+	int hitParticleLifeTime = 20;
 
 	std::unique_ptr<ParticleField> particleField_;
 };

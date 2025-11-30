@@ -115,7 +115,7 @@ void PipelineStateManager::CreateParticlePSO() {
 	baseDesc.VS = { particleVertexShaderBlob_->GetBufferPointer(), particleVertexShaderBlob_->GetBufferSize() };
 	baseDesc.PS = { particlePixelShaderBlob_->GetBufferPointer(),	particlePixelShaderBlob_->GetBufferSize() };
 	baseDesc.BlendState = CreateNoneBlendDesc();
-	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	baseDesc.DepthStencilState.DepthEnable = TRUE;
 	baseDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;

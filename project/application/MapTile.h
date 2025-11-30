@@ -19,10 +19,11 @@ public:
 		Goal,
 	};
 
+	~MapTile();
 	void Initialize(Entity* wall,Entity* floor,Entity* goal, GameContext* context);
 	void LoadCSV(const std::string& filePath);
-	void Update(GameContext* context);
-	void Draw(GameContext* context, Camera* camera);
+	void Update();
+	void Draw(Camera* camera);
 
 	std::vector<std::vector<Tile>> GetMap() { return map_; }
 	int GetWidth() { return mapWidth_; }
@@ -41,8 +42,13 @@ private:
 
 	std::unique_ptr<Entity> particle_ = nullptr;
 	const int particleNum_ = 30;
-	float particleRange_ = 4.0f;
+	float particleRange_ = 3.0f;
 	int emitTimer_ = 0;
-	const int emitTime_ = 10;
+	const int emitTime_ = 5;
+
+	// ライトのインデックス
+	int lightIndex_ = 0;
+
+	GameContext* context_;
 };
 

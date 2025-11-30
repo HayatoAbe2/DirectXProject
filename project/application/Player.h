@@ -55,6 +55,7 @@ private:
 
 	// トランスフォーム
 	Transform transform_;
+	Transform weaponTransform_;
 
 	// 半径
 	float radius_ = 0.5f;
@@ -73,8 +74,8 @@ private:
 	Vector3 attackDirection_ = {};
 
 	// hp
-	int hp_ = 30;
-	int maxHp_ = 30;
+	int hp_ = 50;
+	int maxHp_ = 50;
 
 	// スタン時間
 	int stunTimer_ = 0;
@@ -87,5 +88,12 @@ private:
 
 	// 所持武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
+
+	// 移動パーティクル
+	std::unique_ptr<Entity> moveParticle_;
+	const int moveParticleNum_ = 20;
+	float moveParticleRange_ = 1.0f;
+	int moveParticleEmitTimer_ = 0;
+	int moveParticleEmitInterval_ = 20;
 };
 

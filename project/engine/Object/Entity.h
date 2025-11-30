@@ -15,6 +15,7 @@ class ParticleSystem;
 class Entity {
 public:
 	Entity();
+	~Entity();
 
 	///
 	/// トランスフォーム操作

@@ -5,6 +5,7 @@
 #include <mfobjects.h>
 #include <mfreadwrite.h>
 #pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfplat.lib")
 #include <vector>
 
 void Audio::Initialize() {
@@ -16,9 +17,16 @@ void Audio::Initialize() {
 	// マスターボイスを生成する
 	hr = xAudio2_->CreateMasteringVoice(&masterVoice_);
 	assert(SUCCEEDED(hr));
+	// MFの初期化
+	hr = MFStartup(MF_VERSION,MFSTARTUP_NOSOCKET);
+	assert(SUCCEEDED(hr));
 }
 
 void Audio::Finalize() {
+	HRESULT result;
+	result = MFShutdown();
+	assert(SUCCEEDED(result));
+
 	xAudio2_.Reset();
 }
 

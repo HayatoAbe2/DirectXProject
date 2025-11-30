@@ -3,6 +3,10 @@
 #include "MapCheck.h"
 #include "ParticleSystem.h"
 #include "Camera.h"
+#include <sstream>
+
+FireBullet::~FireBullet() {
+}
 
 void FireBullet::Initialize(GameContext* context) {
 	context_ = context;
@@ -10,13 +14,17 @@ void FireBullet::Initialize(GameContext* context) {
 	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
 	particle_->GetParticleSystem()->SetLifeTime(10);
 	particle_->GetParticleSystem()->SetColor({ 0.3f, 0.03f, 0.0f, 1.0f });
+ 
+	std::ostringstream oss;
+	oss << "particle model ptr=" << particle_->GetParticleSystem()->GetInstancedModel_().get() << " use_count=" << particle_->GetParticleSystem()->GetInstancedModel_().use_count() << "\n";
+	OutputDebugStringA(oss.str().c_str());
 
 	explosionParticle_ = std::make_unique<Entity>();
 	explosionParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
 	explosionParticle_->GetParticleSystem()->SetLifeTime(10);
 	explosionParticle_->GetParticleSystem()->SetColor({ 0.7f, 0.03f, 0.0f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
-	particleField_->SetUseArea(false);
+	particleField_->SetCheckArea(false);
 
 	lightIndex_ = context_->AddPointLight();
 	auto& light = context_->GetPointLight(lightIndex_);

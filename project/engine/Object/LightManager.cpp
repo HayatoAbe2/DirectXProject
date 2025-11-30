@@ -41,7 +41,7 @@ void LightManager::Update() {
 }
 
 void LightManager::DrawImGui() {
-#ifdef USEIMGUI
+#ifdef USE_IMGUI
 
 	if (ImGui::CollapsingHeader("DirectionalLight")) {
 		Vector3 dlDir = directionalLightData_.direction;

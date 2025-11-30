@@ -3,6 +3,10 @@
 #include "Camera.h"
 #include <numbers>
 
+Item::~Item() {
+	context_->RemovePointLight(lightIndex_);
+}
+
 Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context) {
 	rangedWeapon_ = std::move(rangedWeapon);
 	rangedWeapon_->GetWeaponModel()->SetTranslate(pos);
