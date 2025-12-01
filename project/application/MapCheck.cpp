@@ -147,7 +147,9 @@ bool MapCheck::IsHitWall(const Vector2& pos, float radius) {
     return false;
 }
 
-bool MapCheck::IsGoal(const Vector2& pos, float radius) {
+bool MapCheck::IsGoal(const Vector2& pos, float radius,bool canGoal) {
+    if (!canGoal) { return false; }
+
     int mapH = static_cast<int>(map_.size());
     int mapW = static_cast<int>(map_[0].size());
 

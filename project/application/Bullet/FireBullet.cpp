@@ -28,7 +28,7 @@ void FireBullet::Initialize(GameContext* context) {
 
 	lightIndex_ = context_->AddPointLight();
 	auto& light = context_->GetPointLight(lightIndex_);
-	light.radius = 1.0f;
+	light.radius = 1.5f;
 }
 
 void FireBullet::Update(MapCheck* mapCheck) {

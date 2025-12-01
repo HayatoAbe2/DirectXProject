@@ -31,6 +31,10 @@ void BulletManager::Draw(GameContext* context, Camera* camera) {
 	}
 }
 
+void BulletManager::Reset() {
+	bullets_.clear();
+}
+
 void BulletManager::AddBullet(std::unique_ptr<Bullet> newBullet) {
 	bullets_.push_back(std::move(newBullet));
 }

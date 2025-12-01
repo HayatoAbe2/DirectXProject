@@ -72,20 +72,33 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				target_ = nullptr;
 				searchRadius_ = defaultSearchRadius_;
 			}
+
+
+			if (attackCoolTimer_ <= 0) {
+				// 射撃
+				attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
+			} else {
+				attackCoolTimer_--;
+			}
 		}
 
-		if (attackCoolTimer_ <= 0) {
-			// 射撃
-			if (target_) {
-				attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
+		// 攻撃前警告
+		if (attackCoolTimer_ <= attackMotionStart_) {
+			float sizeEase;
+			if (attackCoolTimer_ < attackMotionStart_ / 2) {
+				float t = (1 - float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_)) * 2;
+				sizeEase = EaseIn(1, 1.7f, t);
+			} else {
+				float t = float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_) * 2;
+				sizeEase = EaseIn(1, 1.7f, t);
 			}
-		} else {
-			attackCoolTimer_--;
+			model_->SetScale({ sizeEase,sizeEase,sizeEase });
 		}
 	} else {
 		stunTimer_--;
 
 		// ノックバック
+		model_->SetScale({ 1,1,1 });
 		model_->SetTranslate(model_->GetTransform().translate + velocity_);
 		float length = Length(velocity_);
 		length -= 0.05f;
@@ -127,4 +140,13 @@ void Enemy::Hit(int damage, Vector3 from) {
 		data.color = { 1.0f,0.2f,0.2f,1.0f };
 		mesh->GetMaterial()->SetData(data);
 	}
+}
+
+// EaseInBackの数値調整版
+float Enemy::EaseIn(float start, float end, float t) {
+	if (t > 1.0f)t = 1.0f;
+	else if (t < 0.0f)t = 0.0f;
+
+	float easedT = 1.0f - cosf((t * float(std::numbers::pi)) / 2.0f);
+	return (1.0f - easedT) * start + easedT * end;
 }

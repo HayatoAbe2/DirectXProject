@@ -17,6 +17,7 @@ public:
 	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager);
 	void Draw(GameContext* context, Camera* camera);
 	void Spawn(Vector3 pos,GameContext* context,WeaponManager* weaponManager, int enemyType);
+	void Reset();
 
 	std::vector<Enemy*> GetEnemies();
 private:

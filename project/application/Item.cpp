@@ -10,12 +10,13 @@ Item::~Item() {
 Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context) {
 	rangedWeapon_ = std::move(rangedWeapon);
 	rangedWeapon_->GetWeaponModel()->SetTranslate(pos);
-	rangedWeapon_->GetWeaponModel()->SetRotate({ float(std::numbers::pi / 2.0f),0,float(std::numbers::pi / 2.0f) });
+	rangedWeapon_->GetWeaponModel()->SetRotate({ 0,float(std::numbers::pi / 2.0f),0 });
 
 	lightIndex_ = context->AddPointLight();
 	auto& pointLight = context->GetPointLight(lightIndex_);
 	pointLight.position = pos;
 	pointLight.intensity = 1.0f;
+	pointLight.radius = 3.0f;
 
 	context_ = context;
 }

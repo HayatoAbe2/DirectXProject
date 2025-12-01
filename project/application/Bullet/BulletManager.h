@@ -16,6 +16,7 @@ public:
 	void Initialize(EffectManager* effectManager);
 	void Update(MapCheck* mapCheck);
 	void Draw(GameContext* context, Camera* camera);
+	void Reset();
 
 	void AddBullet(std::unique_ptr<Bullet> newBullet);
 	std::vector<Bullet*> GetBullets();

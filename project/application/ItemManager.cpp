@@ -77,14 +77,20 @@ void ItemManager::Interact(Player* player) {
 }
 
 void ItemManager::Spawn(Vector3 pos, int index) {
+	// 設置する
 	auto rangedWeapon = std::move(weaponManager_->GetRangedWeapon(index));
 	auto newItem = std::make_unique<Item>(std::move(rangedWeapon), pos,context_);
 	items_.push_back(std::move(newItem));
 }
 
 void ItemManager::Drop(Vector3 pos, std::unique_ptr<RangedWeapon> weapon) {
+	// アイテムを落とす
 	if (weapon) {
 		auto newItem = std::make_unique<Item>(std::move(weapon), pos, context_);
 		items_.push_back(std::move(newItem));
 	}
+}
+
+void ItemManager::Reset() {
+	items_.clear();
 }

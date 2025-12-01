@@ -34,15 +34,24 @@ void EnemyManager::Draw(GameContext* context, Camera* camera) {
 void EnemyManager::Spawn(Vector3 pos, GameContext* context,WeaponManager* weaponManager,int enemyType) {
 	auto enemyModel = std::make_unique<Entity>();
 	enemyModel->SetTranslate(pos);
-	enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
 
 	std::unique_ptr<RangedWeapon> rangedWeapon;
-	if (enemyType) {
+	switch (enemyType) {
+	case 1:
+		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
+		rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
+		break;
+
+	default:
+		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
 		rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
 	}
-
 	auto newEnemy = std::make_unique<Enemy>(std::move(enemyModel), pos,std::move(rangedWeapon));
 	enemies_.push_back(std::move(newEnemy));
+}
+
+void EnemyManager::Reset() {
+	enemies_.clear();
 }
 
 std::vector<Enemy*> EnemyManager::GetEnemies() {

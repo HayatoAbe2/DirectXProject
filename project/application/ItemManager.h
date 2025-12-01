@@ -18,11 +18,11 @@ public:
 	void Interact(Player* player);
 	void Spawn(Vector3 pos,int index);
 	void Drop(Vector3 pos,std::unique_ptr<RangedWeapon> weapon);
+	void Reset();
 	
 private:
 	GameContext* context_ = nullptr;
 	std::unique_ptr<Entity> control_ = nullptr;
-	std::unique_ptr<Entity> particles_ = nullptr;
 	WeaponManager* weaponManager_ = nullptr;
 	std::vector<std::unique_ptr<Item>> items_;
 	bool canInteract_ = true;

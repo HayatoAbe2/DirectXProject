@@ -31,8 +31,8 @@ public:
 
 	// 終了チェック
 	virtual bool IsFinished() {
-		if (finished_) {
-			finished_ = false;
+		if (isScenefinished_) {
+			isScenefinished_ = false;
 			return true;
 		}
 		return false;
@@ -49,7 +49,7 @@ protected:
 	GameContext* context_ = nullptr;
 
 	// シーンの終了
-	bool finished_ = false;
+	bool isScenefinished_ = false;
 
 	// 次シーン
 	BaseScene* nextScene_ = nullptr;

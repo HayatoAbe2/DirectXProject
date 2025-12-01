@@ -56,7 +56,6 @@ private:
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
 
 	// 射撃クールダウン
-	int attackCoolTime_ = 0;
 	int attackCoolTimer_ = 90;
 
 	// hp
@@ -88,5 +87,9 @@ private:
 	// 行動変更タイマー
 	int actionChangeTimer_ = 0;
 	const int actionChangeInterval_ = 20;
+
+	// 攻撃モーション
+	int attackMotionStart_ = 30;
+	float EaseIn(float start, float end, float t);
 };
 

@@ -18,7 +18,11 @@ int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, Game
 	newBullet->Initialize(context);
 
 	bulletManager->AddBullet(std::move(newBullet));
-	return status_.shootCoolTime;
+	if (isEnemyBullet) {
+		return status_.shootCoolTime * 2;
+	} else {
+		return status_.shootCoolTime;
+	}
 }
 
 void FireBall::Update() {

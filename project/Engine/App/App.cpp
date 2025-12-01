@@ -52,7 +52,6 @@ void App::Initialize() {
 	audio_->Initialize();
 	assert(&audio_);
 	logger_->Log(logger_->GetStream(), std::format("[Audio] Initialization complete.\n"));
-	audio_->SoundLoad(L"Resources/Alarm01.wav");
 	
 	// DirectInputの初期化
 	input_ = new Input(window_->GetInstance(), window_->GetHwnd());
@@ -81,6 +80,10 @@ void App::Initialize() {
 	sceneManager_->Initialize();
 	logger_->Log(logger_->GetStream(), std::format("[SceneManager] Initialization complete.\n"));
 
+
+	// 音声データの読み込み
+	audio_->SoundLoad(L"Resources/Sounds/BGM/field.mp3");
+	audio_->SoundPlay(L"Resources/Sounds/BGM/field.mp3", true);
 }
 
 void App::Run() {
@@ -128,7 +131,8 @@ void App::Finalize() {
 	delete sceneManager_;
 
 	// XAudio終了処理
-	audio_->SoundUnload(L"Resources/Alarm01.wav");
+	audio_->SoundUnload(L"Resources/Sounds/BGM/field.mp3");
+
 
 	audio_->Finalize();
 	delete audio_;

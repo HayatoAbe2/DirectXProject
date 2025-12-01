@@ -46,7 +46,8 @@ void Audio::SoundLoad(const wchar_t* filename) {
 	assert(SUCCEEDED(hr));
 	pMFMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 	pMFMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-	pMFSourceReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pMFMediaType);
+	hr = pMFSourceReader->SetCurrentMediaType(MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pMFMediaType);
+	assert(SUCCEEDED(hr));
 
 	pMFMediaType->Release();
 	pMFMediaType = nullptr;

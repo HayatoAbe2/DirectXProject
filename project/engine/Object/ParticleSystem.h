@@ -22,6 +22,10 @@ public:
 		fields_.push_back(std::move(field));
 	}
 
+    void RemoveField() {
+        fields_.clear();
+    }
+
 private:
     std::vector<Particle> particles_;
     std::shared_ptr<InstancedModel> instancedModel_;

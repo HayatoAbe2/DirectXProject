@@ -37,6 +37,9 @@ public:
 	// 描画
 	void Draw() override;
 
+	// リセット
+	void Reset();
+
 private:
 	// 3Dモデル
 	std::unique_ptr<Entity> playerModel_ = nullptr;
@@ -87,4 +90,7 @@ private:
 	int fadeTimer_ = 0;
 	const int kMaxFadeinTimer_ = 30;
 	const int kMaxFadeoutTimer_ = 60;
+
+	// 階数
+	int currentFloor_ = 1;
 };

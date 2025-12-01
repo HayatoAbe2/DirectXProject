@@ -22,7 +22,7 @@ public:
 	~MapTile();
 	void Initialize(Entity* wall,Entity* floor,Entity* goal, GameContext* context);
 	void LoadCSV(const std::string& filePath);
-	void Update();
+	void Update(bool canGoal);
 	void Draw(Camera* camera);
 
 	std::vector<std::vector<Tile>> GetMap() { return map_; }
@@ -47,7 +47,7 @@ private:
 	const int emitTime_ = 5;
 
 	// ライトのインデックス
-	int lightIndex_ = 0;
+	int lightIndex_ = -1;
 
 	GameContext* context_;
 };

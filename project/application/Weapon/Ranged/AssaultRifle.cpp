@@ -17,7 +17,11 @@ int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, 
 	std::unique_ptr<NormalBullet> newBullet = std::make_unique<NormalBullet>(std::move(bullet), dir, status_, isEnemyBullet);
 	newBullet->Initialize(context);
 	bulletManager->AddBullet(std::move(newBullet));
-	return status_.shootCoolTime;
+	if (isEnemyBullet) {
+		return status_.shootCoolTime * 2;
+	} else {
+		return status_.shootCoolTime;
+	}
 }
 
 void AssaultRifle::Update() {

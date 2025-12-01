@@ -12,7 +12,7 @@ public:
 	void ResolveCollisionX(Vector2& pos, float radius);
 	void ResolveCollisionY(Vector2& pos, float radius);
 	bool IsHitWall(const Vector2& pos, float radius);
-	bool IsGoal(const Vector2& pos, float radius);
+	bool IsGoal(const Vector2& pos, float radius, bool canGoal);
 
 private:	
 	std::vector<std::vector<MapTile::Tile>> map_;
