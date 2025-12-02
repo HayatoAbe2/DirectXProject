@@ -8,9 +8,6 @@ BulletManager::~BulletManager() {
 	bullets_.clear();
 }
 
-void BulletManager::Initialize(EffectManager* effectManager) {
-}
-
 void BulletManager::Update(MapCheck* mapCheck) {
 	for (const auto& bullet : bullets_) {
 			bullet->Update(mapCheck);

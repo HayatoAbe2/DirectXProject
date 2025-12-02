@@ -75,9 +75,9 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 		// 速度をもとに移動
 		Vector2 pos = { transform_.translate.x,transform_.translate.z };
 		pos.x += velocity_.x;
-		mapCheck->ResolveCollisionX(pos, radius_);
+		mapCheck->ResolveCollisionX(pos, radius_,false);
 		pos.y += velocity_.z;
-		mapCheck->ResolveCollisionY(pos, radius_);
+		mapCheck->ResolveCollisionY(pos, radius_,false);
 		transform_.translate.x = pos.x;
 		transform_.translate.z = pos.y;
 
@@ -109,8 +109,8 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 			itemManager_->Interact(this);
 		}
 
+		// 攻撃の向き
 		if (context->IsClickLeft()) {
-			// 攻撃の向き
 			Vector2 win = context->GetWindowSize();
 			Vector2 mouse = context->GetMousePosition();
 			mouse.y = win.y - mouse.y;
@@ -118,11 +118,10 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 			Vector2 dir = Normalize(mouse - win / 2.0f);
 			attackDirection_ = { dir.x,0,dir.y };
 
-
-
-			// 攻撃の向き
+			// プレイヤーの向き
 			transform_.rotate.y = -std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f;
 
+			// 減速
 			if (rangedWeapon_) {
 				moveSpeed_ = defaultMoveSpeed_ * (1.0f - rangedWeapon_->GetStatus().weight);
 			}
@@ -133,11 +132,11 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 		if (rangedWeapon_) {
 			rangedWeapon_->Update();
 			weaponTransform_ = transform_;
-			weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)};
+			weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
 		}
 
+		// 射撃
 		if (shootCoolTime_ <= 0) {
-			// 射撃
 			if (context->IsClickLeft()) {
 				if (rangedWeapon_) {
 					shootCoolTime_ = rangedWeapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context, false);

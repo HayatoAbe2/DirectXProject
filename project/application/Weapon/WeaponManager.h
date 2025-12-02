@@ -16,6 +16,7 @@ public:
 	enum class WEAPON {
 		FireBall,
 		AssaultRifle,
+		Shotgun,
 	};
 private:
 	std::vector<std::shared_ptr<Model>> weaponModels_;

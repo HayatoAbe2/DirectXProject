@@ -244,6 +244,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Object\ParticleField.cpp" />
     <ClCompile Include="application\Bullet\NormalBullet.cpp" />
     <ClCompile Include="application\Weapon\Melee\Sword.cpp" />
+    <ClCompile Include="application\Bullet\SpreadBullet.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\Shotgun.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -372,6 +374,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Bullet\FireBullet.h" />
     <ClInclude Include="application\Bullet\NormalBullet.h" />
     <ClInclude Include="application\Weapon\Melee\Sword.h" />
+    <ClInclude Include="application\Bullet\SpreadBullet.h" />
+    <ClInclude Include="application\Weapon\Ranged\Shotgun.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

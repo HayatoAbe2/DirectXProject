@@ -9,9 +9,10 @@ class Player;
 class MapCheck {
 public:
 	void Initialize(std::vector<std::vector<MapTile::Tile>> map, float tileSize);
-	void ResolveCollisionX(Vector2& pos, float radius);
-	void ResolveCollisionY(Vector2& pos, float radius);
+	void ResolveCollisionX(Vector2& pos, float radius, bool isFlying);
+	void ResolveCollisionY(Vector2& pos, float radius, bool isFlying);
 	bool IsHitWall(const Vector2& pos, float radius);
+	bool IsFall(const Vector2& pos, float radius);
 	bool IsGoal(const Vector2& pos, float radius, bool canGoal);
 
 private:	

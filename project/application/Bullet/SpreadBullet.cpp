@@ -1,23 +1,25 @@
-#include "NormalBullet.h"
+#include "SpreadBullet.h"
 #include "GameContext.h"
 #include "MapCheck.h"
 
-void NormalBullet::Initialize(GameContext* context) {
+void SpreadBullet::Initialize(GameContext* context) {
 	context_ = context;
 	particle_ = std::make_unique<Entity>();
 	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
 	particle_->GetParticleSystem()->SetLifeTime(2);
-	particle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
+	particle_->GetParticleSystem()->SetColor({ 0.8f, 0.2f, 0.2f, 1.0f });
 
 	hitParticle_ = std::make_unique<Entity>();
 	hitParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", hitParticleNum_));
 	hitParticle_->GetParticleSystem()->SetLifeTime(hitParticleLifeTime);
-	hitParticle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
+	hitParticle_->GetParticleSystem()->SetColor({ 0.6f, 0.1f, 0.1f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
+
+	maxDamage_ = status_.damage;
 }
 
-void NormalBullet::Update(MapCheck* mapCheck) {
+void SpreadBullet::Update(MapCheck* mapCheck) {
 	if (!isDead_) {
 		model_->SetTranslate(model_->GetTransform().translate + velocity_);
 
@@ -28,6 +30,8 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 		if (lifeTime_ <= 0) {
 			canErase_ = true;
 		}
+
+		status_.damage = int(float(maxDamage_) * (float(lifeTime_) / float(status_.bulletLifeTime)));
 
 		if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
 			Hit();
@@ -57,7 +61,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 	}
 }
 
-void NormalBullet::Draw(GameContext* context, Camera* camera) {
+void SpreadBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
 		context->DrawEntity(*model_, *camera, BlendMode::Add);
 	}
@@ -67,7 +71,7 @@ void NormalBullet::Draw(GameContext* context, Camera* camera) {
 	context->DrawEntity(*hitParticle_, *camera, BlendMode::Add);
 }
 
-void NormalBullet::Hit() {
+void SpreadBullet::Hit() {
 	isDead_ = true;
 
 	// 飛散パーティクル

@@ -31,10 +31,12 @@ public:
 	void Draw(GameContext* context, Camera* camera);
 
 	void Hit(int damage,Vector3 from);
+	void Fall();
 
 	Transform GetTransform() const { return model_->GetTransform(); }
 	float GetRadius() const { return radius_; }
 	bool IsDead() { return isDead_; }
+	bool IsStunning() { return stunTimer_ > 0; }
 
 private:
 	// 半径
@@ -83,6 +85,9 @@ private:
 
 	// スタン時間
 	int stunTimer_ = 0;
+
+	// 落下
+	bool isFall_ = false;
 
 	// 行動変更タイマー
 	int actionChangeTimer_ = 0;

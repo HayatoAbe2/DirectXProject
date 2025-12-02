@@ -5,9 +5,6 @@
 #include "Camera.h"
 #include <sstream>
 
-FireBullet::~FireBullet() {
-}
-
 void FireBullet::Initialize(GameContext* context) {
 	context_ = context;
 	particle_ = std::make_unique<Entity>();
@@ -38,8 +35,8 @@ void FireBullet::Update(MapCheck* mapCheck) {
 		// マップ当たり判定
 		Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
 
-		maxLifeTime_--;
-		if (maxLifeTime_ <= 0) {
+		lifeTime_--;
+		if (lifeTime_ <= 0) {
 			canErase_ = true;
 		}
 

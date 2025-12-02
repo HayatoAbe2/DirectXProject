@@ -1,0 +1,35 @@
+#include "Shotgun.h"
+#include "Bullet.h"
+#include "BulletManager.h"
+#include "GameContext.h"
+#include "Entity.h"
+#include "SpreadBullet.h"
+#include "numbers"
+
+Shotgun::Shotgun(const RangedWeaponStatus& status, std::unique_ptr<Entity> model) {
+	status_ = status;
+	model_ = std::move(model);
+}
+
+int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+	for (int i = -2; i <= 2; ++i) {
+		auto bullet = std::make_unique<Entity>();
+		bullet->SetTranslate(pos);
+		bullet->SetModel(status_.bulletModel);
+
+		Vector3 rotatedDir = TransformVector(dir, MakeRotateYMatrix(float(std::numbers::pi) / 7.0f * i));
+		std::unique_ptr<SpreadBullet> newBullet = std::make_unique<SpreadBullet>(std::move(bullet), rotatedDir, status_, isEnemyBullet);
+		newBullet->Initialize(context);
+		bulletManager->AddBullet(std::move(newBullet));
+	}
+
+	if (isEnemyBullet) {
+		return status_.shootCoolTime * 2;
+	} else {
+		return status_.shootCoolTime;
+	}
+}
+
+void Shotgun::Update() {
+}
+

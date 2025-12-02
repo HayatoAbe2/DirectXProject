@@ -53,7 +53,6 @@ void GameScene::Initialize() {
 	goal_ = std::make_unique<Entity>();
 	goal_->SetModel(context_->LoadModel("Resources/Tiles", "sphere.obj"));
 
-
 	mapTile_ = new MapTile();
 	mapTile_->Initialize(wall_.get(), floor_.get(),goal_.get(),context_);
 
@@ -82,8 +81,7 @@ void GameScene::Initialize() {
 
 	// 弾
 	bulletManager_ = new BulletManager();
-	bulletManager_->Initialize(effectManager_);
-
+	
 	// 天球
 	skydome_ = std::make_unique<Entity>();
 	skydome_->SetModel(context_->LoadModel("Resources/Skydome", "skydome.obj", false));
@@ -212,7 +210,7 @@ void GameScene::Reset() {
 		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
 		enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
 		enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
-		itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::FireBall));
+		itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::Shotgun));
 		itemManager_->Spawn({ 24,0,18 }, int(WeaponManager::WEAPON::AssaultRifle));
 		break;
 

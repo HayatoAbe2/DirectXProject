@@ -32,7 +32,7 @@ protected:
 	RangedWeaponStatus status_;
 
 	// 生存時間
-	int maxLifeTime_ = 0;
+	int lifeTime_ = 0;
 
 	// 敵の弾フラグ
 	bool isEnemyBullet_ = false;

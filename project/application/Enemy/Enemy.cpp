@@ -23,95 +23,107 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 		mesh->GetMaterial()->SetData(data);
 	}
 
-	if (stunTimer_ <= 0) {
-		// 移動
-		if (target_) {
-			actionChangeTimer_++;
-			if (actionChangeTimer_ > actionChangeInterval_) {
+	if (!isFall_) {
+
+		if (stunTimer_ <= 0) {
+			// 移動
+			if (target_) {
+				actionChangeTimer_++;
+				if (actionChangeTimer_ > actionChangeInterval_) {
+					actionChangeTimer_ = 0;
+
+					Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
+					velocity_.x = direction.x * moveSpeed_;
+					velocity_.z = direction.y * moveSpeed_;
+				}
+			} else {
 				actionChangeTimer_ = 0;
+				velocity_ = { 0,0,0 };
+			}
 
-				Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
-				velocity_.x = direction.x * moveSpeed_;
-				velocity_.z = direction.y * moveSpeed_;
+			// 速度をもとに移動
+			Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
+			pos.x += velocity_.x;
+			mapCheck->ResolveCollisionX(pos, radius_, false);
+			pos.y += velocity_.z;
+			mapCheck->ResolveCollisionY(pos, radius_, false);
+			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
+
+			if (velocity_.x != 0 || velocity_.z != 0) {
+				model_->SetRotate({ 0,-std::atan2(velocity_.z, velocity_.x) + float(std::numbers::pi) / 2.0f,0 });
+			}
+
+			// ターゲット発見
+			if (Length(player->GetTransform().translate - model_->GetTransform().translate) < searchRadius_) {
+				target_ = player;
+				loseSightTimer_ = 0;
+			} else {
+				// 見失う
+				loseSightTimer_++;
+				if (loseSightTimer_ > loseSightTime_) {
+					target_ = nullptr;
+				}
+			}
+
+			if (target_) {
+				// 攻撃の向き
+				attackDirection_ = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
+				model_->SetRotate({ 0,-std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f,0 });
+
+				if (loseSightRadius_ < Length(target_->GetTransform().translate - model_->GetTransform().translate)) {
+					target_ = nullptr;
+					searchRadius_ = defaultSearchRadius_;
+				}
+
+
+				if (attackCoolTimer_ <= 0) {
+					// 射撃
+					attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
+				} else {
+					attackCoolTimer_--;
+				}
+			}
+
+			// 攻撃前警告
+			if (attackCoolTimer_ <= attackMotionStart_) {
+				float sizeEase;
+				if (attackCoolTimer_ < attackMotionStart_ / 2) {
+					float t = (1 - float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_)) * 2;
+					sizeEase = EaseIn(1, 1.7f, t);
+				} else {
+					float t = float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_) * 2;
+					sizeEase = EaseIn(1, 1.7f, t);
+				}
+				model_->SetScale({ sizeEase,sizeEase,sizeEase });
 			}
 		} else {
-			actionChangeTimer_ = 0;
-			velocity_ = { 0,0,0 };
-		}
+			stunTimer_--;
 
-		// 速度をもとに移動
-		Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
-		pos.x += velocity_.x;
-		mapCheck->ResolveCollisionX(pos, radius_);
-		pos.y += velocity_.z;
-		mapCheck->ResolveCollisionY(pos, radius_);
-		model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
+			// ノックバック
+			model_->SetScale({ 1,1,1 });
+			model_->SetTranslate(model_->GetTransform().translate + velocity_);
+			float length = Length(velocity_);
+			length -= 0.05f;
+			if (length < 0) { length = 0; }
+			velocity_ = Normalize(velocity_) * length;
 
-		if (velocity_.x != 0 || velocity_.z != 0) {
-			model_->SetRotate({ 0,-std::atan2(velocity_.z, velocity_.x) + float(std::numbers::pi) / 2.0f,0 });
-		}
+			// 速度をもとに移動
+			Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
+			pos.x += velocity_.x;
+			mapCheck->ResolveCollisionX(pos, radius_, true);
+			pos.y += velocity_.z;
+			mapCheck->ResolveCollisionY(pos, radius_, true);
 
-		// ターゲット発見
-		if (Length(player->GetTransform().translate - model_->GetTransform().translate) < searchRadius_) {
-			target_ = player;
-			loseSightTimer_ = 0;
-		} else {
-			// 見失う
-			loseSightTimer_++;
-			if (loseSightTimer_ > loseSightTime_) {
-				target_ = nullptr;
-			}
-		}
-
-		if (target_) {
-			// 攻撃の向き
-			attackDirection_ = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
-			model_->SetRotate({ 0,-std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f,0 });
-
-			if (loseSightRadius_ < Length(target_->GetTransform().translate - model_->GetTransform().translate)) {
-				target_ = nullptr;
-				searchRadius_ = defaultSearchRadius_;
-			}
-
-
-			if (attackCoolTimer_ <= 0) {
-				// 射撃
-				attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
-			} else {
-				attackCoolTimer_--;
-			}
-		}
-
-		// 攻撃前警告
-		if (attackCoolTimer_ <= attackMotionStart_) {
-			float sizeEase;
-			if (attackCoolTimer_ < attackMotionStart_ / 2) {
-				float t = (1 - float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_)) * 2;
-				sizeEase = EaseIn(1, 1.7f, t);
-			} else {
-				float t = float(attackMotionStart_ - attackCoolTimer_) / float(attackMotionStart_) * 2;
-				sizeEase = EaseIn(1, 1.7f, t);
-			}
-			model_->SetScale({ sizeEase,sizeEase,sizeEase });
+			isFall_ = mapCheck->IsFall(pos, radius_);
+			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 		}
 	} else {
-		stunTimer_--;
-
-		// ノックバック
-		model_->SetScale({ 1,1,1 });
-		model_->SetTranslate(model_->GetTransform().translate + velocity_);
-		float length = Length(velocity_);
-		length -= 0.05f;
-		if (length < 0) { length = 0; }
-		velocity_ = Normalize(velocity_) * length;
-
-		// 速度をもとに移動
-		Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
-		pos.x += velocity_.x;
-		mapCheck->ResolveCollisionX(pos, radius_);
-		pos.y += velocity_.z;
-		mapCheck->ResolveCollisionY(pos, radius_);
-		model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
+		// 落下
+		model_->SetTranslate(model_->GetTransform().translate - Vector3{ 0,-0.2f,0 });
+		model_->SetScale(model_->GetTransform().scale * 0.99f);
+		if (model_->GetTransform().scale.x <= 0.05f) {
+			isDead_ = true;
+		}
 	}
 }
 
@@ -140,6 +152,10 @@ void Enemy::Hit(int damage, Vector3 from) {
 		data.color = { 1.0f,0.2f,0.2f,1.0f };
 		mesh->GetMaterial()->SetData(data);
 	}
+}
+
+void Enemy::Fall() {
+
 }
 
 // EaseInBackの数値調整版

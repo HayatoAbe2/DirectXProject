@@ -4,6 +4,7 @@
 #include "RangedWeapon.h"
 #include "FireBall.h"
 #include "AssaultRifle.h"
+#include "Shotgun.h"
 
 void WeaponManager::Initilaize(GameContext* context) {
 	context_ = context;
@@ -12,11 +13,13 @@ void WeaponManager::Initilaize(GameContext* context) {
 #pragma region weapons
 	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "pistol.obj"));
 	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "assaultRifle.obj"));
+	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "pistol.obj"));
 #pragma endregion
 
 	// 弾のモデル読み込み
 #pragma region bullets
 	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "fireBall.obj"));
+	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
 	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
 #pragma endregion
 
@@ -27,7 +30,7 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 	RangedWeaponStatus status;
 
 	switch (index) {
-	case 0:
+		case int(WEAPON::FireBall) :
 		status.damage = 8;
 		status.weight = 0.2f;
 		status.bulletSize = 1.2f;
@@ -39,16 +42,28 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		return std::make_unique<FireBall>(status, std::move(model),context_);
 		break;
 
-	default:
+		case int(WEAPON::AssaultRifle) :
 		status.damage = 2;
 		status.weight = 0.4f;
-		status.bulletSize = 0.4f;
+		status.bulletSize = 0.3f;
 		status.bulletSpeed = 1.0f;
 		status.shootCoolTime = 6;
 		status.bulletLifeTime = 120;
 		status.bulletModel = bulletModels_[int(WEAPON::AssaultRifle)];
 		model->SetModel(weaponModels_[int(WEAPON::AssaultRifle)]);
 		return std::make_unique<AssaultRifle>(status, std::move(model));
+		break;
+
+	default:
+		status.damage = 3;
+		status.weight = 0.3f;
+		status.bulletSize = 0.4f;
+		status.bulletSpeed = 0.75f;
+		status.shootCoolTime = 40;
+		status.bulletLifeTime = 8;
+		status.bulletModel = bulletModels_[int(WEAPON::Shotgun)];
+		model->SetModel(weaponModels_[int(WEAPON::Shotgun)]);
+		return std::make_unique<Shotgun>(status, std::move(model));
 		break;
 	}
 }
