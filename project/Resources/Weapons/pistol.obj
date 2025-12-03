@@ -1,6 +1,6 @@
 # Blender 4.4.0
 # www.blender.org
-mtllib pistol.mtl
+mtllib Pistol.mtl
 o 立方体.001
 v -0.052662 -0.239576 -0.132954
 v -0.052662 0.079740 -0.063380

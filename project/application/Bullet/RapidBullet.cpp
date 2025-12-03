@@ -1,23 +1,23 @@
-#include "NormalBullet.h"
+#include "RapidBullet.h"
 #include "GameContext.h"
 #include "MapCheck.h"
 
-void NormalBullet::Initialize(GameContext* context) {
+void RapidBullet::Initialize(GameContext* context) {
 	context_ = context;
 	particle_ = std::make_unique<Entity>();
 	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
 	particle_->GetParticleSystem()->SetLifeTime(2);
-	particle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
+	particle_->GetParticleSystem()->SetColor({ 0.0f, 0.1f, 0.8f, 1.0f });
 
 	hitParticle_ = std::make_unique<Entity>();
 	hitParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", hitParticleNum_));
 	hitParticle_->GetParticleSystem()->SetLifeTime(hitParticleLifeTime);
-	hitParticle_->GetParticleSystem()->SetColor({ 0.5f, 0.7f, 0.0f, 1.0f });
+	hitParticle_->GetParticleSystem()->SetColor({ 0.2f, 0.1f, 1.0f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
 }
 
-void NormalBullet::Update(MapCheck* mapCheck) {
+void RapidBullet::Update(MapCheck* mapCheck) {
 	if (!isDead_) {
 		prePos_ = model_->GetTransform().translate;
 		model_->SetTranslate(model_->GetTransform().translate + velocity_);
@@ -58,7 +58,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 	}
 }
 
-void NormalBullet::Draw(GameContext* context, Camera* camera) {
+void RapidBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
 		//context->DrawEntity(*model_, *camera, BlendMode::Add);
 	}
@@ -68,7 +68,7 @@ void NormalBullet::Draw(GameContext* context, Camera* camera) {
 	context->DrawEntity(*hitParticle_, *camera, BlendMode::Add);
 }
 
-void NormalBullet::Hit() {
+void RapidBullet::Hit() {
 	isDead_ = true;
 
 	// 飛散パーティクル

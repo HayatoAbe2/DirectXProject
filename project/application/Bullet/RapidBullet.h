@@ -2,9 +2,9 @@
 #include "Bullet.h"
 #include "ParticleSystem.h"
 
-class SpreadBullet :public Bullet {
+class RapidBullet :public Bullet {
 public:
-	SpreadBullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
+	RapidBullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {
 	};
 	void Initialize(GameContext* context);
@@ -26,4 +26,3 @@ private:
 
 	std::unique_ptr<ParticleField> particleField_;
 };
-

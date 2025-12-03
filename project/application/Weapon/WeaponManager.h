@@ -17,6 +17,7 @@ public:
 		FireBall,
 		AssaultRifle,
 		Shotgun,
+		Pistol,
 	};
 private:
 	std::vector<std::shared_ptr<Model>> weaponModels_;

@@ -3,25 +3,28 @@
 #include "Enemy.h"
 #include "MathUtils.h"
 #include "Bullet.h"
+#include "Camera.h"
 
-void CollisionChecker::Check(Player* player, Bullet* bullet) {
+void CollisionChecker::Check(Player* player, Bullet* bullet,Camera* camera) {
 	// 敵の弾でなかったら判定しない
 	if (!bullet->IsEnemyBullet() || bullet->IsDead()) { return; }
 	
 	if (Length(player->GetTransform().translate - bullet->GetTransform().translate) <=
 		player->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
-		player->Hit(bullet->GetDamage(),bullet->GetTransform().translate);
+		player->Hit(bullet->GetDamage(), bullet->GetPrePos());
 		bullet->Hit();
+		camera->StartShake(1.0f, 3);
 	}
 }
 
-void CollisionChecker::Check(Enemy* enemy, Bullet* bullet) {
+void CollisionChecker::Check(Enemy* enemy, Bullet* bullet, Camera* camera) {
 	// 敵の弾だったら判定しない
 	if (bullet->IsEnemyBullet() || bullet->IsDead()) { return; }
 
 	if (Length(enemy->GetTransform().translate - bullet->GetTransform().translate) <=
 		enemy->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
-		enemy->Hit(bullet->GetDamage(),bullet->GetTransform().translate);
+		enemy->Hit(bullet->GetDamage(),bullet->GetPrePos());
 		bullet->Hit();
+		camera->StartShake(1.0f, 3);
 	}
 }

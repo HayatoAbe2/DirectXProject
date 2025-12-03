@@ -15,12 +15,11 @@ void SpreadBullet::Initialize(GameContext* context) {
 	hitParticle_->GetParticleSystem()->SetColor({ 0.6f, 0.1f, 0.1f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
-
-	maxDamage_ = status_.damage;
 }
 
 void SpreadBullet::Update(MapCheck* mapCheck) {
 	if (!isDead_) {
+		prePos_ = model_->GetTransform().translate;
 		model_->SetTranslate(model_->GetTransform().translate + velocity_);
 
 		// マップ当たり判定
@@ -30,8 +29,6 @@ void SpreadBullet::Update(MapCheck* mapCheck) {
 		if (lifeTime_ <= 0) {
 			canErase_ = true;
 		}
-
-		status_.damage = int(float(maxDamage_) * (float(lifeTime_) / float(status_.bulletLifeTime)));
 
 		if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
 			Hit();
@@ -63,7 +60,7 @@ void SpreadBullet::Update(MapCheck* mapCheck) {
 
 void SpreadBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
-		context->DrawEntity(*model_, *camera, BlendMode::Add);
+		//context->DrawEntity(*model_, *camera, BlendMode::Add);
 	}
 
 	// パーティクル

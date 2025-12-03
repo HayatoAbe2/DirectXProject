@@ -30,6 +30,7 @@ void FireBullet::Initialize(GameContext* context) {
 
 void FireBullet::Update(MapCheck* mapCheck) {
 	if (!isDead_) {
+		prePos_ = model_->GetTransform().translate;
 		model_->SetTranslate(model_->GetTransform().translate + velocity_);
 
 		// マップ当たり判定
@@ -73,7 +74,7 @@ void FireBullet::Update(MapCheck* mapCheck) {
 
 void FireBullet::Draw(GameContext* context, Camera* camera) {
 	if (isDead_ && !shaked_) {
-		camera->StartShake(1.0f, 3);
+		camera->StartShake(2.0f, 3);
 		shaked_ = true;
 	}
 

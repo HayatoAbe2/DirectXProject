@@ -8,6 +8,10 @@
 #include "ImGuiManager.h"
 #include "Sprite.h"
 #include "ParticleSystem.h"
+#include "AssaultRifle.h"
+#include "Shotgun.h"
+#include "FireBall.h"
+#include "Pistol.h"
 
 #include <numbers>
 #include <cmath>
@@ -27,9 +31,14 @@ void Player::Initialize(Entity* playerModel, GameContext* context) {
 
 	// 操作
 	control_ = std::make_unique<Entity>();
-	control_->SetSprite(context->LoadSprite("Resources/Control/control.png"));
-	control_->GetSprite()->SetSize({ 331,39 });
-	control_->GetSprite()->SetPosition({ 640 - 150,710 - 39 });
+	control_->SetSprite(context->LoadSprite("Resources/Control/leftClick.png"));
+	control_->GetSprite()->SetSize({ 48,65 });
+	control_->GetSprite()->SetPosition({ 640 - 24 + 100,710 - 65 });
+
+	equipment_ = std::make_unique<Entity>();
+	equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentAssaultRifle.png"));
+	equipment_->GetSprite()->SetSize({ 120,120 });
+	equipment_->GetSprite()->SetPosition({ 640 - 60,710 - 160 });
 
 	life_ = std::make_unique<Entity>();
 	life_->SetSprite(context->LoadSprite("Resources/UI/gauge.png"));
@@ -107,6 +116,20 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 		// アイテム取得
 		if (context->IsTrigger(DIK_F)) {
 			itemManager_->Interact(this);
+			if(rangedWeapon_){
+
+                if (rangedWeapon_ && dynamic_cast<AssaultRifle*>(rangedWeapon_.get())) {
+                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentAssaultRifle.png"));
+                } else if (rangedWeapon_ && dynamic_cast<Pistol*>(rangedWeapon_.get())) {
+                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentPistol.png"));
+                } else if (rangedWeapon_ && dynamic_cast<Shotgun*>(rangedWeapon_.get())) {
+                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentShotgun.png"));
+                } else if (rangedWeapon_ && dynamic_cast<FireBall*>(rangedWeapon_.get())) {
+                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentSpellbook.png"));
+                }
+                equipment_->GetSprite()->SetSize({120, 120});
+                equipment_->GetSprite()->SetPosition({640 - 60, 710 - 160});
+			}
 		}
 
 		// 攻撃の向き
@@ -161,6 +184,7 @@ void Player::Draw(GameContext* context, Camera* camera) {
 		rangedWeapon_->GetWeaponModel()->SetTransform(weaponTransform_);
 		context->DrawEntity(*rangedWeapon_->GetWeaponModel(), *camera);
 		context->DrawEntity(*control_, *camera);
+		context->DrawEntity(*equipment_, *camera);
 	}
 
 	life_->GetSprite()->SetTextureRect(0, 0, (float(hp_) / float(maxHp_)) * 290, 68);

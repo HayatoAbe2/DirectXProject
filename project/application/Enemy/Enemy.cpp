@@ -6,14 +6,28 @@
 #include "MapCheck.h"
 #include "Player.h"
 #include "Mesh.h"
+#include "EnemyStatus.h"
 
 #include <numbers>
 #include <cmath>
 
-Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, std::unique_ptr<RangedWeapon> rWeapon) {
+Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std::unique_ptr<RangedWeapon> rWeapon) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
+	status_ = status;
+
 	rangedWeapon_ = std::move(rWeapon);
+}
+
+Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<RangedWeapon>> rWeapons) {
+	model_ = std::move(model);
+	model_->SetTranslate(pos);
+	status_ = status;
+
+	multipleWeapons_ = std::move(rWeapons);
+	rangedWeapon_ = std::move(multipleWeapons_[0]);
+	isBoss_ = true;
+	overheat_ = 8;
 }
 
 void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
@@ -28,25 +42,36 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 		if (stunTimer_ <= 0) {
 			// 移動
 			if (target_) {
-				actionChangeTimer_++;
-				if (actionChangeTimer_ > actionChangeInterval_) {
-					actionChangeTimer_ = 0;
+				if (isMoving_) {
+					moveTimer_++;
+					if (moveTimer_ > status_.moveTime) {
+						moveTimer_ = 0;
+						isMoving_ = false;
+						velocity_ = {};
+					}
+				} else {
+					stopTimer_++;
+					if (stopTimer_ > status_.stopTime) {
+						stopTimer_ = 0;
+						isMoving_ = true;
 
-					Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
-					velocity_.x = direction.x * moveSpeed_;
-					velocity_.z = direction.y * moveSpeed_;
+						Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
+						velocity_.x = direction.x * status_.moveSpeed;
+						velocity_.z = direction.y * status_.moveSpeed;
+					}
 				}
 			} else {
-				actionChangeTimer_ = 0;
+				moveTimer_ = 0;
+				stopTimer_ = 0;
 				velocity_ = { 0,0,0 };
 			}
 
 			// 速度をもとに移動
 			Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
 			pos.x += velocity_.x;
-			mapCheck->ResolveCollisionX(pos, radius_, false);
+			mapCheck->ResolveCollisionX(pos, status_.radius, status_.canFly);
 			pos.y += velocity_.z;
-			mapCheck->ResolveCollisionY(pos, radius_, false);
+			mapCheck->ResolveCollisionY(pos, status_.radius, status_.canFly);
 			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 
 			if (velocity_.x != 0 || velocity_.z != 0) {
@@ -60,7 +85,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 			} else {
 				// 見失う
 				loseSightTimer_++;
-				if (loseSightTimer_ > loseSightTime_) {
+				if (loseSightTimer_ > status_.loseSightTime) {
 					target_ = nullptr;
 				}
 			}
@@ -70,17 +95,42 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				attackDirection_ = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
 				model_->SetRotate({ 0,-std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f,0 });
 
-				if (loseSightRadius_ < Length(target_->GetTransform().translate - model_->GetTransform().translate)) {
+				if (status_.loseSightRadius < Length(target_->GetTransform().translate - model_->GetTransform().translate)) {
 					target_ = nullptr;
-					searchRadius_ = defaultSearchRadius_;
+					searchRadius_ = status_.defaultSearchRadius;
 				}
 
 
 				if (attackCoolTimer_ <= 0) {
 					// 射撃
 					attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
+					overheatCount_++;
 				} else {
 					attackCoolTimer_--;
+
+					// 倍速
+					if (isBoss_) {
+						attackCoolTimer_--;
+
+						weaponChangeTimer_--;
+						if (weaponChangeTimer_ <= 0) {
+							weaponChangeTimer_ = 300;
+							if (weaponNum_ == 0) {
+								multipleWeapons_[0] = std::move(rangedWeapon_);
+								rangedWeapon_ = std::move(multipleWeapons_[1]);
+								weaponNum_ = 1;
+							} else {
+								multipleWeapons_[1] = std::move(rangedWeapon_);
+								rangedWeapon_ = std::move(multipleWeapons_[0]);
+								weaponNum_ = 0;
+							}
+						}
+					}
+				}
+
+				if (overheatCount_ >= overheat_) {
+					overheatCount_ = 0;
+					attackCoolTimer_ = 120;
 				}
 			}
 
@@ -101,7 +151,6 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 
 			// ノックバック
 			model_->SetScale({ 1,1,1 });
-			model_->SetTranslate(model_->GetTransform().translate + velocity_);
 			float length = Length(velocity_);
 			length -= 0.05f;
 			if (length < 0) { length = 0; }
@@ -109,19 +158,20 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 
 			// 速度をもとに移動
 			Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
-			pos.x += velocity_.x;
-			mapCheck->ResolveCollisionX(pos, radius_, true);
-			pos.y += velocity_.z;
-			mapCheck->ResolveCollisionY(pos, radius_, true);
+			for (int i = 0; i < 3; ++i) { // 3回に分ける
+				pos.x += velocity_.x / 3.0f;
+				mapCheck->ResolveCollisionX(pos, status_.radius, true);
+				pos.y += velocity_.z / 3.0f;
+				mapCheck->ResolveCollisionY(pos, status_.radius, true);
+			}
 
-			isFall_ = mapCheck->IsFall(pos, radius_);
+			if (stunTimer_ <= 0 && !status_.canFly) { isFall_ = mapCheck->IsFall(pos, status_.radius); }
 			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 		}
 	} else {
 		// 落下
-		model_->SetTranslate(model_->GetTransform().translate - Vector3{ 0,-0.2f,0 });
-		model_->SetScale(model_->GetTransform().scale * 0.99f);
-		if (model_->GetTransform().scale.x <= 0.05f) {
+		model_->SetTranslate(model_->GetTransform().translate - Vector3{ 0,0.7f,0 });
+		if (model_->GetTransform().translate.y < -10.0f) {
 			isDead_ = true;
 		}
 	}
@@ -132,30 +182,28 @@ void Enemy::Draw(GameContext* context, Camera* camera) {
 }
 
 void Enemy::Hit(int damage, Vector3 from) {
-	hp_ -= damage; 
-	if (hp_ <= 0) { isDead_ = true; }
-	
-	stunTimer_ = 10;
+	status_.hp -= damage;
+	if (status_.hp <= 0) { isDead_ = true; }
 
-	// ノックバック
-	velocity_ = Normalize(model_->GetTransform().translate - from) * 0.3f;
+	if (!isBoss_) {
+		// 行動不能
+		stunTimer_ = 10;
 
+		// ノックバック
+		velocity_ = Normalize(model_->GetTransform().translate - from) * 0.3f;
+	}
 
 	// 強制的に発見
 	if (target_ == nullptr) {
 		searchRadius_ *= 10.0f;
 	}
-	
+
 	// ダメージを受けたら赤くする
 	for (auto& mesh : model_->GetModel()->GetMeshes()) {
 		auto data = mesh->GetMaterial()->GetData();
 		data.color = { 1.0f,0.2f,0.2f,1.0f };
 		mesh->GetMaterial()->SetData(data);
 	}
-}
-
-void Enemy::Fall() {
-
 }
 
 // EaseInBackの数値調整版

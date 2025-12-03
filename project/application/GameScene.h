@@ -89,7 +89,7 @@ private:
 	bool isFadeOut_ = false;
 	int fadeTimer_ = 0;
 	const int kMaxFadeinTimer_ = 30;
-	const int kMaxFadeoutTimer_ = 60;
+	const int kMaxFadeoutTimer_ = 40;
 
 	// 階数
 	int currentFloor_ = 1;

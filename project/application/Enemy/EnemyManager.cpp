@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "WeaponManager.h"
 #include "BulletManager.h"
+#include "EnemyStatus.h"
 
 void EnemyManager::Initialize(GameContext* context) {
 }
@@ -36,18 +37,73 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context,WeaponManager* weapon
 	enemyModel->SetTranslate(pos);
 
 	std::unique_ptr<RangedWeapon> rangedWeapon;
+	std::vector<std::unique_ptr<RangedWeapon>> rangedWeapons;
+	EnemyStatus status;
 	switch (enemyType) {
 	case 1:
 		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
 		rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
+		status.hp = 10;
+		status.radius = 0.5f;
+		status.moveSpeed = 0.15f;
+		status.defaultSearchRadius = 8.0f;
+		status.loseSightRadius = 30.0f;
+		status.loseSightTime = 180;
+		status.moveTime = 60;
+		status.stopTime = 5;
+		status.canFly = true;
 		break;
 
+	case 2:
+		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight.obj"));
+		rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle));
+		status.hp = 20;
+		status.radius = 0.75f;
+		status.moveSpeed = 0.07f;
+		status.defaultSearchRadius = 12.0f;
+		status.loseSightRadius = 20.0f;
+		status.loseSightTime = 300;
+		status.moveTime = 60;
+		status.stopTime = 60;
+		status.canFly = false;
+		break;
+
+	case 3:
+		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight.obj"));
+		rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
+		rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
+		status.hp = 100;
+		status.radius = 0.75f;
+		status.moveSpeed = 0.07f;
+		status.defaultSearchRadius = 12.0f;
+		status.loseSightRadius = 20.0f;
+		status.loseSightTime = 300;
+		status.moveTime = 60;
+		status.stopTime = 60;
+		status.canFly = false;
+		break;
+	
 	default:
 		enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
 		rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
+		status.hp = 10;
+		status.radius = 0.5f;
+		status.moveSpeed = 0.15f;
+		status.defaultSearchRadius = 8.0f;
+		status.loseSightRadius = 30.0f;
+		status.loseSightTime = 180;
+		status.moveTime = 60;
+		status.stopTime = 5;
+		status.canFly = true;
+		break;
 	}
-	auto newEnemy = std::make_unique<Enemy>(std::move(enemyModel), pos,std::move(rangedWeapon));
-	enemies_.push_back(std::move(newEnemy));
+	if (rangedWeapons.empty()) {
+		auto newEnemy = std::make_unique<Enemy>(std::move(enemyModel), pos, status, std::move(rangedWeapon));
+		enemies_.push_back(std::move(newEnemy));
+	} else {
+		auto newEnemy = std::make_unique<Enemy>(std::move(enemyModel), pos, status, std::move(rangedWeapons));
+		enemies_.push_back(std::move(newEnemy));
+	}
 }
 
 void EnemyManager::Reset() {

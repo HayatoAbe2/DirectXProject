@@ -5,6 +5,7 @@
 #include <MathUtils.h>
 #include <vector>
 #include <memory>
+#include "EnemyStatus.h"
 
 class GameContext;
 class MapCheck;
@@ -14,7 +15,9 @@ class BulletManager;
 
 class Enemy {
 public:
-	Enemy(std::unique_ptr<Entity> model,Vector3 pos,std::unique_ptr<RangedWeapon> rWeapon);
+	Enemy(std::unique_ptr<Entity> model,Vector3 pos,EnemyStatus status,std::unique_ptr<RangedWeapon> rWeapon);
+	// ボス敵
+	Enemy(std::unique_ptr<Entity> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<RangedWeapon>> rWeapons);
 
 
 	/// <summary>
@@ -31,19 +34,18 @@ public:
 	void Draw(GameContext* context, Camera* camera);
 
 	void Hit(int damage,Vector3 from);
-	void Fall();
 
 	Transform GetTransform() const { return model_->GetTransform(); }
-	float GetRadius() const { return radius_; }
+	float GetRadius() const { return status_.radius; }
 	bool IsDead() { return isDead_; }
-	bool IsStunning() { return stunTimer_ > 0; }
+	bool IsBoss() { return isBoss_; }
 
 private:
-	// 半径
-	float radius_ = 0.5f;
+	// ボス?
+	bool isBoss_ = false;
 
-	// 移動の速さ
-	float moveSpeed_ = 0.1f;
+	// 敵別ステータス
+	EnemyStatus status_;
 
 	// 移動
 	Vector3 velocity_{};
@@ -56,28 +58,20 @@ private:
 
 	// 武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
+	std::vector<std::unique_ptr<RangedWeapon>> multipleWeapons_; // 複数ある場合
+	int weaponChangeTimer_ = 300;
+	int weaponNum_ = 0;
 
 	// 射撃クールダウン
 	int attackCoolTimer_ = 90;
 
-	// hp
-	int hp_ = 10;
-
-	// 弾速
-	float bulletSpeed_ = 0.1f;
-
 	// プレイヤー
 	Player* target_ = nullptr;
 
-	// 検知範囲
+	// 発見範囲
 	float searchRadius_ = 8.0f;
-	float defaultSearchRadius_ = 8.0f;
-
-	// 見失い距離
-	float loseSightRadius_ = 15.0f;
 
 	// 見失いカウント
-	int loseSightTime_ = 120;
 	int loseSightTimer_ = 0;
 
 	// 死亡フラグ
@@ -90,11 +84,15 @@ private:
 	bool isFall_ = false;
 
 	// 行動変更タイマー
-	int actionChangeTimer_ = 0;
-	const int actionChangeInterval_ = 20;
+	int moveTimer_ = 0;
+	int stopTimer_ = 0;
+	bool isMoving_ = false;
 
 	// 攻撃モーション
 	int attackMotionStart_ = 30;
 	float EaseIn(float start, float end, float t);
+
+	int overheatCount_ = 0;
+	int overheat_ = 4;
 };
 

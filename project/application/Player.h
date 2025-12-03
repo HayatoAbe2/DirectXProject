@@ -51,6 +51,7 @@ public:
 private:
 	// 操作説明
 	std::unique_ptr<Entity> control_ = nullptr;
+	std::unique_ptr<Entity> equipment_ = nullptr;
 	std::unique_ptr<Entity> life_ = nullptr;
 
 	// トランスフォーム

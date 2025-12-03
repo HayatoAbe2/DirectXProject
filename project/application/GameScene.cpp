@@ -131,10 +131,10 @@ void GameScene::Update() {
 	for (const auto& bullet : bulletManager_->GetBullets()) {
 
 		// 当たり判定
-		collisionChecker_->Check(player_, bullet);
+		collisionChecker_->Check(player_, bullet,camera_);
 
 		for (auto enemy : enemyManager_->GetEnemies()) {
-			collisionChecker_->Check(enemy, bullet);
+			collisionChecker_->Check(enemy, bullet,camera_);
 		}
 	}
 
@@ -146,7 +146,7 @@ void GameScene::Update() {
 		fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
 		if (fadeTimer_ >= kMaxFadeinTimer_) {
 			isFadeIn_ = false;
-			fadeTimer_ = kMaxFadeoutTimer_;
+			fadeTimer_ = 0;
 		}
 	} else if (isFadeOut_) {
 		fadeTimer_++;
@@ -154,11 +154,11 @@ void GameScene::Update() {
 		if (fadeTimer_ >= kMaxFadeoutTimer_) {
 			isFadeOut_ = false;
 
-			if (player_->IsDead() || currentFloor_ == 2) {
+			if (player_->IsDead() || currentFloor_ == 3) {
 				// ゲームオーバーまたはクリア
 				isScenefinished_ = true;
 			} else {
-				fadeTimer_ = kMaxFadeinTimer_;
+				fadeTimer_ = 0;
 				isFadeIn_ = true;
 				// 次のフロア
 				currentFloor_++;
@@ -202,16 +202,15 @@ void GameScene::Reset() {
 		mapTile_->LoadCSV("Resources/MapData/Floor1.csv");
 
 		// プレイヤー位置
-		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {0,0,0} });
+		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,3} });
 
 		// その階の敵とアイテム
 		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
 		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
-		itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::Shotgun));
-		itemManager_->Spawn({ 24,0,18 }, int(WeaponManager::WEAPON::AssaultRifle));
+		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 2);
+		enemyManager_->Spawn({ 3,0,18 }, context_, weaponManager_, 1);
+		itemManager_->Spawn({ 10,0,5 }, int(WeaponManager::WEAPON::Pistol));
+		itemManager_->Spawn({ 26,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
 		break;
 
 	case 2:
@@ -219,16 +218,27 @@ void GameScene::Reset() {
 		mapTile_->LoadCSV("Resources/MapData/Floor2.csv");
 
 		// プレイヤー位置
-		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {0,0,0} });
+		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,27} });
 
 		// その階の敵とアイテム
 		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
 		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 17,0,25 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 1,0,18 }, context_, weaponManager_, 1);
-		itemManager_->Spawn({ 3,0,3 }, int(WeaponManager::WEAPON::FireBall));
-		itemManager_->Spawn({ 24,0,18 }, int(WeaponManager::WEAPON::AssaultRifle));
+		enemyManager_->Spawn({ 12,0,21 }, context_, weaponManager_, 2);
+		enemyManager_->Spawn({ 24,0,25 }, context_, weaponManager_, 2);
+		enemyManager_->Spawn({ 4,0,18 }, context_, weaponManager_, 2);
+		itemManager_->Spawn({ 27,0,20 }, int(WeaponManager::WEAPON::Shotgun));
+		itemManager_->Spawn({ 26,0,5 }, int(WeaponManager::WEAPON::FireBall));
+		break;
+
+	case 3:
+		// マップを再構築
+		mapTile_->LoadCSV("Resources/MapData/Floor3.csv");
+
+		// プレイヤー位置
+		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,3} });
+
+		// その階の敵とアイテム
+		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 3);
 		break;
 	}
 

@@ -214,6 +214,8 @@
     <ClCompile Include="application\Weapon\Melee\Sword.cpp" />
     <ClCompile Include="application\Bullet\SpreadBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Shotgun.cpp" />
+    <ClCompile Include="application\Bullet\RapidBullet.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -450,6 +452,9 @@
     <ClInclude Include="engine\Object\InstanceGPUData.h" />
     <ClInclude Include="application\Bullet\SpreadBullet.h" />
     <ClInclude Include="application\Weapon\Ranged\Shotgun.h" />
+    <ClInclude Include="application\Enemy\EnemyStatus.h" />
+    <ClInclude Include="application\Bullet\RapidBullet.h" />
+    <ClInclude Include="application\Weapon\Ranged\Pistol.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

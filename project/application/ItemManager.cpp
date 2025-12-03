@@ -12,9 +12,9 @@ void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) 
 
 	// 操作
 	control_ = std::make_unique<Entity>();
-	control_->SetSprite(context->LoadSprite("Resources/Control/f.png"));
-	control_->GetSprite()->SetSize({ 30,30 });
-	control_->GetSprite()->SetPosition({ 640 - 15,720 - 450 });
+	control_->SetSprite(context->LoadSprite("Resources/Control/pickup.png"));
+	control_->GetSprite()->SetSize({ 96,39 });
+	control_->GetSprite()->SetPosition({ 640 - 48,720 - 450 });
 }
 
 void ItemManager::Update(Player* player) {

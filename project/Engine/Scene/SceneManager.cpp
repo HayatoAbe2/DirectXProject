@@ -4,6 +4,7 @@
 #include "../Io/Input.h"
 #include "BaseScene.h"
 #include "../../application/GameScene.h"
+#include "../../application/TitleScene.h"
 #include "GameContext.h"
 
 SceneManager::SceneManager(GameContext* context) {
@@ -17,8 +18,8 @@ SceneManager::~SceneManager() {
 }
 
 void SceneManager::Initialize() {
-	currentScene_ = new GameScene();
-	currentSceneType_ = Scene::kGame;
+	currentScene_ = new TitleScene();
+	currentSceneType_ = Scene::kTitle;
 
 	currentScene_->SetGameContext(gameContext_); // 初期化より前
 	currentScene_->Initialize();
@@ -28,12 +29,25 @@ void SceneManager::Update() {
 	if (currentScene_) {
 		currentScene_->Update();
 		if (currentScene_->IsFinished()) {
-			// 現在シーン削除
-			delete currentScene_;
-			currentScene_ = nullptr;
+			if (currentSceneType_ == Scene::kTitle) {
+				// 現在シーン削除
+				delete currentScene_;
 
-			// シーン切り替え
-			Initialize();
+				// シーン切り替え
+				currentScene_ = new GameScene;
+				currentSceneType_ = Scene::kGame;
+			} else if (currentSceneType_ == Scene::kGame) {
+				// 現在シーン削除
+				delete currentScene_;
+
+				// シーン切り替え
+				currentScene_ = new TitleScene;
+				currentSceneType_ = Scene::kTitle;
+			}
+
+			currentScene_->SetGameContext(gameContext_); // 初期化より前
+			currentScene_->Initialize();
+			currentScene_->Update();
 		}
 	}
 }

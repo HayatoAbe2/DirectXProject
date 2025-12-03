@@ -2,6 +2,7 @@
 #include "GameContext.h"
 #include "Camera.h"
 #include <numbers>
+#include "FireBall.h"
 
 Item::~Item() {
 	context_->RemovePointLight(lightIndex_);
@@ -10,7 +11,10 @@ Item::~Item() {
 Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context) {
 	rangedWeapon_ = std::move(rangedWeapon);
 	rangedWeapon_->GetWeaponModel()->SetTranslate(pos);
-	rangedWeapon_->GetWeaponModel()->SetRotate({ 0,float(std::numbers::pi / 2.0f),0 });
+	if (rangedWeapon_ && dynamic_cast<FireBall*>(rangedWeapon_.get())) {
+	} else {
+		rangedWeapon_->GetWeaponModel()->SetRotate({ 0,float(std::numbers::pi / 2.0f),0 });
+	}
 
 	lightIndex_ = context->AddPointLight();
 	auto& pointLight = context->GetPointLight(lightIndex_);

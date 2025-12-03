@@ -1,6 +1,6 @@
 # Blender 4.4.0
 # www.blender.org
-mtllib assaultRifle.mtl
+mtllib AssaultRifle.mtl
 o Cube.013
 v 0.009731 0.176167 0.877887
 v 0.009731 0.176167 0.858425

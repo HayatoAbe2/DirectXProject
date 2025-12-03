@@ -193,7 +193,7 @@ bool MapCheck::IsFall(const Vector2& pos, float radius) {
 
 				// 重なっていれば衝突
 				if (!(charMaxX < tileMinX || charMinX > tileMaxX ||
-					charMaxY < tileMinY || charMinY > tileMaxY)){
+					charMaxY < tileMinY || charMinY > tileMaxY)) {
 					return true;
 				}
 			}
@@ -209,9 +209,9 @@ bool MapCheck::IsGoal(const Vector2& pos, float radius, bool canGoal) {
 	int mapW = static_cast<int>(map_[0].size());
 
 	// キャラのAABB（更新後）
-	float charMinX = pos.x - radius;
+	float charMinX = pos.x - radius - 0.1f;
 	float charMaxX = pos.x + radius;
-	float charMinY = pos.y - radius;
+	float charMinY = pos.y - radius - 0.1f;
 	float charMaxY = pos.y + radius;
 
 	// 衝突しそうな範囲だけループ（効率化）
@@ -240,3 +240,6 @@ bool MapCheck::IsGoal(const Vector2& pos, float radius, bool canGoal) {
 	}
 	return false;
 }
+
+
+
