@@ -1,4 +1,5 @@
 #pragma once
+#include "Node.h"
 #include <d3d12.h>
 #include <wrl.h>
 #include <unordered_map>
@@ -46,6 +47,8 @@ public:
     std::shared_ptr<Texture> CreateSRV(std::shared_ptr<Texture> texture);
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
+
+    Node ReadNode(aiNode* node);
 
     
     /// <summary>

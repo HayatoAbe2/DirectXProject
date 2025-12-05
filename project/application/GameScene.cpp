@@ -41,7 +41,7 @@ void GameScene::Initialize() {
 	camera_->transform_.rotate = { 1.0f,0,0 };
 
 	playerModel_ = std::make_unique<Entity>();
-	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
+	playerModel_->SetModel(context_->LoadModel("Resources", "plane.gltf"));
 
 	// マップ
 	wall_ = std::make_unique<Entity>();

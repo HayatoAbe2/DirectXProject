@@ -58,7 +58,7 @@ private:
 
 	// 武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
-	std::vector<std::unique_ptr<RangedWeapon>> multipleWeapons_; // 複数ある場合
+	std::vector<std::unique_ptr<RangedWeapon>> bossWeapons_; // 複数ある場合
 	int weaponChangeTimer_ = 300;
 	int weaponNum_ = 0;
 
@@ -92,6 +92,7 @@ private:
 	int attackMotionStart_ = 30;
 	float EaseIn(float start, float end, float t);
 
+	// 連続攻撃回数
 	int overheatCount_ = 0;
 	int overheat_ = 4;
 };

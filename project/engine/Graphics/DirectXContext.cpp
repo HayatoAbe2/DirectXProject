@@ -26,6 +26,10 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	clientHeight_ = clientHeight;
 	logger_ = logger;
 
+	// FPS固定クラス初期化
+	fixFPS_ = new FixFPS;
+	fixFPS_->Initialize();
+
 	// DXGIファクトリーの生成
 	hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory_));
 	assert(SUCCEEDED(hr));
@@ -87,10 +91,6 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	pipelineStateManager_->Initialize(deviceManager_->GetDevice(), rootSignatureManager_->GetStandardRootSignature(), rootSignatureManager_->GetInstancingRootSignature(),rootSignatureManager_->GetParticleRootSignature());
 
 	SetViewportAndScissor();
-
-	// FPS固定クラス初期化
-	fixFPS_ = new FixFPS;
-	fixFPS_->Initialize();
 
 	imGuiManager_ = new ImGuiManager;
 	int index = srvManager_->Allocate();

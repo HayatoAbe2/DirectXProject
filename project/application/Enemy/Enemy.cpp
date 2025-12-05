@@ -24,8 +24,8 @@ Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std
 	model_->SetTranslate(pos);
 	status_ = status;
 
-	multipleWeapons_ = std::move(rWeapons);
-	rangedWeapon_ = std::move(multipleWeapons_[0]);
+	bossWeapons_ = std::move(rWeapons);
+	rangedWeapon_ = std::move(bossWeapons_[0]);
 	isBoss_ = true;
 	overheat_ = 8;
 }
@@ -115,14 +115,15 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 						weaponChangeTimer_--;
 						if (weaponChangeTimer_ <= 0) {
 							weaponChangeTimer_ = 300;
-							if (weaponNum_ == 0) {
-								multipleWeapons_[0] = std::move(rangedWeapon_);
-								rangedWeapon_ = std::move(multipleWeapons_[1]);
-								weaponNum_ = 1;
-							} else {
-								multipleWeapons_[1] = std::move(rangedWeapon_);
-								rangedWeapon_ = std::move(multipleWeapons_[0]);
+							// 武器を交換する
+							bossWeapons_[weaponNum_] = std::move(rangedWeapon_);
+							if (bossWeapons_.size() - 1 == weaponNum_) {
+								// 0番目に戻る
+								rangedWeapon_ = std::move(bossWeapons_[0]);
 								weaponNum_ = 0;
+							} else {
+								// 次の武器
+								rangedWeapon_ = std::move(bossWeapons_[++weaponNum_]);
 							}
 						}
 					}

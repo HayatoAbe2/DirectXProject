@@ -172,6 +172,37 @@ void ResourceManager::CreateInstancingSRV(InstancedModel* model, const int numIn
 	model->SetSRVHandle(srvManager_->GetGPUHandle(currentSRVIndex_));
 }
 
+Node ResourceManager::ReadNode(aiNode* node) {
+	Node result;
+	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	aiLocalMatrix.Transpose(); // 行ベクトルにする
+	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	result.localMatrix.m[0][1] = aiLocalMatrix[0][1];
+	result.localMatrix.m[0][2] = aiLocalMatrix[0][2];
+	result.localMatrix.m[0][3] = aiLocalMatrix[0][3];
+	result.localMatrix.m[1][0] = aiLocalMatrix[1][0];
+	result.localMatrix.m[1][1] = aiLocalMatrix[1][1];
+	result.localMatrix.m[1][2] = aiLocalMatrix[1][2];
+	result.localMatrix.m[1][3] = aiLocalMatrix[1][3];
+	result.localMatrix.m[2][0] = aiLocalMatrix[2][0];
+	result.localMatrix.m[2][1] = aiLocalMatrix[2][1];
+	result.localMatrix.m[2][2] = aiLocalMatrix[2][2];
+	result.localMatrix.m[2][3] = aiLocalMatrix[2][3];
+	result.localMatrix.m[3][0] = aiLocalMatrix[3][0];
+	result.localMatrix.m[3][1] = aiLocalMatrix[3][1];
+	result.localMatrix.m[3][2] = aiLocalMatrix[3][2];
+	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
+
+	result.name = node->mName.C_Str();
+	result.children.resize(node->mNumChildren);
+	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
+		// 階層構造を作成
+		result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
+	}
+
+	return result;
+}
+
 std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
 	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
 
@@ -195,6 +226,7 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 			model->AddMeshes(newMesh);
 		}
 		return model;
+
 	} else {
 		std::vector<VertexData> vertices; // 頂点
 		std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
@@ -203,8 +235,9 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		// assimpでobjを読む
 		std::string filePath = directoryPath + "/" + filename;
 		// obj->DirectX12変換
-		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
+		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
 		assert(scene->HasMeshes());
+
 		for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
 			aiMesh* mesh = scene->mMeshes[meshIndex];
 			assert(mesh->HasNormals());
@@ -260,6 +293,7 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		mesh->SetVertices(vertices);			// 頂点
 		mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
 		mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
+		mesh->rootNode = ReadNode(scene->mRootNode); // 階層の根
 
 		// マテリアル初期化
 		std::shared_ptr<Material> material = std::make_shared<Material>();

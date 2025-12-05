@@ -1,6 +1,7 @@
 #pragma once
 #include "Material.h"
 #include "VertexData.h"
+#include "Node.h"
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
@@ -46,6 +47,9 @@ public:
 	void UpdateMaterial() { material_->UpdateGPU(); }
 	Material* GetMaterial() { return material_.get(); }
 
+
+	// ノード
+	Node rootNode;
 private:
 	// 頂点
 	std::vector<VertexData> vertices_;

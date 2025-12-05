@@ -9,7 +9,7 @@ void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
 }
 
 void ParticleSystem::Update() {
-	for (Particle& particle : particles_) {
+	for (auto& particle : particles_) {
 		if (particle.alive) {
 			particle.transform.translate += particle.velocity;
 
@@ -31,7 +31,7 @@ void ParticleSystem::PreDraw(const Camera& camera) {
 	std::vector<Transform> transforms;
 	std::vector<Vector4> colors;
 
-	for (Particle& particle : particles_) {
+	for (auto& particle : particles_) {
 
 		particle.transform.rotate = camera.transform_.rotate;
 		transforms.push_back(particle.transform);
@@ -43,13 +43,13 @@ void ParticleSystem::PreDraw(const Camera& camera) {
 }
 
 void ParticleSystem::SetColor(const Vector4& color) {
-	for (Particle& particle : particles_) {
+	for (auto& particle : particles_) {
 		particle.color = color;
 	}
 }
 
 void ParticleSystem::Emit(const Transform& baseTransform, const Vector3& velocity) {
-	for (Particle& particle : particles_) {
+	for (auto& particle : particles_) {
 		if (!particle.alive) {
 			particle.alive = true;
 			particle.lifeTime = maxLifeTime_;

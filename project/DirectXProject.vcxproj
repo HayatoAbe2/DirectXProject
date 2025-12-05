@@ -243,11 +243,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
     <ClCompile Include="application\Bullet\NormalBullet.cpp" />
-    <ClCompile Include="application\Weapon\Melee\Sword.cpp" />
     <ClCompile Include="application\Bullet\SpreadBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Shotgun.cpp" />
     <ClCompile Include="application\Bullet\RapidBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
+    <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -304,6 +304,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Graphics\BlendMode.h" />
     <ClInclude Include="engine\Graphics\CommandListManager.h" />
     <ClInclude Include="engine\Graphics\DeviceManager.h" />
+    <ClInclude Include="engine\Object\Node.h" />
     <ClInclude Include="engine\Graphics\PipelineStateManager.h" />
     <ClInclude Include="engine\Graphics\RootSignatureManager.h" />
     <ClInclude Include="engine\Math\AABB.h" />
@@ -376,11 +377,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\LightManager.h" />
     <ClInclude Include="application\Bullet\FireBullet.h" />
     <ClInclude Include="application\Bullet\NormalBullet.h" />
-    <ClInclude Include="application\Weapon\Melee\Sword.h" />
     <ClInclude Include="application\Bullet\SpreadBullet.h" />
     <ClInclude Include="application\Weapon\Ranged\Shotgun.h" />
     <ClInclude Include="application\Bullet\RapidBullet.h" />
     <ClInclude Include="application\Weapon\Ranged\Pistol.h" />
+    <ClInclude Include="application\Weapon\MeleeWeapon.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

@@ -58,7 +58,9 @@ void Renderer::UpdateEntityTransforms(
 	// トランスフォーム更新
 	TransformationMatrix data;
 	data.World = MakeAffineMatrix(entity.GetTransform());
-	data.WVP = data.World
+	data.WVP = 
+		entity.GetModel()->GetMeshes()[0]->rootNode.localMatrix *
+		data.World
 		* camera.viewMatrix_
 		* camera.projectionMatrix_;
 	data.WorldInverseTranspose = Transpose(Inverse(data.World));
