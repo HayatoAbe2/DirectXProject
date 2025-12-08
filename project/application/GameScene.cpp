@@ -41,7 +41,7 @@ void GameScene::Initialize() {
 	camera_->transform_.rotate = { 1.0f,0,0 };
 
 	playerModel_ = std::make_unique<Entity>();
-	playerModel_->SetModel(context_->LoadModel("Resources", "plane.gltf"));
+	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
 
 	// マップ
 	wall_ = std::make_unique<Entity>();
@@ -64,12 +64,13 @@ void GameScene::Initialize() {
 	itemManager_ = new ItemManager();
 	itemManager_->Initialize(weaponManager_,context_);
 
-	// 当たり判定
-	collisionChecker_ = new CollisionChecker();
-
 	// エフェクト
 	effectManager_ = new EffectManager();
 	effectManager_->Initialize(context_);
+
+	// 当たり判定
+	collisionChecker_ = new CollisionChecker();
+	collisionChecker_->Inititalize(effectManager_);
 
 	// プレイヤー
 	player_ = new Player();
@@ -169,6 +170,8 @@ void GameScene::Update() {
 
 	// マップ
 	mapTile_->Update(enemyManager_->GetEnemies().size() == 0);
+
+	effectManager_->Update();
 }
 
 void GameScene::Draw() {
@@ -196,8 +199,14 @@ void GameScene::Reset() {
 	itemManager_->Reset();
 	bulletManager_->Reset();
 
+	int floorType = 0;
+	std::string path;
 	switch (currentFloor_) {
 	case 1:
+		floorType = context_->RandomInt(1, 3);
+		path = "Resources/MapData/Floor" + std::to_string(floorType) + ".csv";
+		mapTile_->LoadCSV(path);
+
 		// マップを再構築
 		mapTile_->LoadCSV("Resources/MapData/Floor1.csv");
 
@@ -206,9 +215,9 @@ void GameScene::Reset() {
 
 		// その階の敵とアイテム
 		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 2);
+		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 2);
 		enemyManager_->Spawn({ 3,0,18 }, context_, weaponManager_, 1);
+		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 3);
 		itemManager_->Spawn({ 10,0,5 }, int(WeaponManager::WEAPON::Pistol));
 		itemManager_->Spawn({ 26,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
 		break;

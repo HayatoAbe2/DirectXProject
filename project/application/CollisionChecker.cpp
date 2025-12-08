@@ -4,6 +4,11 @@
 #include "MathUtils.h"
 #include "Bullet.h"
 #include "Camera.h"
+#include "EffectManager.h"
+
+void CollisionChecker::Inititalize(EffectManager* effectManager) {
+	effectManager_ = effectManager;
+}
 
 void CollisionChecker::Check(Player* player, Bullet* bullet,Camera* camera) {
 	// 敵の弾でなかったら判定しない
@@ -14,6 +19,7 @@ void CollisionChecker::Check(Player* player, Bullet* bullet,Camera* camera) {
 		player->Hit(bullet->GetDamage(), bullet->GetPrePos());
 		bullet->Hit();
 		camera->StartShake(1.0f, 3);
+		effectManager_->SpawnHitEffect(player->GetTransform().translate);
 	}
 }
 
@@ -26,5 +32,6 @@ void CollisionChecker::Check(Enemy* enemy, Bullet* bullet, Camera* camera) {
 		enemy->Hit(bullet->GetDamage(),bullet->GetPrePos());
 		bullet->Hit();
 		camera->StartShake(1.0f, 3);
+		effectManager_->SpawnHitEffect(enemy->GetTransform().translate);
 	}
 }

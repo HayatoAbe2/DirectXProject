@@ -1,8 +1,6 @@
 #include "Enemy.h"
 #include "Entity.h"
-#include "GameContext.h"
 #include "Camera.h"
-#include "BulletManager.h"
 #include "MapCheck.h"
 #include "Player.h"
 #include "Mesh.h"
@@ -26,8 +24,6 @@ Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std
 
 	bossWeapons_ = std::move(rWeapons);
 	rangedWeapon_ = std::move(bossWeapons_[0]);
-	isBoss_ = true;
-	overheat_ = 8;
 }
 
 void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
@@ -100,39 +96,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 					searchRadius_ = status_.defaultSearchRadius;
 				}
 
-
-				if (attackCoolTimer_ <= 0) {
-					// 射撃
-					attackCoolTimer_ = rangedWeapon_->Shoot(model_->GetTransform().translate, attackDirection_, bulletManager, context, true);
-					overheatCount_++;
-				} else {
-					attackCoolTimer_--;
-
-					// 倍速
-					if (isBoss_) {
-						attackCoolTimer_--;
-
-						weaponChangeTimer_--;
-						if (weaponChangeTimer_ <= 0) {
-							weaponChangeTimer_ = 300;
-							// 武器を交換する
-							bossWeapons_[weaponNum_] = std::move(rangedWeapon_);
-							if (bossWeapons_.size() - 1 == weaponNum_) {
-								// 0番目に戻る
-								rangedWeapon_ = std::move(bossWeapons_[0]);
-								weaponNum_ = 0;
-							} else {
-								// 次の武器
-								rangedWeapon_ = std::move(bossWeapons_[++weaponNum_]);
-							}
-						}
-					}
-				}
-
-				if (overheatCount_ >= overheat_) {
-					overheatCount_ = 0;
-					attackCoolTimer_ = 120;
-				}
+				Attack(rangedWeapon_.get(), bulletManager, context);
 			}
 
 			// 攻撃前警告
@@ -186,9 +150,9 @@ void Enemy::Hit(int damage, Vector3 from) {
 	status_.hp -= damage;
 	if (status_.hp <= 0) { isDead_ = true; }
 
-	if (!isBoss_) {
+	if (status_.stunResist < 10) {
 		// 行動不能
-		stunTimer_ = 10;
+		stunTimer_ = 10 - status_.stunResist;
 
 		// ノックバック
 		velocity_ = Normalize(model_->GetTransform().translate - from) * 0.3f;

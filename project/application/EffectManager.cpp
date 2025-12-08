@@ -2,6 +2,7 @@
 #include "GameContext.h"
 #include "Camera.h"
 #include "Sprite.h"
+#include <numbers>
 
 void EffectManager::Initialize(GameContext* context) {
 	context_ = context;
@@ -10,17 +11,19 @@ void EffectManager::Initialize(GameContext* context) {
 void EffectManager::Update() {
 	for (auto& effect : hitEffect_) {
 		// 拡大
-		effect->GetSprite()->SetSize(effect->GetSprite()->GetSize() + Vector2{ hitEffectUpScaleSpeed_, hitEffectUpScaleSpeed_ });
+		effect->SetScale(effect->GetTransform().scale + Vector3{ hitEffectUpScaleSpeed_, hitEffectUpScaleSpeed_, hitEffectUpScaleSpeed_});
 		
 		// 薄くする
-		effect->SetColor({ 1.0f,1.0f,1.0f,effect->GetColor().z - 0.02f });
+		MaterialData data = effect->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+		data.color.w -= 0.1f;
+		effect->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
 	}
 
 	// 消滅したエフェクトの削除
 	hitEffect_.erase(
 		std::remove_if(hitEffect_.begin(), hitEffect_.end(),
 			[](const std::unique_ptr<Entity>& effect) {
-				return effect->GetColor().z <= 0.0f;
+				return effect->GetModel()->GetMeshes()[0]->GetMaterial()->GetData().color.w <= 0.0f;
 			}
 		),
 		hitEffect_.end()
@@ -29,13 +32,16 @@ void EffectManager::Update() {
 
 void EffectManager::Draw(GameContext* context,Camera* camera) {
 	for (const auto& effect : hitEffect_) {
-		context->DrawEntity(*effect, *camera);
+		Vector3 rotate = camera->transform_.rotate;
+		rotate.x += float(std::numbers::pi);
+		effect->SetRotate(rotate);
+		context->DrawEntity(*effect, *camera,BlendMode::Add);
 	}
 }
 
 void EffectManager::SpawnHitEffect(const Vector3& pos) {
 	auto effect = std::make_unique<Entity>();
-	effect->SetTranslate(pos);
-	effect->SetSprite(context_->LoadSprite("Resources/Effects/hitEffect.png"));
+	effect->SetModel(context_->LoadModel("Resources/HitEffect", "hitEffect.obj"));
+	effect->SetTransform({ {0.5f,0.5f,0.5f},{},pos });
 	hitEffect_.push_back(std::move(effect));
 }

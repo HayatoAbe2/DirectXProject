@@ -17,6 +17,6 @@ private:
 	GameContext* context_ = nullptr;
 
 	std::vector<std::unique_ptr<Entity>> hitEffect_;
-	float hitEffectUpScaleSpeed_ = 0.01f;
+	float hitEffectUpScaleSpeed_ = 0.2f;
 };
 

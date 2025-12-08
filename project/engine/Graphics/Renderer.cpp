@@ -211,7 +211,7 @@ void Renderer::DrawModelParticle(Entity* entity, int blendMode) {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// 各メッシュを描画
-	for (auto& mesh : entity->GetParticleSystem()->GetInstancedModel_()->GetMeshes()) {
+	for (auto& mesh : entity->GetParticleSystem()->GetInstancedModel()->GetMeshes()) {
 
 		// マテリアル更新
 		mesh->UpdateMaterial();
@@ -220,15 +220,15 @@ void Renderer::DrawModelParticle(Entity* entity, int blendMode) {
 		// モデル描画
 		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
 		// wvp用のCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceCBV());
+		cmdList->SetGraphicsRootConstantBufferView(1, entity->GetParticleSystem()->GetInstancedModel()->GetInstanceCBV());
 		// SRVの設定
 		if (mesh->GetTextureSRVHandle().ptr != 0) {
 			cmdList->SetGraphicsRootDescriptorTable(2, mesh->GetTextureSRVHandle());
 		}
 		// インスタンス用SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(3, entity->GetParticleSystem()->GetInstancedModel_()->GetInstanceSRVHandle());
+		cmdList->SetGraphicsRootDescriptorTable(3, entity->GetParticleSystem()->GetInstancedModel()->GetInstanceSRVHandle());
 		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetParticleSystem()->GetInstancedModel_()->GetNumInstance(), 0, 0);
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), entity->GetParticleSystem()->GetInstancedModel()->GetNumInstance(), 0, 0);
 	}
 }
 

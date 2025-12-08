@@ -9,5 +9,6 @@ struct EnemyStatus {
 	int loseSightTime = 120; 	// 見失いカウント
 	int moveTime = 0; // 動く時間
 	int stopTime = 0; // その後止まる時間
+	int stunResist = 0; // スタン時間を減らす量
 	bool canFly = false; // 飛行する
 };

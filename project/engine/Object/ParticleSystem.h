@@ -16,7 +16,7 @@ public:
 
     void SetColor(const Vector4& color);
     void SetLifeTime(int lifeTime) { maxLifeTime_ = lifeTime; }
-    std::shared_ptr<InstancedModel> GetInstancedModel_() const { return instancedModel_; };
+    std::shared_ptr<InstancedModel> GetInstancedModel() const { return instancedModel_; }
 
 	void AddField(std::unique_ptr<ParticleField> field) {
 		fields_.push_back(std::move(field));

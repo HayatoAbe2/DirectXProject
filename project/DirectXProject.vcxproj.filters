@@ -40,6 +40,12 @@
     <Filter Include="Application\Bullet">
       <UniqueIdentifier>{0d04984b-3623-4d05-8bbc-cbb9719c4ad4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\Enemy">
+      <UniqueIdentifier>{338e9d89-c9ff-42f2-8b8a-a91b3eb4154b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Enemy\Enemies">
+      <UniqueIdentifier>{0909658e-4b05-4dbb-91bc-84769e3269ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="externals\imgui\imgui.cpp">
@@ -181,15 +187,12 @@
     <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
     <ClCompile Include="engine\Math\Vector2.cpp" />
     <ClCompile Include="application\ItemManager.cpp" />
-    <ClCompile Include="application\Enemy\Enemy.cpp" />
-    <ClCompile Include="application\Enemy\EnemyManager.cpp" />
     <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
     <ClCompile Include="application\EffectManager.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
     <ClCompile Include="application\Item.cpp" />
     <ClCompile Include="engine\Object\ParticleField.cpp" />
-    <ClCompile Include="engine\Object\LightManager.cpp" />
     <ClCompile Include="application\Bullet\Bullet.cpp">
       <Filter>Application\Bullet</Filter>
     </ClCompile>
@@ -216,6 +219,24 @@
     <ClCompile Include="application\Bullet\RapidBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
     <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
+    <ClCompile Include="application\Enemy\Enemy.cpp">
+      <Filter>Application\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Enemy\EnemyManager.cpp">
+      <Filter>Application\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Enemy\Enemies\Bat.cpp">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Enemy\Enemies\HeavyKnight.cpp">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Enemy\Enemies\Knight.cpp">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\Object\LightManager.cpp">
+      <Filter>Engine\Object</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -236,8 +257,12 @@
     <FxCompile Include="Resources\shaders\Particle.VS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="Resources\shaders\Instance.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\Instance.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\Instance.VS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="Resources\shaders\Instance.PS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -411,8 +436,6 @@
     <ClInclude Include="application\MapCheck.h" />
     <ClInclude Include="application\Weapon\RangedWeapon.h" />
     <ClInclude Include="application\ItemManager.h" />
-    <ClInclude Include="application\Enemy\Enemy.h" />
-    <ClInclude Include="application\Enemy\EnemyManager.h" />
     <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
     <ClInclude Include="application\EffectManager.h" />
@@ -420,9 +443,7 @@
     <ClInclude Include="application\Item.h" />
     <ClInclude Include="engine\Object\ParticleField.h" />
     <ClInclude Include="engine\Graphics\CameraForGPU.h" />
-    <ClInclude Include="engine\Object\LightManager.h" />
     <ClInclude Include="engine\Object\Lights\PointLight.h" />
-    <ClInclude Include="engine\Object\Lights\LightsForGPU.h" />
     <ClInclude Include="engine\Object\Lights\SpotLight.h" />
     <ClInclude Include="application\Bullet\Bullet.h">
       <Filter>Application\Bullet</Filter>
@@ -448,14 +469,39 @@
     <ClInclude Include="application\Bullet\NormalBullet.h">
       <Filter>Application\Bullet</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Object\InstanceGPUData.h" />
     <ClInclude Include="application\Bullet\SpreadBullet.h" />
     <ClInclude Include="application\Weapon\Ranged\Shotgun.h" />
-    <ClInclude Include="application\Enemy\EnemyStatus.h" />
     <ClInclude Include="application\Bullet\RapidBullet.h" />
     <ClInclude Include="application\Weapon\Ranged\Pistol.h" />
     <ClInclude Include="application\Weapon\MeleeWeapon.h" />
     <ClInclude Include="engine\Object\Node.h" />
+    <ClInclude Include="application\Enemy\Enemy.h">
+      <Filter>Application\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\EnemyManager.h">
+      <Filter>Application\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\EnemyStatus.h">
+      <Filter>Application\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\Enemies\Bat.h">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\Enemies\HeavyKnight.h">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\Enemies\Knight.h">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\InstanceGPUData.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\Lights\LightsForGPU.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\Object\LightManager.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -469,6 +515,8 @@
     <None Include="Resources\shaders\Particle.hlsli">
       <Filter>Shader</Filter>
     </None>
-    <None Include="Resources\shaders\Instance.hlsli" />
+    <None Include="Resources\shaders\Instance.hlsli">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
 </Project>

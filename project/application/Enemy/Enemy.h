@@ -6,12 +6,12 @@
 #include <vector>
 #include <memory>
 #include "EnemyStatus.h"
+#include "BulletManager.h"
+#include "GameContext.h"
 
-class GameContext;
 class MapCheck;
 class Camera;
 class Player;
-class BulletManager;
 
 class Enemy {
 public:
@@ -33,16 +33,17 @@ public:
 	/// <param name="camera">カメラ</param>
 	void Draw(GameContext* context, Camera* camera);
 
+	// 被ダメージ時
 	void Hit(int damage,Vector3 from);
+
+	// 敵ごとの関数
+	virtual void Attack(RangedWeapon* rangedWeapon, BulletManager* bulletManager, GameContext* context) = 0;
 
 	Transform GetTransform() const { return model_->GetTransform(); }
 	float GetRadius() const { return status_.radius; }
 	bool IsDead() { return isDead_; }
-	bool IsBoss() { return isBoss_; }
 
-private:
-	// ボス?
-	bool isBoss_ = false;
+protected:
 
 	// 敵別ステータス
 	EnemyStatus status_;
@@ -59,8 +60,6 @@ private:
 	// 武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
 	std::vector<std::unique_ptr<RangedWeapon>> bossWeapons_; // 複数ある場合
-	int weaponChangeTimer_ = 300;
-	int weaponNum_ = 0;
 
 	// 射撃クールダウン
 	int attackCoolTimer_ = 90;
@@ -91,9 +90,5 @@ private:
 	// 攻撃モーション
 	int attackMotionStart_ = 30;
 	float EaseIn(float start, float end, float t);
-
-	// 連続攻撃回数
-	int overheatCount_ = 0;
-	int overheat_ = 4;
 };
 
