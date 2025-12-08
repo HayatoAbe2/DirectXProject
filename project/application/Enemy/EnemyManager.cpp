@@ -46,7 +46,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
 
    switch (enemyType) {
    case 1:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
+       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "bat.obj"));
        rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
        status.hp = 10;
        status.radius = 0.5f;
@@ -66,7 +66,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight.obj"));
        rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle));
        status.hp = 20;
-       status.radius = 0.75f;
+       status.radius = 0.9f;
        status.moveSpeed = 0.07f;
        status.defaultSearchRadius = 12.0f;
        status.loseSightRadius = 20.0f;
@@ -80,11 +80,11 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        break;
 
    case 3:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight.obj"));
+       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight2.obj"));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
-       status.hp = 100;
-       status.radius = 0.75f;
+       status.hp = 150;
+       status.radius = 1.5f;
        status.moveSpeed = 0.07f;
        status.defaultSearchRadius = 12.0f;
        status.loseSightRadius = 20.0f;
@@ -98,10 +98,11 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        break;
 
    default:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "enemy.obj"));
-       rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
-       status.hp = 10;
-       status.radius = 0.5f;
+       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "bat2.obj"));
+       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
+       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Pistol)));
+       status.hp = 100;
+       status.radius = 0.75f;
        status.moveSpeed = 0.15f;
        status.defaultSearchRadius = 8.0f;
        status.loseSightRadius = 30.0f;

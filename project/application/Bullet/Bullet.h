@@ -24,7 +24,7 @@ public:
 	
 protected:
 	// 前フレーム場所
-	Vector3 prePos_;
+	Vector3 prePos_{};
 
 	// 速度
 	Vector3 velocity_{};

@@ -34,7 +34,7 @@ void FireBullet::Update(MapCheck* mapCheck) {
 
 		lifeTime_--;
 		if (lifeTime_ <= 0) {
-			canErase_ = true;
+			Hit();
 		}
 
 		if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {

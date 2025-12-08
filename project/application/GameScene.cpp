@@ -86,6 +86,15 @@ void GameScene::Initialize() {
 	// 天球
 	skydome_ = std::make_unique<Entity>();
 	skydome_->SetModel(context_->LoadModel("Resources/Skydome", "skydome.obj", false));
+
+	// 雲
+	cloud_ = std::make_unique<Entity>();
+	cloud_->SetModel(context_->LoadModel("Resources/Cloud", "Cloud.obj", false));
+	cloud_->SetTranslate({ 0,-20,0 });
+	MaterialData data = cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+	data.color.w = 0.8f;
+	cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
+
 	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,0,-cameraDistance_ };
 
 	// フェード
@@ -101,6 +110,10 @@ void GameScene::Initialize() {
 }
 
 void GameScene::Update() {
+	MaterialData data = cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+	data.uvTransform.m[3][1] += 0.001f;
+	cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
+
 	// プレイヤー処理
 	if (!isFadeOut_) {
 		player_->Update(context_, mapCheck_, itemManager_, camera_, bulletManager_);
@@ -176,6 +189,7 @@ void GameScene::Update() {
 
 void GameScene::Draw() {
 	context_->DrawEntity(*skydome_, *camera_);
+	context_->DrawEntity(*cloud_, *camera_,BlendMode::Add);
 	mapTile_->Draw(camera_);
 	player_->Draw(context_, camera_);
 	enemyManager_->Draw(context_, camera_);

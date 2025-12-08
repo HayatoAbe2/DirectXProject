@@ -1,6 +1,6 @@
 # Blender 4.4.0
 # www.blender.org
-mtllib enemy.mtl
+mtllib bat.mtl
 o 球.002
 v -0.243786 -0.394141 -0.113566
 v -0.243786 -0.416664 -0.169964

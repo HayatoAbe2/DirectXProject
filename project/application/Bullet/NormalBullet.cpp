@@ -27,7 +27,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 
 		lifeTime_--;
 		if (lifeTime_ <= 0) {
-			canErase_ = true;
+			Hit();
 		}
 
 		if (mapCheck->IsHitWall(pos, status_.bulletSize / 2.0f)) {
@@ -60,7 +60,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 
 void NormalBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
-		//context->DrawEntity(*model_, *camera, BlendMode::Add);
+		context->DrawEntity(*model_, *camera, BlendMode::Add);
 	}
 
 	// パーティクル

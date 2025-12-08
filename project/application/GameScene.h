@@ -48,6 +48,7 @@ private:
 	std::unique_ptr<Entity> floor_ = nullptr;
 	std::unique_ptr<Entity> goal_ = nullptr;
 	std::unique_ptr<Entity> skydome_ = nullptr;
+	std::unique_ptr<Entity> cloud_ = nullptr;
 	std::unique_ptr<Entity> fade_ = nullptr;
 
 	// プレイヤー
