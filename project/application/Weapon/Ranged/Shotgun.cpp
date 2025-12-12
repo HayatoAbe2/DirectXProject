@@ -21,6 +21,8 @@ int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameC
 		std::unique_ptr<SpreadBullet> newBullet = std::make_unique<SpreadBullet>(std::move(bullet), rotatedDir, status_, isEnemyBullet);
 		newBullet->Initialize(context);
 		bulletManager->AddBullet(std::move(newBullet));
+
+		context->SoundPlay(L"Resources/Sounds/SE/shoot.mp3", false);
 	}
 
 	if (isEnemyBullet) {

@@ -18,6 +18,9 @@ int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameCo
 	newBullet->Initialize(context);
 
 	bulletManager->AddBullet(std::move(newBullet));
+
+	context->SoundPlay(L"Resources/Sounds/SE/shoot.mp3", false);
+
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {

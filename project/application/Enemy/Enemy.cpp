@@ -130,7 +130,10 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				mapCheck->ResolveCollisionY(pos, status_.radius, true);
 			}
 
-			if (stunTimer_ <= 0 && !status_.canFly) { isFall_ = mapCheck->IsFall(pos, status_.radius); }
+			if (stunTimer_ <= 0 && !status_.canFly) {
+				isFall_ = mapCheck->IsFall(pos, status_.radius); 
+				if(isFall_){ context->SoundPlay(L"Resources/Sounds/SE/fall.mp3",false); }
+			}
 			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 		}
 	} else {
@@ -147,6 +150,7 @@ void Enemy::Draw(GameContext* context, Camera* camera) {
 }
 
 void Enemy::Hit(int damage, Vector3 from) {
+
 	status_.hp -= damage;
 	if (status_.hp <= 0) { isDead_ = true; }
 

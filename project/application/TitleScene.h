@@ -34,6 +34,7 @@ private:
 
 	// 操作
 	std::unique_ptr<Entity> control_ = nullptr;
+	std::unique_ptr<Entity> logo_ = nullptr;
 
 	// カメラ
 	Camera* camera_ = nullptr;

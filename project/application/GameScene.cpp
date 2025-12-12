@@ -21,6 +21,14 @@
 #include "ImGuiManager.h"
 
 GameScene::~GameScene() {
+	context_->SoundUnload(L"Resources/Sounds/SE/explosion.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/shoot.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/fire.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/floorClear.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/fall.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/warp.mp3");
+	context_->SoundUnload(L"Resources/Sounds/SE/hit.mp3");
+
 	delete camera_;
 	delete debugCamera_;
 	delete player_;
@@ -39,6 +47,14 @@ void GameScene::Initialize() {
 	debugCamera_->Initialize(context_);
 	camera_ = new Camera;
 	camera_->transform_.rotate = { 1.0f,0,0 };
+
+	context_->SoundLoad(L"Resources/Sounds/SE/explosion.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/shoot.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/fire.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/floorClear.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/fall.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/warp.mp3");
+	context_->SoundLoad(L"Resources/Sounds/SE/hit.mp3");
 
 	playerModel_ = std::make_unique<Entity>();
 	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
@@ -70,7 +86,7 @@ void GameScene::Initialize() {
 
 	// 当たり判定
 	collisionChecker_ = new CollisionChecker();
-	collisionChecker_->Inititalize(effectManager_);
+	collisionChecker_->Inititalize(effectManager_,context_);
 
 	// プレイヤー
 	player_ = new Player();
@@ -92,7 +108,7 @@ void GameScene::Initialize() {
 	cloud_->SetModel(context_->LoadModel("Resources/Cloud", "Cloud.obj", false));
 	cloud_->SetTranslate({ 0,-20,0 });
 	MaterialData data = cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
-	data.color.w = 0.8f;
+	data.color.w = 1.0f;
 	cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
 
 	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,0,-cameraDistance_ };
@@ -130,6 +146,7 @@ void GameScene::Update() {
 	if (mapCheck_->IsGoal(pos, player_->GetRadius(),enemyManager_->GetEnemies().size() == 0) && !isFadeOut_) {
 		isFadeOut_ = true;
 		fadeTimer_ = 0;
+		context_->SoundPlay(L"Resources/Sounds/SE/warp.mp3", false);
 	}
 
 	// カメラ追従
@@ -217,9 +234,9 @@ void GameScene::Reset() {
 	std::string path;
 	switch (currentFloor_) {
 	case 1:
-		floorType = context_->RandomInt(1, 3);
+		/*floorType = context_->RandomInt(1, 3);
 		path = "Resources/MapData/Floor" + std::to_string(floorType) + ".csv";
-		mapTile_->LoadCSV(path);
+		mapTile_->LoadCSV(path);*/
 
 		// マップを再構築
 		mapTile_->LoadCSV("Resources/MapData/Floor1.csv");
@@ -231,7 +248,7 @@ void GameScene::Reset() {
 		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
 		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 2);
 		enemyManager_->Spawn({ 3,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 3);
+		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
 		itemManager_->Spawn({ 10,0,5 }, int(WeaponManager::WEAPON::Pistol));
 		itemManager_->Spawn({ 26,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
 		break;

@@ -17,6 +17,9 @@ int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, 
 	std::unique_ptr<NormalBullet> newBullet = std::make_unique<NormalBullet>(std::move(bullet), dir, status_, isEnemyBullet);
 	newBullet->Initialize(context);
 	bulletManager->AddBullet(std::move(newBullet));
+
+	context->SoundPlay(L"Resources/Sounds/SE/shoot.mp3", false);
+
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {

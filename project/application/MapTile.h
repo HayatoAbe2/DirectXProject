@@ -45,6 +45,7 @@ private:
 	float particleRange_ = 3.0f;
 	int emitTimer_ = 0;
 	const int emitTime_ = 5;
+	bool soundPlayed_ = false;
 
 	// ライトのインデックス
 	int lightIndex_ = -1;

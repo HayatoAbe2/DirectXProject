@@ -44,7 +44,7 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
-    std::shared_ptr<Texture> CreateSRV(std::shared_ptr<Texture> texture);
+    std::shared_ptr<Texture> CreateTextureSRV(std::shared_ptr<Texture> texture);
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
 

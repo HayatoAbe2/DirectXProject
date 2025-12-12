@@ -18,6 +18,9 @@ int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, Game
 	newBullet->Initialize(context);
 
 	bulletManager->AddBullet(std::move(newBullet));
+
+	context->SoundPlay(L"Resources/Sounds/SE/fire.mp3", false);
+
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {

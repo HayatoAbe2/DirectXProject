@@ -6,13 +6,16 @@
 TitleScene::~TitleScene() {
 	delete camera_;
 	delete debugCamera_;
+	context_->SoundUnload(L"Resources/Sounds/SE/press.mp3");
 }
 
 void TitleScene::Initialize() {
+	context_->SoundLoad(L"Resources/Sounds/SE/press.mp3");
+
 	debugCamera_ = new DebugCamera;
 	debugCamera_->Initialize(context_);
 	camera_ = new Camera;
-	camera_->transform_.rotate = { 1.0f,0,0 };
+	camera_->transform_.rotate = { 0,0,0 };
 
 	// 天球
 	skydome_ = std::make_unique<Entity>();
@@ -28,11 +31,16 @@ void TitleScene::Initialize() {
 	control_->SetSprite(context_->LoadSprite("Resources/Control/gamestart.png"));
 	control_->GetSprite()->SetSize({ 270,39 });
 	control_->GetSprite()->SetPosition({ 640 - 135,710 - 200 });
+
+	//logo_ = std::make_unique<Entity>();
+	//logo_->SetSprite(context_->LoadSprite("Resources/Logo/logo.png"));
+	//logo_->GetSprite()->SetSize({ 270,39 });
+	//logo_->GetSprite()->SetPosition({ 640 - 135,700 - 200 });
 }
 
 void TitleScene::Update() {
 	Vector3 rotate = skydome_->GetTransform().rotate;
-	rotate.y += 0.015f;
+	rotate.y -= 0.004f;
 	skydome_->SetRotate(rotate);
 
 	camera_->UpdateCamera(context_, *debugCamera_);
@@ -41,6 +49,7 @@ void TitleScene::Update() {
 	if (context_->IsTriggerLeft() && !isFadeIn_ && !isFadeOut_) {
 		isFadeOut_ = true;
 		fadeTimer_ = 0;
+		context_->SoundPlay(L"Resources/Sounds/SE/press.mp3",false);
 	}
 
 	if (isFadeIn_) {

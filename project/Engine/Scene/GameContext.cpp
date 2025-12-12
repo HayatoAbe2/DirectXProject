@@ -134,6 +134,18 @@ Vector2 GameContext::GetRightStick() {
 	return input_->GetRightStick();
 }
 
+void GameContext::SoundLoad(const wchar_t* filename) {
+	audio_->SoundLoad(filename);
+}
+
+void GameContext::SoundPlay(const wchar_t* filename, bool isLoop) {
+	audio_->SoundPlay(filename, isLoop);
+}
+
+void GameContext::SoundUnload(const wchar_t* filename) {
+	audio_->SoundUnload(filename);
+}
+
 int GameContext::RandomInt(int min, int max) {
 	std::uniform_int_distribution<int> distribution(min, max);
 	return distribution(randomEngine_);

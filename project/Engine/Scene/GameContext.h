@@ -74,6 +74,15 @@ public:
 	Vector2 GetLeftStick();
 	Vector2 GetRightStick();
 
+	///
+	/// 音声
+	/// 
+
+	void SoundLoad(const wchar_t* filename);
+	void SoundPlay(const wchar_t* filename, bool isLoop);
+	void SoundUnload(const wchar_t* filename);
+
+
 	/// 
 	/// 乱数
 	///

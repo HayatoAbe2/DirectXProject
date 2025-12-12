@@ -251,6 +251,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Bullet\RapidBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
     <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
+    <ClCompile Include="engine\Object\ModelData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -388,6 +389,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Weapon\MeleeWeapon.h" />
     <ClInclude Include="application\Enemy\Enemies\Knight.h" />
     <ClInclude Include="application\Enemy\Enemies\HeavyKnight.h" />
+    <ClInclude Include="engine\Object\ModelData.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

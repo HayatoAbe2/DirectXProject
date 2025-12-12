@@ -138,7 +138,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(siz
 	return vertexResource;
 }
 
-std::shared_ptr<Texture> ResourceManager::CreateSRV(std::shared_ptr<Texture> texture) {
+std::shared_ptr<Texture> ResourceManager::CreateTextureSRV(std::shared_ptr<Texture> texture) {
 	if (!texture->GetMtlPath().empty()) {
 		// Textureを読んで転送する
 		DirectX::ScratchImage mipImages = LoadTexture(texture->GetMtlPath());
@@ -238,6 +238,10 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
 		assert(scene->HasMeshes());
 
+		///
+		/// メッシュ頂点の設定
+		/// 
+
 		for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
 			aiMesh* mesh = scene->mMeshes[meshIndex];
 			assert(mesh->HasNormals());
@@ -263,6 +267,10 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 			}
 		}
 
+		///
+		/// マテリアルの設定
+		/// 
+		
 		for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 			aiMaterial* material = scene->mMaterials[materialIndex];
 			if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
@@ -270,7 +278,7 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
 				texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
 				// SRVを作成
-				texture = CreateSRV(texture);
+				texture = CreateTextureSRV(texture);
 			}
 		}
 
@@ -328,33 +336,27 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 
 			bool useTexture = (oldMat->GetTexture() != nullptr);
 			newMat->Initialize(this, useTexture, true);
-
-			// Texture は共有（shared_ptr を想定）
 			newMat->SetTexture(oldMat->GetTexture());
-
 			newMesh->SetMaterial(newMat);
 			model->AddMeshes(newMesh);
-
-			model->SetNumInstance(numInstance);
-			// インスタンス数分のtransformリソース
-			Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(InstanceGPUData) * numInstance);
-			InstanceGPUData* transformData = nullptr;
-			instanceTransformResource->Map(0, nullptr, reinterpret_cast<void**>(&transformData));
-			// 単位行列を書き込んでおく
-			for (int i = 0; i < numInstance; ++i) {
-				transformData[i].World = MakeIdentity4x4();
-				transformData[i].WVP = MakeIdentity4x4();
-				transformData[i].WorldInverseTranspose = MakeIdentity4x4();
-				model->AddInstanceTransform();
-			}
-
-			model->SetInstanceResource(instanceTransformResource);
-			model->SetInstanceTransformData(transformData);
-			CreateInstancingSRV(model.get(), numInstance);
 		}
-		std::ostringstream oss;
-		oss << "cached model ptr=" << model.get() << " use_count=" << model.use_count() << "\n";
-		OutputDebugStringA(oss.str().c_str());
+
+		model->SetNumInstance(numInstance);
+		// インスタンス数分のtransformリソース
+		Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformResource = CreateBufferResource(sizeof(InstanceGPUData) * numInstance);
+		InstanceGPUData* transformData = nullptr;
+		instanceTransformResource->Map(0, nullptr, reinterpret_cast<void**>(&transformData));
+		// 単位行列を書き込んでおく
+		for (int i = 0; i < numInstance; ++i) {
+			transformData[i].World = MakeIdentity4x4();
+			transformData[i].WVP = MakeIdentity4x4();
+			transformData[i].WorldInverseTranspose = MakeIdentity4x4();
+			model->AddInstanceTransform();
+		}
+
+		model->SetInstanceResource(instanceTransformResource);
+		model->SetInstanceTransformData(transformData);
+		CreateInstancingSRV(model.get(), numInstance);
 		return model; // キャッシュにあったのでそれを返す
 	}
 
@@ -399,7 +401,7 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
 			texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
 			// SRVを作成
-			texture = CreateSRV(texture);
+			texture = CreateTextureSRV(texture);
 		}
 	}
 
@@ -448,10 +450,6 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	model->SetInstanceResource(instanceTransformResource);
 	model->SetInstanceTransformData(transformData);
 	CreateInstancingSRV(model.get(), numInstance);
-
-	std::ostringstream oss;
-	oss << "new model ptr=" << model.get() << " use_count=" << model.use_count() << "\n";
-	OutputDebugStringA(oss.str().c_str());
 
 	// キャッシュに登録
 	instancedModels_.insert({ fullPath, model });
@@ -573,7 +571,7 @@ std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// TexturePathを設定
 	std::shared_ptr<Texture> texture = std::make_shared<Texture>();
 	texture->SetMtlFilePath(texturePath);
-	texture = CreateSRV(texture);
+	texture = CreateTextureSRV(texture);
 
 	// Sprite用のマテリアルリソースを作る
 	Material* material = new Material;

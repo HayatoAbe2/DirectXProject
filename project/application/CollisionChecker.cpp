@@ -5,9 +5,11 @@
 #include "Bullet.h"
 #include "Camera.h"
 #include "EffectManager.h"
+#include "GameContext.h"
 
-void CollisionChecker::Inititalize(EffectManager* effectManager) {
+void CollisionChecker::Inititalize(EffectManager* effectManager,GameContext* context) {
 	effectManager_ = effectManager;
+	context_ = context;
 }
 
 void CollisionChecker::Check(Player* player, Bullet* bullet,Camera* camera) {
@@ -19,7 +21,8 @@ void CollisionChecker::Check(Player* player, Bullet* bullet,Camera* camera) {
 		player->Hit(bullet->GetDamage(), bullet->GetPrePos());
 		bullet->Hit();
 		camera->StartShake(1.0f, 3);
-		effectManager_->SpawnHitEffect(player->GetTransform().translate);
+		effectManager_->SpawnHitEffect(bullet->GetTransform().translate);
+		context_->SoundPlay(L"Resources/Sounds/SE/hit.mp3", false);
 	}
 }
 
@@ -32,6 +35,7 @@ void CollisionChecker::Check(Enemy* enemy, Bullet* bullet, Camera* camera) {
 		enemy->Hit(bullet->GetDamage(),bullet->GetPrePos());
 		bullet->Hit();
 		camera->StartShake(1.0f, 3);
-		effectManager_->SpawnHitEffect(enemy->GetTransform().translate);
+		effectManager_->SpawnHitEffect(bullet->GetTransform().translate);
+		context_->SoundPlay(L"Resources/Sounds/SE/hit.mp3", false);
 	}
 }

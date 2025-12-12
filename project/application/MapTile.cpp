@@ -27,6 +27,8 @@ void MapTile::Initialize(Entity* wall, Entity* floor, Entity* goal, GameContext*
 }
 
 void MapTile::LoadCSV(const std::string& filePath) {
+	soundPlayed_ = false;
+
 	if (lightIndex_ != -1) { context_->RemoveSpotLight(lightIndex_); }
 	particle_->GetParticleSystem()->RemoveField();
 	map_.clear();
@@ -129,6 +131,11 @@ void MapTile::LoadCSV(const std::string& filePath) {
 
 void MapTile::Update(bool canGoal) {
 	if (canGoal) {
+		if (!soundPlayed_) {
+			context_->SoundPlay(L"Resources/Sounds/SE/floorClear.mp3", false);
+			soundPlayed_ = true;
+		}
+
 		emitTimer_++;
 		if (emitTimer_ >= emitTime_) {
 			// パーティクル

@@ -86,6 +86,7 @@ void FireBullet::Draw(GameContext* context, Camera* camera) {
 void FireBullet::Hit() {
 	isDead_ = true;
 	context_->RemovePointLight(lightIndex_);
+	context_->SoundPlay(L"Resources/Sounds/SE/aasssdexplosion.mp3", false);
 
 	// 爆発開始
 	particleField_->SetGravity(-0.6f, model_->GetTransform().translate);
