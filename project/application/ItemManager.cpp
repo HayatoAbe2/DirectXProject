@@ -11,10 +11,10 @@ void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) 
 	context_ = context;
 
 	// 操作
-	control_ = std::make_unique<Entity>();
-	control_->SetSprite(context->LoadSprite("Resources/Control/pickup.png"));
-	control_->GetSprite()->SetSize({ 96,39 });
-	control_->GetSprite()->SetPosition({ 640 - 48,720 - 450 });
+	control_ = std::make_unique<Sprite>();
+	control_ = context->LoadSprite("Resources/Control/pickup.png");
+	control_->SetSize({ 96,39 });
+	control_->SetPosition({ 640 - 48,720 - 450 });
 }
 
 void ItemManager::Update(Player* player) {
@@ -52,7 +52,7 @@ void ItemManager::Draw(Camera* camera) {
 	}
 
 	if (canInteract_) {
-		context_->DrawEntity(*control_, *camera);
+		context_->DrawSprite(control_.get());
 	}
 }
 

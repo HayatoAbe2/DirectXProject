@@ -1,6 +1,5 @@
 #include "Player.h"
 #include "GameContext.h"
-#include "Entity.h"
 #include "BulletManager.h"
 #include "Camera.h"
 #include "MapCheck.h"
@@ -24,31 +23,31 @@ Player::~Player() {
 
 }
 
-void Player::Initialize(Entity* playerModel, GameContext* context) {
-	model_ = playerModel;
+void Player::Initialize(std::unique_ptr<Model> playerModel, GameContext* context) {
+	model_ = std::move(playerModel);
 	transform_.translate.x = 1;
 	transform_.translate.z = 1;
 
 	// 操作
-	control_ = std::make_unique<Entity>();
-	control_->SetSprite(context->LoadSprite("Resources/Control/leftClick.png"));
-	control_->GetSprite()->SetSize({ 48,65 });
-	control_->GetSprite()->SetPosition({ 640 - 24 + 100,710 - 65 });
+	control_ = std::make_unique<Sprite>();
+	control_ = context->LoadSprite("Resources/Control/leftClick.png");
+	control_->SetSize({ 48,65 });
+	control_->SetPosition({ 640 - 24 + 100,710 - 65 });
 
-	equipment_ = std::make_unique<Entity>();
-	equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentAssaultRifle.png"));
-	equipment_->GetSprite()->SetSize({ 120,120 });
-	equipment_->GetSprite()->SetPosition({ 640 - 60,710 - 160 });
+	equipment_ = std::make_unique<Sprite>();
+	equipment_ = context->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
+	equipment_->SetSize({ 120,120 });
+	equipment_->SetPosition({ 640 - 60,710 - 160 });
 
-	life_ = std::make_unique<Entity>();
-	life_->SetSprite(context->LoadSprite("Resources/UI/gauge.png"));
-	life_->GetSprite()->SetSize({ 290,68 });
-	life_->GetSprite()->SetPosition({ 10,10 });
+	life_ = std::make_unique<Sprite>();
+	life_ = context->LoadSprite("Resources/UI/gauge.png");
+	life_->SetSize({ 290,68 });
+	life_->SetPosition({ 10,10 });
 
-	moveParticle_ = std::make_unique<Entity>();
-	moveParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", moveParticleNum_));
-	moveParticle_->GetParticleSystem()->SetLifeTime(10);
-	moveParticle_->GetParticleSystem()->SetColor({ 0.6f, 0.6f, 0.6f, 1.0f });
+	moveParticle_ = std::make_unique<ParticleSystem>();
+	moveParticle_->Initialize(std::move(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", moveParticleNum_)));
+	moveParticle_->SetLifeTime(10);
+	moveParticle_->SetColor({ 0.6f, 0.6f, 0.6f, 1.0f });
 }
 
 void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera, BulletManager* bulletManager) {
@@ -106,12 +105,12 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 					Transform transform = model_->GetTransform();
 					transform.translate += randomVector;
 					transform.scale = { 1.0f,1.0f,1.0f };
-					moveParticle_->GetParticleSystem()->Emit(transform, -velocity_ * 0.4f);
+					moveParticle_->Emit(transform, -velocity_ * 0.4f);
 				}
 				moveParticleEmitTimer_ = 0;
 			}
 		}
-		moveParticle_->GetParticleSystem()->Update();
+		moveParticle_->Update();
 
 		// アイテム取得
 		if (context->IsTrigger(DIK_F)) {
@@ -119,16 +118,16 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 			if(rangedWeapon_){
 
                 if (rangedWeapon_ && dynamic_cast<AssaultRifle*>(rangedWeapon_.get())) {
-                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentAssaultRifle.png"));
+                   equipment_ = context->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
                 } else if (rangedWeapon_ && dynamic_cast<Pistol*>(rangedWeapon_.get())) {
-                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentPistol.png"));
+                   equipment_ = context->LoadSprite("Resources/Control/equipmentPistol.png");
                 } else if (rangedWeapon_ && dynamic_cast<Shotgun*>(rangedWeapon_.get())) {
-                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentShotgun.png"));
+                   equipment_ = context->LoadSprite("Resources/Control/equipmentShotgun.png");
                 } else if (rangedWeapon_ && dynamic_cast<FireBall*>(rangedWeapon_.get())) {
-                   equipment_->SetSprite(context->LoadSprite("Resources/Control/equipmentSpellbook.png"));
+                   equipment_ = context->LoadSprite("Resources/Control/equipmentSpellbook.png");
                 }
-                equipment_->GetSprite()->SetSize({120, 120});
-                equipment_->GetSprite()->SetPosition({640 - 60, 710 - 160});
+                equipment_->SetSize({120, 120});
+                equipment_->SetPosition({640 - 60, 710 - 160});
 			}
 		}
 
@@ -178,21 +177,21 @@ void Player::Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemM
 void Player::Draw(GameContext* context, Camera* camera) {
 
 	model_->SetTransform(transform_);
-	context->DrawEntity(*model_, *camera);
+	context->DrawModel(model_.get(), camera);
 
 	if (rangedWeapon_) {
 		rangedWeapon_->GetWeaponModel()->SetTransform(weaponTransform_);
-		context->DrawEntity(*rangedWeapon_->GetWeaponModel(), *camera);
-		context->DrawEntity(*control_, *camera);
-		context->DrawEntity(*equipment_, *camera);
+		context->DrawModel(rangedWeapon_->GetWeaponModel(), camera);
+		context->DrawSprite(control_.get());
+		context->DrawSprite(equipment_.get());
 	}
 
-	life_->GetSprite()->SetTextureRect(0, 0, (float(hp_) / float(maxHp_)) * 290, 68);
-	life_->GetSprite()->SetSize({ (float(hp_) / float(maxHp_)) * 290,68 });
-	context->DrawEntity(*life_, *camera);
+	life_->SetTextureRect(0, 0, (float(hp_) / float(maxHp_)) * 290, 68);
+	life_->SetSize({ (float(hp_) / float(maxHp_)) * 290,68 });
+	context->DrawSprite(life_.get());
 
 	// パーティクル
-	context->DrawEntity(*moveParticle_, *camera, BlendMode::Add);
+	context->DrawParticle(moveParticle_.get(), camera, BlendMode::Add);
 
 #ifdef USE_IMGUI
 	ImGui::Begin("Player Info");

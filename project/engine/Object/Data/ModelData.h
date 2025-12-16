@@ -6,9 +6,10 @@
 
 // 読み込んだモデルの共通データ
 class ModelData {
+public:
 	// メッシュ
-	std::vector<std::unique_ptr<Mesh>> meshes_;
+	std::vector<std::unique_ptr<Mesh>> meshes;
 
-	// マテリアル
-	std::vector<std::unique_ptr<Material>> materials_;
+	// 初期状態のマテリアル
+	std::vector<std::unique_ptr<Material>> defaultMaterials_;
 };

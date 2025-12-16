@@ -175,9 +175,6 @@
     <ClCompile Include="engine\Object\Mesh.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Object\Entity.cpp">
-      <Filter>Engine\Object</Filter>
-    </ClCompile>
     <ClCompile Include="engine\Object\InstancedModel.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
@@ -237,7 +234,6 @@
     <ClCompile Include="engine\Object\LightManager.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="engine\Object\ModelData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -425,9 +421,6 @@
     <ClInclude Include="engine\Object\Mesh.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Object\Entity.h">
-      <Filter>Engine\Object</Filter>
-    </ClInclude>
     <ClInclude Include="engine\Object\InstancedModel.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
@@ -503,7 +496,7 @@
     <ClInclude Include="engine\Object\LightManager.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="engine\Object\ModelData.h" />
+    <ClInclude Include="engine\Object\Data\ModelData.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

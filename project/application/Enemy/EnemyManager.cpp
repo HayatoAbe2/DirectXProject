@@ -1,5 +1,4 @@
 #include "EnemyManager.h"
-#include "Entity.h"
 #include "GameContext.h"
 #include "Enemy.h"
 #include "Camera.h"
@@ -37,7 +36,7 @@ void EnemyManager::Draw(GameContext* context, Camera* camera) {
 }
 
 void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weaponManager, int enemyType){
-   auto enemyModel = std::make_unique<Entity>();
+   auto enemyModel = std::make_unique<Model>();
    enemyModel->SetTranslate(pos);
 
    std::unique_ptr<RangedWeapon> rangedWeapon = nullptr;
@@ -46,7 +45,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
 
    switch (enemyType) {
    case 1:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "bat.obj"));
+       enemyModel = context->LoadModel("Resources/Enemy", "bat.obj");
        rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
        status.hp = 10;
        status.radius = 0.5f;
@@ -63,7 +62,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        break;
 
    case 2:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight.obj"));
+       enemyModel = context->LoadModel("Resources/Enemy", "knight.obj");
        rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle));
        status.hp = 20;
        status.radius = 0.9f;
@@ -80,7 +79,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        break;
 
    case 3:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "knight2.obj"));
+       enemyModel = context->LoadModel("Resources/Enemy", "knight2.obj");
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
        status.hp = 150;
@@ -98,7 +97,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        break;
 
    default:
-       enemyModel->SetModel(context->LoadModel("Resources/Enemy", "bat2.obj"));
+       enemyModel = context->LoadModel("Resources/Enemy", "bat2.obj");
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Pistol)));
        status.hp = 100;

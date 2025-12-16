@@ -7,15 +7,15 @@
 
 void FireBullet::Initialize(GameContext* context) {
 	context_ = context;
-	particle_ = std::make_unique<Entity>();
-	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
-	particle_->GetParticleSystem()->SetLifeTime(10);
-	particle_->GetParticleSystem()->SetColor({ 0.3f, 0.03f, 0.0f, 1.0f });
+	particle_ = std::make_unique<ParticleSystem>();
+	particle_->Initialize(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
+	particle_->SetLifeTime(10);
+	particle_->SetColor({ 0.3f, 0.03f, 0.0f, 1.0f });
 
-	explosionParticle_ = std::make_unique<Entity>();
-	explosionParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
-	explosionParticle_->GetParticleSystem()->SetLifeTime(10);
-	explosionParticle_->GetParticleSystem()->SetColor({ 0.7f, 0.03f, 0.0f, 1.0f });
+	explosionParticle_ = std::make_unique<ParticleSystem>();
+	explosionParticle_->Initialize(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
+	explosionParticle_->SetLifeTime(10);
+	explosionParticle_->SetColor({ 0.7f, 0.03f, 0.0f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
 
@@ -51,16 +51,16 @@ void FireBullet::Update(MapCheck* mapCheck) {
 			Transform transform = model_->GetTransform();
 			transform.translate += randomVector + velocity_ * 0.5f;
 			transform.scale = { 2.0f,2.0f,2.0f };
-			particle_->GetParticleSystem()->Emit(transform, -velocity_ * 0.2f);
+			particle_->Emit(transform, -velocity_ * 0.2f);
 		}
 	}
-	particle_->GetParticleSystem()->Update();
+	particle_->Update();
 
 	if (!isDead_) {
 		auto& light = context_->GetPointLight(lightIndex_);
 		light.position = model_->GetTransform().translate;
 	} else {
-		explosionParticle_->GetParticleSystem()->Update();
+		explosionParticle_->Update();
 		explosionEndLifeTime--;
 		if (explosionEndLifeTime <= 0) {
 			canErase_ = true;
@@ -75,12 +75,12 @@ void FireBullet::Draw(GameContext* context, Camera* camera) {
 	}
 
 	if (!isDead_) {
-		context->DrawEntity(*model_, *camera,BlendMode::Add);
+		context->DrawModel(model_.get(), camera, BlendMode::Add);
 	}
 
 	// パーティクル
-	context->DrawEntity(*particle_, *camera, BlendMode::Add);
-	context->DrawEntity(*explosionParticle_, *camera, BlendMode::Add);
+	context->DrawParticle(particle_.get(), camera, BlendMode::Add);
+	context->DrawParticle(explosionParticle_.get(), camera, BlendMode::Add);
 }
 
 void FireBullet::Hit() {
@@ -90,7 +90,7 @@ void FireBullet::Hit() {
 
 	// 爆発開始
 	particleField_->SetGravity(-0.6f, model_->GetTransform().translate);
-	explosionParticle_->GetParticleSystem()->AddField(std::move(particleField_));
+	explosionParticle_->AddField(std::move(particleField_));
 	for (int i = 0; i < explosionParticleNum_; ++i) {
 		Vector3 randomVector = {
 		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
@@ -100,6 +100,6 @@ void FireBullet::Hit() {
 		Transform transform = model_->GetTransform();
 		transform.translate += randomVector;
 		transform.scale = { 1.5f,1.5f,1.5f };
-		explosionParticle_->GetParticleSystem()->Emit(transform, {});
+		explosionParticle_->Emit(transform, {});
 	}
 }

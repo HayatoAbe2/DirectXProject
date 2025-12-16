@@ -1,9 +1,10 @@
 #pragma once
 #include "Bullet.h"
 #include "ParticleField.h"
+#include "GameContext.h"
 class FireBullet : public Bullet{
 public:
-	FireBullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
+	FireBullet(std::unique_ptr<Model> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {};
 	void Initialize(GameContext* context);
 	void Update(MapCheck* mapCheck) override;
@@ -13,11 +14,11 @@ public:
 private:
 	GameContext* context_ = nullptr;
 	
-	std::unique_ptr<Entity> particle_;
+	std::unique_ptr<ParticleSystem> particle_;
 	const int particleNum_ = 200;
 	float particleRange_ = 1.5f;
 
-	std::unique_ptr<Entity> explosionParticle_;
+	std::unique_ptr<ParticleSystem> explosionParticle_;
 	const int explosionParticleNum_ = 250;
 	float explosionParticleRange_ = 1.0f;
 	int explosionEndLifeTime = 8;

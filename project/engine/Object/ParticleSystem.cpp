@@ -3,9 +3,9 @@
 #include "InstancedModel.h"
 #include <numbers>
 
-void ParticleSystem::Initialize(const std::shared_ptr<InstancedModel> model) {
-	instancedModel_ = model;
-	particles_.resize(model->GetNumInstance());
+void ParticleSystem::Initialize(std::unique_ptr<InstancedModel> model) {
+	instancedModel_ = std::move(model);
+	particles_.resize(instancedModel_->GetNumInstance());
 }
 
 void ParticleSystem::Update() {
@@ -27,13 +27,13 @@ void ParticleSystem::Update() {
 	}
 }
 
-void ParticleSystem::PreDraw(const Camera& camera) {
+void ParticleSystem::PreDraw(Camera* camera) {
 	std::vector<Transform> transforms;
 	std::vector<Vector4> colors;
 
 	for (auto& particle : particles_) {
 
-		particle.transform.rotate = camera.transform_.rotate;
+		particle.transform.rotate = camera->transform_.rotate;
 		transforms.push_back(particle.transform);
 
 		particle.color.w = float(particle.lifeTime) / float(maxLifeTime_);

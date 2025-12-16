@@ -26,7 +26,7 @@ Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* 
 }
 
 void Item::Draw(GameContext* context, Camera* camera) {
-	context->DrawEntity(*rangedWeapon_->GetWeaponModel(), *camera);
+	context->DrawModel(rangedWeapon_->GetWeaponModel(), camera);
 }
 
 void Item::Erase() {

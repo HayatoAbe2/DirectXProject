@@ -21,14 +21,6 @@ public:
 	void AddVertex(const VertexData& vertex) { vertices_.push_back(vertex); }
 
 	/// <summary>
-	/// material設定
-	/// </summary>
-	/// <param name="materialResource">マテリアル</param>
-	void SetMaterial(const std::shared_ptr<Material>& material) {
-		material_ = material;
-	}
-
-	/// <summary>
 	/// 頂点バッファを設定
 	/// </summary>
 	/// <param name="vb">VertexBuffer</param>
@@ -42,19 +34,12 @@ public:
 
 	const D3D12_VERTEX_BUFFER_VIEW& GetVBV()const { return vertexBufferView_; }
 	const std::vector<VertexData>& GetVertices() const { return vertices_; }
-	const D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSRVHandle() const { return material_->GetTextureSRVHandle(); }
-	D3D12_GPU_VIRTUAL_ADDRESS GetMaterialCBV() { return material_->GetCBV()->GetGPUVirtualAddress(); }
-	void UpdateMaterial() { material_->UpdateGPU(); }
-	Material* GetMaterial() { return material_.get(); }
-
 
 	// ノード
 	Node rootNode;
 private:
 	// 頂点
 	std::vector<VertexData> vertices_;
-	// マテリアル
-	std::shared_ptr<Material> material_;
 
 	// VB
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_ = nullptr;

@@ -2,9 +2,8 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <GameContext.h>
 
-class Entity;
-class GameContext;
 class Camera;
 
 class MapTile {
@@ -20,7 +19,7 @@ public:
 	};
 
 	~MapTile();
-	void Initialize(Entity* wall,Entity* floor,Entity* goal, GameContext* context);
+	void Initialize(std::unique_ptr<InstancedModel> wall,std::unique_ptr<InstancedModel> floor,std::unique_ptr<Model> goal, GameContext* context);
 	void LoadCSV(const std::string& filePath);
 	void Update(bool canGoal);
 	void Draw(Camera* camera);
@@ -36,11 +35,11 @@ private:
 	int mapWidth_ = 0;
 	int mapHeight_ = 0;
 
-	Entity* wall_ = nullptr;
-	Entity* floor_ = nullptr;
-	Entity* goal_ = nullptr;
+	std::unique_ptr<InstancedModel> wall_ = nullptr;
+	std::unique_ptr<InstancedModel> floor_ = nullptr;
+	std::unique_ptr<Model> goal_ = nullptr;
 
-	std::unique_ptr<Entity> particle_ = nullptr;
+	std::unique_ptr<ParticleSystem> particle_ = nullptr;
 	const int particleNum_ = 30;
 	float particleRange_ = 3.0f;
 	int emitTimer_ = 0;

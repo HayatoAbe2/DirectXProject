@@ -4,23 +4,20 @@
 #include "Camera.h"
 #include "BaseScene.h"
 
+#include "Player.h"
+#include "EnemyManager.h"
+#include "BulletManager.h"
+#include "EffectManager.h"
+#include "MapTile.h"
+#include "MapCheck.h"
+#include "WeaponManager.h"
+#include "ItemManager.h"
+#include "CollisionChecker.h"
+
 #include <list>
 #include <memory>
 #include <vector>
 #include <random>
-
-class Entity;
-class Renderer;
-class Camera;
-class Player;
-class EnemyManager;
-class BulletManager;
-class EffectManager;
-class MapTile;
-class MapCheck;
-class WeaponManager;
-class ItemManager;
-class CollisionChecker;
 
 // ゲームシーン
 class GameScene : public BaseScene {
@@ -42,48 +39,48 @@ public:
 
 private:
 	// 3Dモデル
-	std::unique_ptr<Entity> playerModel_ = nullptr;
-	std::unique_ptr<Entity> enemyModel_ = nullptr;
-	std::unique_ptr<Entity> wall_ = nullptr;
-	std::unique_ptr<Entity> floor_ = nullptr;
-	std::unique_ptr<Entity> goal_ = nullptr;
-	std::unique_ptr<Entity> skydome_ = nullptr;
-	std::unique_ptr<Entity> cloud_ = nullptr;
-	std::unique_ptr<Entity> fade_ = nullptr;
+	std::unique_ptr<Model> playerModel_ = nullptr;
+	std::unique_ptr<Model> enemyModel_ = nullptr;
+	std::unique_ptr<InstancedModel> wall_ = nullptr;
+	std::unique_ptr<InstancedModel> floor_ = nullptr;
+	std::unique_ptr<Model> goal_ = nullptr;
+	std::unique_ptr<Model> skydome_ = nullptr;
+	std::unique_ptr<Model> cloud_ = nullptr;
+	std::unique_ptr<Sprite> fade_ = nullptr;
 
 	// プレイヤー
-	Player* player_ = nullptr;
+	std::unique_ptr<Player> player_ = nullptr;
 
 	// 敵
-	EnemyManager* enemyManager_ = nullptr;
+	std::unique_ptr<EnemyManager> enemyManager_ = nullptr;
 
 	// 弾
-	BulletManager* bulletManager_ = nullptr;
+	std::unique_ptr<BulletManager> bulletManager_ = nullptr;
 
 	// エフェクト
-	EffectManager* effectManager_ = nullptr;
+	std::unique_ptr<EffectManager> effectManager_ = nullptr;
 
 	// マップ
-	MapTile* mapTile_ = nullptr;
+	std::unique_ptr<MapTile> mapTile_ = nullptr;
 
 	// マップ判定
-	MapCheck* mapCheck_ = nullptr;
+	std::unique_ptr<MapCheck> mapCheck_ = nullptr;
 
 	// 武器マネージャー
-	WeaponManager* weaponManager_ = nullptr;
+	std::unique_ptr<WeaponManager> weaponManager_ = nullptr;
 
 	// アイテムマネージャー
-	ItemManager* itemManager_ = nullptr;
+	std::unique_ptr<ItemManager> itemManager_ = nullptr;
 
 	// 当たり判定
-	CollisionChecker* collisionChecker_ = nullptr;
+	std::unique_ptr<CollisionChecker> collisionChecker_ = nullptr;
 
 	// カメラ
-	Camera* camera_ = nullptr;
+	std::unique_ptr<Camera> camera_ = nullptr;
 	float cameraDistance_ = 20.0f;
 
 	// デバッグカメラ
-	DebugCamera* debugCamera_ = nullptr;
+	std::unique_ptr <DebugCamera> debugCamera_ = nullptr;
 
 	// フェード
 	bool isFadeIn_ = true;

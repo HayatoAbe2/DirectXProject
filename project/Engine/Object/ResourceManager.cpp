@@ -1,6 +1,7 @@
 #include "ResourceManager.h"
 #include "Texture.h"
 #include "Model.h"
+#include "Data/ModelData.h"
 #include "Sprite.h"
 #include "InstancedModel.h"
 #include "../Io/Logger.h"
@@ -19,12 +20,8 @@
 
 ResourceManager::~ResourceManager() {
 	// キャッシュしているリソースを解放
-	for (auto& texture : textures_) {
-		delete texture.second;
-	}
-	textures_.clear();
-	meshes_.clear();
-	models_.clear();
+	texturesCache_.clear();
+	modelDataCache_.clear();
 	instancedModels_.clear();
 }
 
@@ -138,7 +135,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ResourceManager::CreateBufferResource(siz
 	return vertexResource;
 }
 
-std::shared_ptr<Texture> ResourceManager::CreateTextureSRV(std::shared_ptr<Texture> texture) {
+void ResourceManager::CreateTextureSRV(Texture* texture) {
 	if (!texture->GetMtlPath().empty()) {
 		// Textureを読んで転送する
 		DirectX::ScratchImage mipImages = LoadTexture(texture->GetMtlPath());
@@ -160,8 +157,6 @@ std::shared_ptr<Texture> ResourceManager::CreateTextureSRV(std::shared_ptr<Textu
 		texture->SetSRVHandle({ 0 });
 		texture->SetResource(nullptr);
 	}
-
-	return texture;
 }
 
 void ResourceManager::CreateInstancingSRV(InstancedModel* model, const int numInstance_) {
@@ -203,36 +198,26 @@ Node ResourceManager::ReadNode(aiNode* node) {
 	return result;
 }
 
-std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
-	std::shared_ptr<Model> model = std::make_shared<Model>(); // 構築するModel
+std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
+	std::unique_ptr<Model> model = std::make_unique<Model>(); // 構築するModel
+	std::shared_ptr<ModelData> modelData = std::make_shared<ModelData>(); // データ
+
+	model->SetTransformCBHandle(AllocateTransformCB());
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = models_.find(fullPath);
-	if (it != models_.end()) {
-		auto templateModel = it->second;
-		for (auto& mesh : templateModel->GetMeshes()) {
-			std::shared_ptr<Mesh> newMesh = std::make_shared<Mesh>(*mesh);
-			auto oldMat = mesh->GetMaterial();
-			auto newMat = std::make_shared<Material>(*oldMat); // 新しいマテリアル
+	auto it = modelDataCache_.find(fullPath);
+	if (it != modelDataCache_.end()) {
 
-			bool useTexture = (oldMat->GetTexture() != nullptr);
-			newMat->Initialize(this, useTexture, enableLighting);
-
-			// Texture は共有（shared_ptr を想定）
-			newMat->SetTexture(oldMat->GetTexture());
-
-			newMesh->SetMaterial(newMat);
-			model->AddMeshes(newMesh);
-		}
+		// あった場合、マテリアルを作成しなおす
+		auto cacheData = it->second;
+		model->CopyModelData(cacheData, this);
 		return model;
 
 	} else {
-		std::vector<VertexData> vertices; // 頂点
-		std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
-
+		// assimpでモデル作成
 		Assimp::Importer importer;
-		// assimpでobjを読む
+		// ファイルパス
 		std::string filePath = directoryPath + "/" + filename;
 		// obj->DirectX12変換
 		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
@@ -241,6 +226,8 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		///
 		/// メッシュ頂点の設定
 		/// 
+
+		std::vector<VertexData> vertices; // メッシュ頂点
 
 		for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
 			aiMesh* mesh = scene->mMeshes[meshIndex];
@@ -270,17 +257,25 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		///
 		/// マテリアルの設定
 		/// 
-		
+
+		std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
+
 		for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 			aiMaterial* material = scene->mMaterials[materialIndex];
 			if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
 				aiString textureFilePath;
 				material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
+
+				// テクスチャ設定
 				texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
 				// SRVを作成
-				texture = CreateTextureSRV(texture);
+				CreateTextureSRV(texture.get());
 			}
 		}
+
+		///
+		/// メッシュの設定
+		///
 
 		// VertexBuffer作成
 		size_t size = sizeof(VertexData) * vertices.size();
@@ -297,49 +292,49 @@ std::shared_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 		// Meshに格納
-		std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+		std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 		mesh->SetVertices(vertices);			// 頂点
 		mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
 		mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
 		mesh->rootNode = ReadNode(scene->mRootNode); // 階層の根
 
 		// マテリアル初期化
-		std::shared_ptr<Material> material = std::make_shared<Material>();
+		std::unique_ptr<Material> material = std::make_unique<Material>();
 		bool useTexture = false;
 		if (texture->GetMtlPath() != "") { useTexture = true; }
 		material->Initialize(this, useTexture, enableLighting); // テクスチャ座標情報がなければテクスチャ不使用
 		material->SetTexture(texture);	// テクスチャ
-		mesh->SetMaterial(material);
-		model->AddMeshes(mesh);
+
+		// モデルデータ作成
+		modelData->defaultMaterials_.push_back(std::move(material));
+		modelData->meshes.push_back(std::move(mesh));
+
+		// モデルにデータの参照
+		model->CopyModelData(modelData,this);
 
 		// キャッシュに登録
-		models_.insert({ fullPath, model });
+		modelDataCache_.insert({ fullPath, std::move(modelData) });
 	}
 
 	return model;
 }
 
-std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, const int numInstance) {
-	if (numInstance == 0) { assert(false); } // インスタンス数0はないので止める
+std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string& directoryPath, const std::string& filename, const int numInstance, bool enableLighting) {
+	if (numInstance == 0) { assert(false); } // インスタンス数0の場合止める
 
-	std::shared_ptr<InstancedModel> model = std::make_shared<InstancedModel>(); // 構築するModel
+	std::unique_ptr<InstancedModel> model = std::make_unique<InstancedModel>(); // 構築するModel
+	std::shared_ptr<ModelData> modelData = std::make_shared<ModelData>(); // データ
+
+	model->SetTransformCBHandle(AllocateTransformCB());
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
-	auto it = instancedModels_.find(fullPath);
-	if (it != instancedModels_.end()) {
-		auto templateModel = it->second;
-		for (auto& mesh : templateModel->GetMeshes()) {
-			std::shared_ptr<Mesh> newMesh = std::make_shared<Mesh>(*mesh);
-			auto oldMat = mesh->GetMaterial();
-			auto newMat = std::make_shared<Material>(*oldMat); // 新しいマテリアル
+	auto it = modelDataCache_.find(fullPath);
+	if (it != modelDataCache_.end()) {
 
-			bool useTexture = (oldMat->GetTexture() != nullptr);
-			newMat->Initialize(this, useTexture, true);
-			newMat->SetTexture(oldMat->GetTexture());
-			newMesh->SetMaterial(newMat);
-			model->AddMeshes(newMesh);
-		}
+		// あった場合、マテリアルを作成しなおす
+		auto cacheData = it->second;
+		model->SetData(cacheData, this);
 
 		model->SetNumInstance(numInstance);
 		// インスタンス数分のtransformリソース
@@ -401,7 +396,7 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
 			texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
 			// SRVを作成
-			texture = CreateTextureSRV(texture);
+			CreateTextureSRV(texture.get());
 		}
 	}
 
@@ -420,19 +415,31 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// Meshに格納
-	std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+	std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 	mesh->SetVertices(vertices);			// 頂点
 	mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
 	mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
 
 	// マテリアル初期化
-	std::shared_ptr<Material> material = std::make_shared<Material>();
+	std::unique_ptr<Material> material = std::make_unique<Material>();
 	bool useTexture = false;
 	if (texture->GetMtlPath() != "") { useTexture = true; }
 	material->Initialize(this, useTexture, true); // テクスチャ座標情報がなければテクスチャ不使用
 	material->SetTexture(texture);	// テクスチャ
-	mesh->SetMaterial(material);
-	model->AddMeshes(mesh);
+
+	// モデルデータ作成
+	modelData->defaultMaterials_.push_back(std::move(material));
+	modelData->meshes.push_back(std::move(mesh));
+
+	// モデルにデータの参照
+	model->SetData(modelData, this);
+
+	// キャッシュに登録
+	modelDataCache_.insert({ fullPath, std::move(modelData) });
+
+	///
+	/// インスタンシング用の設定
+	///
 
 	model->SetNumInstance(numInstance);
 	// インスタンス数分のtransformリソース
@@ -450,9 +457,6 @@ std::shared_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	model->SetInstanceResource(instanceTransformResource);
 	model->SetInstanceTransformData(transformData);
 	CreateInstancingSRV(model.get(), numInstance);
-
-	// キャッシュに登録
-	instancedModels_.insert({ fullPath, model });
 
 	return model;
 }
@@ -481,15 +485,16 @@ std::string ResourceManager::LoadMaterialTemplateFile(const std::string& directo
 	return mtlFilePath;
 }
 
-std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
+std::unique_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// キャッシュにあるか確認
 	//auto it = sprites_.find(texturePath);
 	//if (it != sprites_.end()) {
 	//	return it->second; // キャッシュにあったのでそれを返す
 	//}
 
+	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
 
-	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>();
+	sprite->SetTransformCBHandle(AllocateTransformCB());
 
 	// UVTransform
 	Transform uvTransform_{
@@ -571,13 +576,13 @@ std::shared_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 	// TexturePathを設定
 	std::shared_ptr<Texture> texture = std::make_shared<Texture>();
 	texture->SetMtlFilePath(texturePath);
-	texture = CreateTextureSRV(texture);
+	CreateTextureSRV(texture.get());
 
 	// Sprite用のマテリアルリソースを作る
-	Material* material = new Material;
+	std::unique_ptr<Material> material = std::make_unique<Material>();
 	material->Initialize(this, true, false); // テクスチャ座標情報がなければテクスチャ不使用
 	material->SetTexture(texture);
-	sprite->SetMaterial(material);
+	sprite->SetMaterial(std::move(material));
 
 	// キャッシュに登録
 	//sprites_.insert({ texturePath, sprite });

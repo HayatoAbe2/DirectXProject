@@ -1,10 +1,5 @@
 #pragma once
-
-class Input;
-class Audio;
-class Renderer;
-class ResourceManager;
-class GameContext;
+#include "GameContext.h"
 
 /// <summary>
 /// 各シーンの基底クラス

@@ -1,9 +1,5 @@
 #pragma once
-#include "Material.h"
-#include "VertexData.h"
-#include "TransformationMatrix.h"
-#include "Texture.h"
-#include "Mesh.h"
+#include "Data/ModelData.h"
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -12,28 +8,52 @@
 
 class Renderer;
 class Camera;
+class ResourceManager;
 class Model {
 public:
+
 	///
-	/// モデル読み込み時のSetter
+	/// Setter
 	///
 
-	/// <summary>
-	/// メッシュ追加
-	/// </summary>
-	/// <param name="mesh">追加するメッシュ</param>
-	void AddMeshes(const std::shared_ptr<Mesh>& mesh) { meshes_.push_back(mesh); }
+	void SetTransform(const Transform& transform) { transform_ = transform; }
+	void SetScale(const Vector3& scale) { transform_.scale = scale; }
+	void SetRotate(const Vector3& rotate) { transform_.rotate = rotate; }
+	void SetTranslate(const Vector3& translate) { transform_.translate = translate; }
 
-	const std::string& GetMtlPath()const { return mtlFilePath; }
-	
-	// メッシュ(全体)の取得
-	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() { return meshes_; }
+	// データの設定
+	void CopyModelData(std::shared_ptr<ModelData> data, ResourceManager* rm);
+
+	// トランスフォームCBハンドルセット
+	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
+
+	///
+	/// Getter
+	///
+
+	// トランスフォーム
+	Transform GetTransform() { return transform_; }
+
+	// データの取得
+	std::shared_ptr<const ModelData> GetData() { return data_; }
+
+	// マテリアル取得
+	Material* GetMaterial(int index) { return material_[index].get(); }
+
+	// トランスフォームCBハンドル取得
+	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
 
 private:
-	// モデルデータ
-	std::string mtlFilePath;
+	// トランスフォーム
+	Transform transform_ = { { 1,1,1 },{}, {} };
 
-	// メッシュ
-	std::vector<std::shared_ptr<Mesh>> meshes_;
+	// モデルデータ
+	std::shared_ptr<ModelData> data_ = nullptr;
+
+	// マテリアル
+	std::vector<std::unique_ptr<Material>> material_{};
+
+	// トランスフォームCBハンドル
+	uint32_t transformCBHandle_ = 0;
 };
 

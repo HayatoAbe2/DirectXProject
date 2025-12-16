@@ -187,7 +187,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\Graphics\DescriptorHeapManager.cpp" />
     <ClCompile Include="engine\Io\DumpExporter.cpp" />
     <ClCompile Include="engine\Scene\GameContext.cpp" />
-    <ClCompile Include="engine\Object\Entity.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -251,7 +250,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Bullet\RapidBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
     <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
-    <ClCompile Include="engine\Object\ModelData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -331,7 +329,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\Object\Lights\DirectionalLight.h" />
     <ClInclude Include="engine\Io\DumpExporter.h" />
     <ClInclude Include="engine\Scene\GameContext.h" />
-    <ClInclude Include="engine\Object\Entity.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -389,7 +386,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Weapon\MeleeWeapon.h" />
     <ClInclude Include="application\Enemy\Enemies\Knight.h" />
     <ClInclude Include="application\Enemy\Enemies\HeavyKnight.h" />
-    <ClInclude Include="engine\Object\ModelData.h" />
+    <ClInclude Include="engine\Object\Data\ModelData.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

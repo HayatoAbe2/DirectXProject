@@ -4,9 +4,8 @@
 #include "RangedWeapon.h"
 #include <vector>
 #include <memory>
+#include <GameContext.h>
 
-class Entity;
-class GameContext;
 class Camera;
 class MapCheck;
 class RangedWeapon;
@@ -21,7 +20,7 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="playerModel">モデル</param>
-	void Initialize(Entity* playerModel, GameContext* context);
+	void Initialize(std::unique_ptr<Model> playerModel, GameContext* context);
 
 	/// <summary>
 	/// 更新
@@ -50,9 +49,9 @@ public:
 
 private:
 	// 操作説明
-	std::unique_ptr<Entity> control_ = nullptr;
-	std::unique_ptr<Entity> equipment_ = nullptr;
-	std::unique_ptr<Entity> life_ = nullptr;
+	std::unique_ptr<Sprite> control_ = nullptr;
+	std::unique_ptr<Sprite> equipment_ = nullptr;
+	std::unique_ptr<Sprite> life_ = nullptr;
 
 	// トランスフォーム
 	Transform transform_;
@@ -82,7 +81,7 @@ private:
 	int stunTimer_ = 0;
 
 	// モデル
-	Entity* model_ = nullptr;
+	std::unique_ptr<Model> model_ = nullptr;
 
 	// 射撃
 	int shootCoolTime_ = 0;
@@ -91,7 +90,7 @@ private:
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
 
 	// 移動パーティクル
-	std::unique_ptr<Entity> moveParticle_;
+	std::unique_ptr<ParticleSystem> moveParticle_;
 	const int moveParticleNum_ = 20;
 	float moveParticleRange_ = 1.0f;
 	int moveParticleEmitTimer_ = 0;

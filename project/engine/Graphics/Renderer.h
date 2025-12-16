@@ -3,7 +3,9 @@
 #include "../Scene/DebugCamera.h"
 #include "../Object/Material.h"
 #include "../Object/Model.h"
-#include "../Object/Entity.h"
+#include "../Object/InstancedModel.h"
+#include "../Object/Sprite.h"
+#include "../Object/ParticleSystem.h"
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
 #include "../Object/VertexData.h"
@@ -35,30 +37,26 @@ public:
 	/// <summary>
 	/// トランスフォーム更新
 	/// </summary>
-	/// <param name="entity">エンティティ</param>
-	/// <param name="camera">カメラ</param>
-	void UpdateEntityTransforms(const Entity& entity, const Camera& camera);
+	void UpdateModelTransforms(Model* model, Camera* camera);
 
-	void UpdateSpriteTransform(Entity& entity);
-
-	void DrawEntity(Entity& entity, const Camera& camera, LightManager* lightManager, int blendMode);
+	void UpdateSpriteTransform(Sprite* sprite);
 
 	/// <summary>
 	/// モデル描画
 	/// </summary>
 	/// <param name="blendMode">ブレンドモード</param>
-	void DrawModel(Entity* entity, LightManager* lightManager, int blendMode);
+	void DrawModel(Model* model, Camera* camera, LightManager* lightManager, int blendMode);
 
 	/// <summary>
 	/// インスタンスモデル描画
 	/// </summary>
 	/// <param name="model">複数インスタンスを持つモデル</param>
 	/// <param name="blendMode">ブレンドモード</param>
-	void DrawModelInstance(Entity* entity, LightManager* lightManager, int blendMode);
+	void DrawModelInstance(InstancedModel* model, Camera* camera, LightManager* lightManager, int blendMode);
 
-	void DrawModelParticle(Entity* entity, int blendMode);
+	void DrawParticles(ParticleSystem* particleSys, Camera* camera, int blendMode);
 
-	void DrawSprite(Entity* entity, int blendMode);
+	void DrawSprite(Sprite* sprite, int blendMode);
 
 	/// <summary>
 	/// フレーム開始時の処理(描画開始時に行う)

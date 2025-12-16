@@ -4,15 +4,15 @@
 
 void SpreadBullet::Initialize(GameContext* context) {
 	context_ = context;
-	particle_ = std::make_unique<Entity>();
-	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
-	particle_->GetParticleSystem()->SetLifeTime(2);
-	particle_->GetParticleSystem()->SetColor({ 0.8f, 0.2f, 0.2f, 1.0f });
+	particle_ = std::make_unique<ParticleSystem>();
+	particle_->Initialize(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
+	particle_->SetLifeTime(2);
+	particle_->SetColor({ 0.8f, 0.2f, 0.2f, 1.0f });
 
-	hitParticle_ = std::make_unique<Entity>();
-	hitParticle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", hitParticleNum_));
-	hitParticle_->GetParticleSystem()->SetLifeTime(hitParticleLifeTime);
-	hitParticle_->GetParticleSystem()->SetColor({ 0.6f, 0.1f, 0.1f, 1.0f });
+	hitParticle_ = std::make_unique<ParticleSystem>();
+	hitParticle_->Initialize(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", hitParticleNum_));
+	hitParticle_->SetLifeTime(hitParticleLifeTime);
+	hitParticle_->SetColor({ 0.6f, 0.1f, 0.1f, 1.0f });
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
 }
@@ -44,13 +44,13 @@ void SpreadBullet::Update(MapCheck* mapCheck) {
 			Transform transform = model_->GetTransform();
 			transform.translate += randomVector + velocity_ * 0.5f;
 			transform.scale = { 1.0f,1.0f,1.0f };
-			particle_->GetParticleSystem()->Emit(transform, -velocity_ * 0.5f);
+			particle_->Emit(transform, -velocity_ * 0.5f);
 		}
 	}
-	particle_->GetParticleSystem()->Update();
+	particle_->Update();
 
 	if (isDead_) {
-		hitParticle_->GetParticleSystem()->Update();
+		hitParticle_->Update();
 		hitParticleLifeTime--;
 		if (hitParticleLifeTime <= 0) {
 			canErase_ = true;
@@ -60,12 +60,12 @@ void SpreadBullet::Update(MapCheck* mapCheck) {
 
 void SpreadBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
-		context->DrawEntity(*model_, *camera, BlendMode::Add);
+		context->DrawModel(model_.get(), camera, BlendMode::Add);
 	}
 
 	// パーティクル
-	context->DrawEntity(*particle_, *camera, BlendMode::Add);
-	context->DrawEntity(*hitParticle_, *camera, BlendMode::Add);
+	context->DrawParticle(particle_.get(), camera, BlendMode::Add);
+	context->DrawParticle(hitParticle_.get(), camera, BlendMode::Add);
 }
 
 void SpreadBullet::Hit() {
@@ -73,7 +73,7 @@ void SpreadBullet::Hit() {
 
 	// 飛散パーティクル
 	particleField_->SetGravity(-0.4f, model_->GetTransform().translate);
-	hitParticle_->GetParticleSystem()->AddField(std::move(particleField_));
+	hitParticle_->AddField(std::move(particleField_));
 	for (int i = 0; i < hitParticleNum_; ++i) {
 		Vector3 randomVector = {
 		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
@@ -83,6 +83,6 @@ void SpreadBullet::Hit() {
 		Transform transform = model_->GetTransform();
 		transform.translate += randomVector;
 		transform.scale = { 1.5f,1.5f,1.5f };
-		hitParticle_->GetParticleSystem()->Emit(transform, {});
+		hitParticle_->Emit(transform, {});
 	}
 }

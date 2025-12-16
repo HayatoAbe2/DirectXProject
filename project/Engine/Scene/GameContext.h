@@ -1,7 +1,14 @@
 #pragma once
+
+// ゲームシーンにデフォルトで入れておくインクルード
 #include "MathUtils.h"
-#include "../Graphics/BlendMode.h"
+#include "Camera.h"
+#include "../Object/Model.h"
+#include "../Object/InstancedModel.h"
+#include "../Object/Sprite.h"
+#include "../Object/ParticleSystem.h"
 #include "../Object/Lights/LightsForGPU.h"
+#include "../Graphics/BlendMode.h"
 
 #include <cstdint>
 #include <string>
@@ -12,11 +19,6 @@ class ResourceManager;
 class LightManager;
 class Input;
 class Audio;
-class Entity;
-class Model;
-class Sprite;
-class InstancedModel;
-class Camera;
 class Renderer;
 
 class GameContext {
@@ -33,9 +35,9 @@ public:
 	/// リソース管理系
 	///
 
-	std::shared_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
-	std::shared_ptr<InstancedModel> LoadInstancedModel(const std::string& directoryPath, const std::string& filename, const int num);
-	std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
+	std::unique_ptr<Model> LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
+	std::unique_ptr<InstancedModel> LoadInstancedModel(const std::string& directoryPath, const std::string& filename, const int num);
+	std::unique_ptr<Sprite> LoadSprite(std::string texturePath);
 
 	///
 	/// ライトの操作
@@ -53,7 +55,10 @@ public:
 	/// 描画系 
 	///
 
-	void DrawEntity(Entity& entity, Camera& camera,BlendMode blendMode = BlendMode::Normal);
+	void DrawModel(Model* model, Camera* camera, BlendMode blendMode = BlendMode::Normal);
+	void DrawSprite(Sprite* sprite, BlendMode blendMode = BlendMode::Normal);
+	void DrawInstancedModel(InstancedModel* instancedModel, Camera* camera, BlendMode blendMode = BlendMode::Normal);
+	void DrawParticle(ParticleSystem* particleSystem, Camera* camera, BlendMode blendMode = BlendMode::Normal);
 
 	/// 
 	/// 入力系

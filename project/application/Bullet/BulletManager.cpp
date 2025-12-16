@@ -2,7 +2,6 @@
 #include "EffectManager.h"
 #include "MapCheck.h"
 #include "Bullet.h"
-#include "Entity.h"
 
 BulletManager::~BulletManager() {
 	bullets_.clear();

@@ -1,20 +1,7 @@
 #include "GameScene.h"
 #include "MathUtils.h"
 #include "GameContext.h"
-#include "Player.h"
-#include "EnemyManager.h"
-#include "BulletManager.h"
-#include "EffectManager.h"
-#include "Entity.h"
-#include "Model.h"
-#include "Sprite.h"
-#include "InstancedModel.h"
 #include "ParticleSystem.h"
-#include "MapTile.h"
-#include "MapCheck.h"
-#include "WeaponManager.h"
-#include "ItemManager.h"
-#include "CollisionChecker.h"
 
 #include <numbers>
 
@@ -28,24 +15,12 @@ GameScene::~GameScene() {
 	context_->SoundUnload(L"Resources/Sounds/SE/fall.mp3");
 	context_->SoundUnload(L"Resources/Sounds/SE/warp.mp3");
 	context_->SoundUnload(L"Resources/Sounds/SE/hit.mp3");
-
-	delete camera_;
-	delete debugCamera_;
-	delete player_;
-	delete enemyManager_;
-	delete bulletManager_;
-	delete mapTile_;
-	delete mapCheck_;
-	delete weaponManager_;
-	delete itemManager_;
-	delete collisionChecker_;
-	delete effectManager_;
 }
 
 void GameScene::Initialize() {
-	debugCamera_ = new DebugCamera;
+	debugCamera_ = std::make_unique<DebugCamera>();
 	debugCamera_->Initialize(context_);
-	camera_ = new Camera;
+	camera_ = std::make_unique<Camera>();
 	camera_->transform_.rotate = { 1.0f,0,0 };
 
 	context_->SoundLoad(L"Resources/Sounds/SE/explosion.mp3");
@@ -56,83 +31,77 @@ void GameScene::Initialize() {
 	context_->SoundLoad(L"Resources/Sounds/SE/warp.mp3");
 	context_->SoundLoad(L"Resources/Sounds/SE/hit.mp3");
 
-	playerModel_ = std::make_unique<Entity>();
-	playerModel_->SetModel(context_->LoadModel("Resources/Player", "player.obj"));
+	playerModel_ = context_->LoadModel("Resources/Player", "player.obj");
 
 	// マップ
-	wall_ = std::make_unique<Entity>();
-	wall_->SetInstancedModel(context_->LoadInstancedModel("Resources/Block", "block.obj", 1000));
+	wall_ = context_->LoadInstancedModel("Resources/Block", "block.obj", 1000);
+	floor_ = context_->LoadInstancedModel("Resources/Floor", "floor.obj", 1000);
+	goal_ = context_->LoadModel("Resources/Tiles", "sphere.obj");
 
-	floor_ = std::make_unique<Entity>();
-	floor_->SetInstancedModel(context_->LoadInstancedModel("Resources/Floor", "floor.obj", 1000));
-
-	goal_ = std::make_unique<Entity>();
-	goal_->SetModel(context_->LoadModel("Resources/Tiles", "sphere.obj"));
-
-	mapTile_ = new MapTile();
-	mapTile_->Initialize(wall_.get(), floor_.get(),goal_.get(),context_);
+	mapTile_ = std::make_unique<MapTile>();
+	mapTile_->Initialize(std::move(wall_), std::move(floor_),std::move(goal_),context_);
 
 	// 武器マネージャー
-	weaponManager_ = new WeaponManager();
+	weaponManager_ = std::make_unique<WeaponManager>();
 	weaponManager_->Initilaize(context_);
 
 	// アイテムマネージャー
-	itemManager_ = new ItemManager();
-	itemManager_->Initialize(weaponManager_,context_);
+	itemManager_ = std::make_unique<ItemManager>();
+	itemManager_->Initialize(weaponManager_.get(), context_);
 
 	// エフェクト
-	effectManager_ = new EffectManager();
+	effectManager_ = std::make_unique<EffectManager>();
 	effectManager_->Initialize(context_);
 
 	// 当たり判定
-	collisionChecker_ = new CollisionChecker();
-	collisionChecker_->Inititalize(effectManager_,context_);
+	collisionChecker_ = std::make_unique<CollisionChecker>();
+	collisionChecker_->Inititalize(effectManager_.get(), context_);
 
 	// プレイヤー
-	player_ = new Player();
-	player_->Initialize(playerModel_.get(),context_);
+	player_ = std::make_unique<Player>();
+	player_->Initialize(std::move(playerModel_),context_);
 
 	// 敵
-	enemyManager_ = new EnemyManager();
+	enemyManager_ = std::make_unique<EnemyManager>();
 	enemyManager_->Initialize(context_);
 
 	// 弾
-	bulletManager_ = new BulletManager();
+	bulletManager_ = std::make_unique<BulletManager>();
 	
 	// 天球
-	skydome_ = std::make_unique<Entity>();
-	skydome_->SetModel(context_->LoadModel("Resources/Skydome", "skydome.obj", false));
+	skydome_ = std::make_unique<Model>();
+	skydome_ = context_->LoadModel("Resources/Skydome", "skydome.obj", false);
 
 	// 雲
-	cloud_ = std::make_unique<Entity>();
-	cloud_->SetModel(context_->LoadModel("Resources/Cloud", "Cloud.obj", false));
+	cloud_ = std::make_unique<Model>();
+	cloud_ = context_->LoadModel("Resources/Cloud", "Cloud.obj", false);
 	cloud_->SetTranslate({ 0,-20,0 });
-	MaterialData data = cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+	MaterialData data = cloud_->GetMaterial(0)->GetData();
 	data.color.w = 1.0f;
-	cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
+	cloud_->GetMaterial(0)->SetData(data);
 
 	camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,0,-cameraDistance_ };
 
 	// フェード
-	fade_ = std::make_unique<Entity>();
-	fade_->SetSprite(context_->LoadSprite("resources/white1x1.png"));
-	fade_->GetSprite()->SetSize(context_->GetWindowSize() + Vector2{20,80});
-	fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,0.0f });
+	fade_ = std::make_unique<Sprite>();
+	fade_ = context_->LoadSprite("resources/white1x1.png");
+	fade_->SetSize(context_->GetWindowSize() + Vector2{20,80});
+	fade_->SetColor({ 1.0f,1.0f,1.0f,0.0f });
 
 	// マップ判定
-	mapCheck_ = new MapCheck();
+	mapCheck_ = std::make_unique<MapCheck>();
 
 	Reset();
 }
 
 void GameScene::Update() {
-	MaterialData data = cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+	MaterialData data = cloud_->GetMaterial(0)->GetData();
 	data.uvTransform.m[3][1] += 0.001f;
-	cloud_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(data);
+	cloud_->GetMaterial(0)->SetData(data);
 
 	// プレイヤー処理
 	if (!isFadeOut_) {
-		player_->Update(context_, mapCheck_, itemManager_, camera_, bulletManager_);
+		player_->Update(context_, mapCheck_.get(), itemManager_.get(), camera_.get(), bulletManager_.get());
 	}
 
 	// ゲームオーバー
@@ -155,33 +124,33 @@ void GameScene::Update() {
 	debugCamera_->Update();
 
 	// 敵
-	enemyManager_->Update(context_, mapCheck_, player_, bulletManager_);
+	enemyManager_->Update(context_, mapCheck_.get(), player_.get(), bulletManager_.get());
 
 	// 弾の処理
-	bulletManager_->Update(mapCheck_);
+	bulletManager_->Update(mapCheck_.get());
 	for (const auto& bullet : bulletManager_->GetBullets()) {
 
 		// 当たり判定
-		collisionChecker_->Check(player_, bullet,camera_);
+		collisionChecker_->Check(player_.get(), bullet, camera_.get());
 
 		for (auto enemy : enemyManager_->GetEnemies()) {
-			collisionChecker_->Check(enemy, bullet,camera_);
+			collisionChecker_->Check(enemy, bullet, camera_.get());
 		}
 	}
 
 	// アイテム
-	itemManager_->Update(player_);
+	itemManager_->Update(player_.get());
 
 	if (isFadeIn_) {
 		fadeTimer_++;
-		fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
+		fade_->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
 		if (fadeTimer_ >= kMaxFadeinTimer_) {
 			isFadeIn_ = false;
 			fadeTimer_ = 0;
 		}
 	} else if (isFadeOut_) {
 		fadeTimer_++;
-		fade_->GetSprite()->SetColor({ 1.0f,1.0f,1.0f,(float)fadeTimer_ / (float)kMaxFadeoutTimer_ });
+		fade_->SetColor({ 1.0f,1.0f,1.0f,(float)fadeTimer_ / (float)kMaxFadeoutTimer_ });
 		if (fadeTimer_ >= kMaxFadeoutTimer_) {
 			isFadeOut_ = false;
 
@@ -205,15 +174,15 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
-	context_->DrawEntity(*skydome_, *camera_);
-	context_->DrawEntity(*cloud_, *camera_,BlendMode::Add);
-	mapTile_->Draw(camera_);
-	player_->Draw(context_, camera_);
-	enemyManager_->Draw(context_, camera_);
-	bulletManager_->Draw(context_, camera_);
-	itemManager_->Draw(camera_);
-	effectManager_->Draw(context_, camera_);
-	context_->DrawEntity(*fade_,*camera_);
+	context_->DrawModel(skydome_.get(), camera_.get());
+	context_->DrawModel(cloud_.get(), camera_.get(), BlendMode::Add);
+	mapTile_->Draw(camera_.get());
+	player_->Draw(context_, camera_.get());
+	enemyManager_->Draw(context_, camera_.get());
+	bulletManager_->Draw(context_, camera_.get());
+	itemManager_->Draw(camera_.get());
+	effectManager_->Draw(context_, camera_.get());
+	context_->DrawSprite(fade_.get());
 
 #ifdef USE_IMGUI
 	ImGui::Begin("Player Info");
@@ -245,10 +214,10 @@ void GameScene::Reset() {
 		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,3} });
 
 		// その階の敵とアイテム
-		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 2);
-		enemyManager_->Spawn({ 3,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_, 1);
+		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_.get(), 1);
+		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_.get(), 2);
+		enemyManager_->Spawn({ 3,0,18 }, context_, weaponManager_.get(), 1);
+		enemyManager_->Spawn({ 5,0,24 }, context_, weaponManager_.get(), 1);
 		itemManager_->Spawn({ 10,0,5 }, int(WeaponManager::WEAPON::Pistol));
 		itemManager_->Spawn({ 26,0,12 }, int(WeaponManager::WEAPON::AssaultRifle));
 		break;
@@ -261,11 +230,11 @@ void GameScene::Reset() {
 		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,27} });
 
 		// その階の敵とアイテム
-		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_, 1);
-		enemyManager_->Spawn({ 12,0,21 }, context_, weaponManager_, 2);
-		enemyManager_->Spawn({ 24,0,25 }, context_, weaponManager_, 2);
-		enemyManager_->Spawn({ 4,0,18 }, context_, weaponManager_, 2);
+		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_.get(), 1);
+		enemyManager_->Spawn({ 16,0,18 }, context_, weaponManager_.get(), 1);
+		enemyManager_->Spawn({ 12,0,21 }, context_, weaponManager_.get(), 2);
+		enemyManager_->Spawn({ 24,0,25 }, context_, weaponManager_.get(), 2);
+		enemyManager_->Spawn({ 4,0,18 }, context_, weaponManager_.get(), 2);
 		itemManager_->Spawn({ 27,0,20 }, int(WeaponManager::WEAPON::Shotgun));
 		itemManager_->Spawn({ 26,0,5 }, int(WeaponManager::WEAPON::FireBall));
 		break;
@@ -278,7 +247,7 @@ void GameScene::Reset() {
 		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,3} });
 
 		// その階の敵とアイテム
-		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_, 3);
+		enemyManager_->Spawn({ 25,0,12 }, context_, weaponManager_.get(), 3);
 		break;
 	}
 

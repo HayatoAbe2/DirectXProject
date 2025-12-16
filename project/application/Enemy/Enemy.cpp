@@ -1,5 +1,4 @@
 #include "Enemy.h"
-#include "Entity.h"
 #include "Camera.h"
 #include "MapCheck.h"
 #include "Player.h"
@@ -9,7 +8,7 @@
 #include <numbers>
 #include <cmath>
 
-Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std::unique_ptr<RangedWeapon> rWeapon) {
+Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<RangedWeapon> rWeapon) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
@@ -17,7 +16,7 @@ Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std
 	rangedWeapon_ = std::move(rWeapon);
 }
 
-Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<RangedWeapon>> rWeapons) {
+Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<RangedWeapon>> rWeapons) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
@@ -27,10 +26,10 @@ Enemy::Enemy(std::unique_ptr<Entity> model, Vector3 pos, EnemyStatus status, std
 }
 
 void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
-	for (auto& mesh : model_->GetModel()->GetMeshes()) {
-		auto data = mesh->GetMaterial()->GetData();
+	for (auto& mesh : model_->GetData()->meshes) {
+		auto data = model_->GetMaterial(0)->GetData();
 		data.color = { 1.0f,1.0f,1.0f,1.0f };
-		mesh->GetMaterial()->SetData(data);
+		model_->GetMaterial(0)->SetData(data);      
 	}
 
 	if (!isFall_) {
@@ -146,7 +145,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 }
 
 void Enemy::Draw(GameContext* context, Camera* camera) {
-	context->DrawEntity(*model_, *camera);
+	context->DrawModel(model_.get(), camera);
 }
 
 void Enemy::Hit(int damage, Vector3 from) {
@@ -168,11 +167,9 @@ void Enemy::Hit(int damage, Vector3 from) {
 	}
 
 	// ダメージを受けたら赤くする
-	for (auto& mesh : model_->GetModel()->GetMeshes()) {
-		auto data = mesh->GetMaterial()->GetData();
-		data.color = { 1.0f,0.2f,0.2f,1.0f };
-		mesh->GetMaterial()->SetData(data);
-	}
+	auto data = model_->GetMaterial(0)->GetData();
+	data.color = { 1.0f,0.2f,0.2f,1.0f };
+	model_->GetMaterial(0)->SetData(data);
 }
 
 // EaseInBackの数値調整版

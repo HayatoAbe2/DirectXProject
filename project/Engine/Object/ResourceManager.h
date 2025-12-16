@@ -19,6 +19,7 @@
 class Texture;
 class Mesh;
 class Model;
+class ModelData;
 class Sprite;
 class InstancedModel;
 class DescriptorHeapManager;
@@ -44,7 +45,7 @@ public:
 
     Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 
-    std::shared_ptr<Texture> CreateTextureSRV(std::shared_ptr<Texture> texture);
+    void CreateTextureSRV(Texture* texture);
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
 
@@ -57,13 +58,14 @@ public:
     /// <param name="directoryPath"></param>
     /// <param name="filename"></param>
     /// <returns></returns>
-    std::shared_ptr<Model> LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
-    std::shared_ptr<InstancedModel> LoadModelFile(const std::string& directoryPath, const std::string& filename,const int numInstance_);
+    std::unique_ptr<Model> LoadModelFile(const std::string& directoryPath, const std::string& filename, bool enableLighting = true);
+    std::unique_ptr<InstancedModel> LoadModelFile(const std::string& directoryPath, const std::string& filename,const int numInstance_, bool enableLighting = true);
 
     std::string LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 
-    std::shared_ptr<Sprite> LoadSprite(std::string texturePath);
+    std::unique_ptr<Sprite> LoadSprite(std::string texturePath);
 
+    uint32_t AllocateTransformCB() { return nextId_++; }
 private:
     Logger* logger_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Device> device_ = nullptr;
@@ -78,10 +80,12 @@ private:
     UINT currentSRVIndex_ = 1; // 0 = ImGui用
 
 	// 作成したリソースのキャッシュ
-    std::unordered_map<std::string, Texture*> textures_;
-    std::unordered_map<std::string, std::shared_ptr<Mesh>> meshes_;
-    std::unordered_map<std::string, std::shared_ptr<Model>> models_;
+    std::unordered_map<std::string, std::shared_ptr<Texture>> texturesCache_;
+    std::unordered_map<std::string, std::shared_ptr<ModelData>> modelDataCache_;
     std::unordered_map<std::string, std::shared_ptr<InstancedModel>> instancedModels_;
+
+    // id(ハンドルにしたい)
+    uint32_t nextId_ = 0;
 };
 
 

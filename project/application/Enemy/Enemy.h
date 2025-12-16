@@ -1,5 +1,4 @@
 #pragma once
-#include "Entity.h"
 #include "WeaponStatus.h"
 #include "RangedWeapon.h"
 #include <MathUtils.h>
@@ -15,9 +14,9 @@ class Player;
 
 class Enemy {
 public:
-	Enemy(std::unique_ptr<Entity> model,Vector3 pos,EnemyStatus status,std::unique_ptr<RangedWeapon> rWeapon);
+	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::unique_ptr<RangedWeapon> rWeapon);
 	// ボス敵
-	Enemy(std::unique_ptr<Entity> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<RangedWeapon>> rWeapons);
+	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<RangedWeapon>> rWeapons);
 
 
 	/// <summary>
@@ -55,7 +54,7 @@ protected:
 	Vector3 attackDirection_ = {};
 
 	// モデル
-	std::unique_ptr<Entity> model_ = nullptr;
+	std::unique_ptr<Model> model_ = nullptr;
 
 	// 武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;

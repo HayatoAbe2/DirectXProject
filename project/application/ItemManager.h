@@ -1,9 +1,9 @@
 #pragma once
 #include "MathUtils.h"
 #include "Item.h"
+#include "GameContext.h"
 #include <vector>
 #include <memory>
-#include "Entity.h"
 
 class Player;
 class WeaponManager;
@@ -22,7 +22,7 @@ public:
 	
 private:
 	GameContext* context_ = nullptr;
-	std::unique_ptr<Entity> control_ = nullptr;
+	std::unique_ptr<Sprite> control_ = nullptr;
 	WeaponManager* weaponManager_ = nullptr;
 	std::vector<std::unique_ptr<Item>> items_;
 	bool canInteract_ = true;

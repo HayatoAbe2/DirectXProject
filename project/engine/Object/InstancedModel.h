@@ -4,6 +4,7 @@
 #include "InstanceGPUData.h"
 #include "Texture.h"
 #include "Mesh.h"
+#include "Data/ModelData.h"
 
 #include <d3d12.h>
 #include <wrl.h>
@@ -18,17 +19,6 @@ public:
 	/// モデル読み込み時のSetter
 	///
 
-	/// <summary>
-	/// メッシュ追加
-	/// </summary>
-	/// <param name="mesh">追加するメッシュ</param>
-	void AddMeshes(const std::shared_ptr<Mesh>& mesh) { meshes_.push_back(mesh); }
-
-	const std::string& GetMtlPath()const { return mtlFilePath; }
-
-	// メッシュ(全体)の取得
-	const std::vector<std::shared_ptr<Mesh>>& GetMeshes() { return meshes_; }
-
 	// インスタンス描画用
 	int GetNumInstance() { return numInstance_; }
 	void SetNumInstance(int numInstance) { numInstance_ = numInstance; }
@@ -42,28 +32,65 @@ public:
 	}
 
 	void AddInstanceTransform() {
-		instanceTransforms_.push_back({});
+		transforms_.push_back({});
 	}
-	void SetInstanceTransforms(int index, const Transform& transform, const Camera& camera) {
+	void SetInstanceTransforms(int index, const Transform& transform) {
 		if (index < 0 || index >= numInstance_) return;
-		instanceTransforms_[index] = transform;
+		transforms_[index] = transform;
+	}
+	void SetInstanceTransforms(std::vector<Transform> transforms) {
+		transforms_ = transforms;
+	}
+	void SetScale(int index, const Vector3& scale) {
+		if (index < 0 || index >= numInstance_) return;
+		transforms_[index].scale = scale;
+	}
+	void SetRotate(int index, const Vector3& rotate) {
+		if (index < 0 || index >= numInstance_) return;
+		transforms_[index].rotate = rotate;
+	}
+	void SetTranslate(int index, const Vector3& translate) {
+		if (index < 0 || index >= numInstance_) return;
+		transforms_[index].translate = translate;
 	}
 
+	std::vector<Transform> GetTransforms() { return transforms_; }
 	void SetInstanceTransformData(InstanceGPUData* data) { instanceTransformationData_ = data; }
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
-	void UpdateInstanceTransform(const Camera& camera, const std::vector<Transform>& transforms,std::vector<Vector4>& color);
-private:
-	// モデルデータ
-	std::string mtlFilePath;
+	void UpdateInstanceTransform(Camera* camera, const std::vector<Transform>& transforms, std::vector<Vector4>& color);
 
-	// メッシュ
-	std::vector<std::shared_ptr<Mesh>> meshes_;
+	// データの設定
+	void SetData(std::shared_ptr<ModelData> data, ResourceManager* rm);
+
+	// トランスフォームCBハンドルセット
+	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
+
+	// データの取得
+	std::shared_ptr<ModelData> GetData() { return data_; }
+
+	// マテリアル
+	Material* GetMaterial(int index) { return material_[index].get(); }
+
+	// トランスフォームCBハンドル取得
+	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
+
+
+private:
+
+	// モデルデータ
+	std::shared_ptr<ModelData> data_ = nullptr;
+
+	// マテリアル
+	std::vector<std::unique_ptr<Material>> material_{};
+
+	// トランスフォームCBハンドル
+	uint32_t transformCBHandle_ = 0;
 
 	// 複数体描画用（必要なときだけ使う）
 	int numInstance_ = 1;
 	D3D12_GPU_DESCRIPTOR_HANDLE instanceSRVHandleGPU_;
-	std::vector<Transform> instanceTransforms_;
+	std::vector<Transform> transforms_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceTransformationResource_ = nullptr;
 	InstanceGPUData* instanceTransformationData_ = nullptr;
 };

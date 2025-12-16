@@ -1,7 +1,7 @@
 #pragma once
 #include "MathUtils.h"
-#include "Entity.h"
 #include <memory>
+#include "GameContext.h"
 
 class GameContext;
 class Camera;
@@ -16,7 +16,7 @@ public:
 private:
 	GameContext* context_ = nullptr;
 
-	std::vector<std::unique_ptr<Entity>> hitEffect_;
+	std::vector<std::unique_ptr<Model>> hitEffect_;
 	float hitEffectUpScaleSpeed_ = 0.2f;
 };
 

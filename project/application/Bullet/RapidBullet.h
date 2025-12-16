@@ -1,10 +1,11 @@
 #pragma once
 #include "Bullet.h"
 #include "ParticleSystem.h"
+#include "GameContext.h"
 
 class RapidBullet :public Bullet {
 public:
-	RapidBullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
+	RapidBullet(std::unique_ptr<Model> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {
 	};
 	void Initialize(GameContext* context);
@@ -15,11 +16,11 @@ public:
 private:
 	GameContext* context_ = nullptr;
 
-	std::unique_ptr<Entity> particle_;
+	std::unique_ptr<ParticleSystem> particle_;
 	const int particleNum_ = 150;
 	float particleRange_ = 0.7f;
 
-	std::unique_ptr<Entity> hitParticle_;
+	std::unique_ptr<ParticleSystem> hitParticle_;
 	const int hitParticleNum_ = 10;
 	float hitParticleRange_ = 1.0f;
 	int hitParticleLifeTime = 20;

@@ -1,15 +1,9 @@
 #pragma once
-#include "Transform.h"
-#include "DebugCamera.h"
-#include "Camera.h"
+#include "GameContext.h"
 #include "BaseScene.h"
 
-#include <list>
 #include <memory>
-#include <vector>
-#include <random>
 
-class Entity;
 class Renderer;
 class Camera;
 
@@ -28,20 +22,20 @@ public:
 	void Draw() override;
 
 private:
-	// 3Dモデル
-	std::unique_ptr<Entity> skydome_ = nullptr;
-	std::unique_ptr<Entity> fade_ = nullptr;
+	// モデル
+	std::unique_ptr<Model> skydome_ = nullptr;
 
-	// 操作
-	std::unique_ptr<Entity> control_ = nullptr;
-	std::unique_ptr<Entity> logo_ = nullptr;
+	// スプライト
+	std::unique_ptr<Sprite> fade_ = nullptr;
+	std::unique_ptr<Sprite> control_ = nullptr;
+	std::unique_ptr<Sprite> logo_ = nullptr;
 
 	// カメラ
-	Camera* camera_ = nullptr;
+	std::unique_ptr<Camera> camera_ = nullptr;
 	float cameraDistance_ = 20.0f;
 
 	// デバッグカメラ
-	DebugCamera* debugCamera_ = nullptr;
+	std::unique_ptr<DebugCamera> debugCamera_ = nullptr;
 
 	// フェード
 	bool isFadeIn_ = true;

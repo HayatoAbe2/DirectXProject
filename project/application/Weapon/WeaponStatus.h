@@ -1,6 +1,4 @@
 #pragma once
-#include <memory>
-#include <string>
 #include "Model.h"
 
 struct RangedWeaponStatus {
@@ -16,8 +14,6 @@ struct RangedWeaponStatus {
 	int shootCoolTime;
 	// 弾の生存時間
 	int bulletLifeTime;
-	// 弾モデル
-	std::shared_ptr<Model> bulletModel;
 };
 
 struct MeleeWeaponStatus {
@@ -29,6 +25,4 @@ struct MeleeWeaponStatus {
 	int chargeTime;
 	// 攻撃クールダウン
 	int attackCoolTime;
-	// 武器モデル
-	std::shared_ptr<Model> weaponModel;
 };

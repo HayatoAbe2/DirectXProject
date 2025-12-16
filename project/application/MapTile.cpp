@@ -1,7 +1,6 @@
 #include "MapTile.h"
 #include "GameContext.h"
 #include "Camera.h"
-#include "Entity.h"
 #include "ParticleSystem.h"
 #include "Model.h"
 
@@ -14,23 +13,23 @@ MapTile::~MapTile() {
 	context_->RemoveSpotLight(lightIndex_);
 }
 
-void MapTile::Initialize(Entity* wall, Entity* floor, Entity* goal, GameContext* context) {
-	wall_ = wall;
-	floor_ = floor;
-	goal_ = goal;
+void MapTile::Initialize(std::unique_ptr<InstancedModel> wall, std::unique_ptr<InstancedModel> floor, std::unique_ptr<Model> goal, GameContext* context) {
+	wall_ = std::move(wall);
+	floor_ = std::move(floor);
+	goal_ = std::move(goal);
 	context_ = context;
 
-	particle_ = std::make_unique<Entity>();
-	particle_->SetParticleSystem(context->LoadInstancedModel("Resources/Particle/Goal", "goalEffect.obj", particleNum_));
-	particle_->GetParticleSystem()->SetLifeTime(40);
-	particle_->GetParticleSystem()->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
+	particle_ = std::make_unique<ParticleSystem>();
+	particle_->Initialize(context->LoadInstancedModel("Resources/Particle/Goal", "goalEffect.obj", particleNum_));
+	particle_->SetLifeTime(40);
+	particle_->SetColor({ 1.0f, 1.0f, 0.0f, 1.0f });
 }
 
 void MapTile::LoadCSV(const std::string& filePath) {
 	soundPlayed_ = false;
 
 	if (lightIndex_ != -1) { context_->RemoveSpotLight(lightIndex_); }
-	particle_->GetParticleSystem()->RemoveField();
+	particle_->RemoveField();
 	map_.clear();
 	mapWidth_ = 0;
 	mapHeight_ = 0;
@@ -120,7 +119,7 @@ void MapTile::LoadCSV(const std::string& filePath) {
 				std::unique_ptr<ParticleField> particleField = std::make_unique<ParticleField>();
 				particleField->SetCheckArea(false);
 				particleField->SetRotateXZ(0.15f, { x * tileSize_ + tileSize_ / 2.0f,0,y * tileSize_ + tileSize_ / 2.0f });
-				particle_->GetParticleSystem()->AddField(std::move(particleField));
+				particle_->AddField(std::move(particleField));
 			}
 		}
 	}
@@ -148,30 +147,30 @@ void MapTile::Update(bool canGoal) {
 			Transform transform = goal_->GetTransform();
 			transform.translate += randomVector;
 			transform.scale = { 0.5f,4.0f,4.0f };
-			particle_->GetParticleSystem()->Emit(transform, { 0,0.5f,0 });
+			particle_->Emit(transform, { 0,0.5f,0 });
 
 			emitTimer_ = 0;
 		}
 
-		MaterialData materialData = goal_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+		MaterialData materialData = goal_->GetData()->defaultMaterials_[0]->GetData();
 		materialData.color = { 1,1,1,1 };
-		goal_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(materialData);
+		goal_->GetData()->defaultMaterials_[0]->SetData(materialData);
 
 		context_->GetSpotLight(lightIndex_).intensity = 1.0f;
 	} else {
-		MaterialData materialData = goal_->GetModel()->GetMeshes()[0]->GetMaterial()->GetData();
+		MaterialData materialData = goal_->GetData()->defaultMaterials_[0]->GetData();
 		materialData.color = { 0.1f,0.1f,0.1f,1.0f };
-		goal_->GetModel()->GetMeshes()[0]->GetMaterial()->SetData(materialData);
+		goal_->GetData()->defaultMaterials_[0]->SetData(materialData);
 
 		context_->GetSpotLight(lightIndex_).intensity = 0.0f;
 	}
 
-	particle_->GetParticleSystem()->Update();
+	particle_->Update();
 }
 
 void MapTile::Draw(Camera* camera) {
-	context_->DrawEntity(*wall_, *camera);
-	context_->DrawEntity(*floor_, *camera);
-	context_->DrawEntity(*goal_, *camera);
-	context_->DrawEntity(*particle_, *camera, BlendMode::Add);
+	context_->DrawInstancedModel(wall_.get(), camera);
+	context_->DrawInstancedModel(floor_.get(), camera);
+	context_->DrawModel(goal_.get(), camera);
+	context_->DrawInstancedModel(particle_->GetInstancedModel(), camera, BlendMode::Add);
 }

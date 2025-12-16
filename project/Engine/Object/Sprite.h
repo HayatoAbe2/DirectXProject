@@ -1,5 +1,6 @@
 #pragma once
 #include "Transform.h"
+#include "TransformationMatrix.h"
 #include "Matrix4x4.h"
 #include <string>
 #include <wrl.h>
@@ -10,9 +11,6 @@
 
 class Sprite {
 public:
-	~Sprite() {
-		if (material_) delete material_;
-	}
 
 	///
 	/// スプライト読み込み時のSetter
@@ -64,9 +62,8 @@ public:
 	/// material設定
 	/// </summary>
 	/// <param name="materialResource">マテリアル</param>
-	void SetMaterial(Material* material) { 
-		if (material_) { delete material_; }
-		material_ = material;
+	void SetMaterial(std::unique_ptr<Material> material) {
+		material_ = std::move(material);
 	}
 
 	void UpdateTransform(Vector2 windowSize);
@@ -108,12 +105,18 @@ public:
 
 	void UpdateMaterial() { material_->UpdateGPU(); }
 
+	// トランスフォームCBハンドル取得
+	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
+
+	// トランスフォームCBハンドルセット
+	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
+
 private:
 	Vector2 size_ = { 640.0f,360.0f };
 	Vector2 position_ = {};
 	float rotation_ = 0.0f;
 
-	Material* material_;
+	std::unique_ptr<Material> material_;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource_;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView_{};
@@ -122,6 +125,9 @@ private:
 	VertexData* vertexData_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationResource_;
 	TransformationMatrix* transformationData_;
+
+	// トランスフォームCBハンドル
+	uint32_t transformCBHandle_ = 0;
 
 	friend class Renderer;
 };

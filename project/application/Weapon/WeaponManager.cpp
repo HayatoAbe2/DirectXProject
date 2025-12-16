@@ -9,27 +9,10 @@
 
 void WeaponManager::Initilaize(GameContext* context) {
 	context_ = context;
-
-	// 武器のモデル読み込み
-#pragma region weapons
-	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "Spellbook.obj"));
-	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "AssaultRifle.obj"));
-	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "Shotgun.obj"));
-	weaponModels_.push_back(context->LoadModel("Resources/Weapons", "Pistol.obj"));
-#pragma endregion
-
-	// 弾のモデル読み込み
-#pragma region bullets
-	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "fireBall.obj"));
-	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
-	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
-	bulletModels_.push_back(context->LoadModel("Resources/Bullets", "gunBullet.obj"));
-#pragma endregion
-
 }
 
 std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
-	auto model = std::make_unique<Entity>();
+	auto model = std::make_unique<Model>();
 	RangedWeaponStatus status;
 
 	switch (index) {
@@ -40,8 +23,7 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		status.bulletSpeed = 0.4f;
 		status.shootCoolTime = 60;
 		status.bulletLifeTime = 300;
-		status.bulletModel = bulletModels_[int(WEAPON::FireBall)];
-		model->SetModel(weaponModels_[int(WEAPON::FireBall)]);
+		model = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
 		return std::make_unique<FireBall>(status, std::move(model),context_);
 		break;
 
@@ -52,9 +34,8 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		status.bulletSpeed = 1.0f;
 		status.shootCoolTime = 6;
 		status.bulletLifeTime = 120;
-		status.bulletModel = bulletModels_[int(WEAPON::AssaultRifle)];
-		model->SetModel(weaponModels_[int(WEAPON::AssaultRifle)]);
-		return std::make_unique<AssaultRifle>(status, std::move(model));
+		model = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
+		return std::make_unique<AssaultRifle>(status, std::move(model), context_);
 		break;
 
 		case int(WEAPON::Shotgun):
@@ -64,9 +45,8 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		status.bulletSpeed = 0.9f;
 		status.shootCoolTime = 40;
 		status.bulletLifeTime = 9;
-		status.bulletModel = bulletModels_[int(WEAPON::Shotgun)];
-		model->SetModel(weaponModels_[int(WEAPON::Shotgun)]);
-		return std::make_unique<Shotgun>(status, std::move(model));
+		model = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
+		return std::make_unique<Shotgun>(status, std::move(model), context_);
 		break;
 
 	default:
@@ -76,9 +56,8 @@ std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index) {
 		status.bulletSpeed = 0.6f;
 		status.shootCoolTime = 20;
 		status.bulletLifeTime = 60;
-		status.bulletModel = bulletModels_[int(WEAPON::Pistol)];
-		model->SetModel(weaponModels_[int(WEAPON::Pistol)]);
-		return std::make_unique<Pistol>(status, std::move(model));
+		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
+		return std::make_unique<Pistol>(status, std::move(model), context_);
 		break;
 	}
 }

@@ -5,7 +5,7 @@
 #include "MapCheck.h"
 #include <numbers>
 
-Bullet::Bullet(std::unique_ptr<Entity> model, const Vector3& direction, const RangedWeaponStatus& status,bool isEnemyBullet) {
+Bullet::Bullet(std::unique_ptr<Model> model, const Vector3& direction, const RangedWeaponStatus& status,bool isEnemyBullet) {
 	model_ = std::move(model);
 	velocity_ = direction * status.bulletSpeed;
 	if (isEnemyBullet) { velocity_ /= 2.0f; }
