@@ -8,7 +8,19 @@
 #include "../Object/TransformationMatrix.h"
 #include "../Object/LightManager.h"
 #include "../Object/VertexData.h"
-#include "BlendMode.h"
+#include "../Object/Sprite.h"
+#include "../Graphics/DeviceManager.h"
+#include "../Graphics/CommandListManager.h"
+#include "../Graphics/RootSignatureManager.h"
+#include "../Graphics/ShaderCompiler.h"
+#include "../Graphics/RenderTargetManager.h"
+#include "../Graphics/DescriptorHeapManager.h"
+#include "../Graphics/SRVManager.h"
+#include "../Graphics/PipelineStateManager.h"
+#include "../Graphics/FixFPS.h"
+#include "../Object/ResourceManager.h"
+#include "../Graphics/ImGuiManager.h"
+#include "../Graphics/BlendMode.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -16,19 +28,6 @@
 #include <dxcapi.h>
 
 #include "externals/DirectXTex/DirectXTex.h"
-
-class Sprite;
-class DeviceManager;
-class CommandListManager;
-class RootSignatureManager;
-class ShaderCompiler;
-class RenderTargetManager;
-class DescriptorHeapManager;
-class SRVManager;
-class PipelineStateManager;
-class FixFPS;
-class ResourceManager;
-class ImGuiManager;
 
 class DirectXContext {
 public:
@@ -64,12 +63,12 @@ public:
 	// アクセサ
 	int32_t GetWindowWidth() { return clientWidth_; }
 	int32_t GetWindowHeight() { return clientHeight_; }
-	DeviceManager* GetDeviceManager() { return deviceManager_; }
-	CommandListManager* GetCommandListManager() { return commandListManager_; }
-	DescriptorHeapManager* GetDescriptorHeapManager() { return descriptorHeapManager_; }
-	SRVManager* GetSRVManager() { return srvManager_; }
-	PipelineStateManager* GetPipelineStateManager() { return pipelineStateManager_; }
-	RootSignatureManager* GetRootSignatureManager() { return rootSignatureManager_; }
+	DeviceManager* GetDeviceManager() { return deviceManager_.get(); }
+	CommandListManager* GetCommandListManager() { return commandListManager_.get(); }
+	DescriptorHeapManager* GetDescriptorHeapManager() { return descriptorHeapManager_.get(); }
+	SRVManager* GetSRVManager() { return srvManager_.get(); }
+	PipelineStateManager* GetPipelineStateManager() { return pipelineStateManager_.get(); }
+	RootSignatureManager* GetRootSignatureManager() { return rootSignatureManager_.get(); }
 
 private:
 
@@ -98,7 +97,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory_ = nullptr;
 
 	// デバイスマネージャー
-	DeviceManager* deviceManager_ = nullptr;
+	std::unique_ptr<DeviceManager> deviceManager_ = nullptr;
 
 	// スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
@@ -122,33 +121,33 @@ private:
 	Logger* logger_;
 
 	// シェーダーコンパイルクラス
-	ShaderCompiler* shaderCompiler_ = nullptr;
+	std::unique_ptr<ShaderCompiler> shaderCompiler_ = nullptr;
 
 	// ディスクリプタヒープ管理クラス
-	DescriptorHeapManager* descriptorHeapManager_ = nullptr;
+	std::unique_ptr<DescriptorHeapManager> descriptorHeapManager_ = nullptr;
 
 	// RTV設定など
-	RenderTargetManager* renderTargetManager_ = nullptr;
+	std::unique_ptr<RenderTargetManager> renderTargetManager_ = nullptr;
 
 	// SRVマネージャー
-	SRVManager* srvManager_ = nullptr;
+	std::unique_ptr<SRVManager> srvManager_ = nullptr;
 
 	// リソース管理クラス
-	ResourceManager* resourceManager_ = nullptr;
+	std::unique_ptr<ResourceManager> resourceManager_ = nullptr;
 
 	// コマンド関連
-	CommandListManager* commandListManager_ = nullptr;
+	std::unique_ptr<CommandListManager> commandListManager_ = nullptr;
 
 	// ルートシグネチャ管理クラス
-	RootSignatureManager* rootSignatureManager_ = nullptr;
+	std::unique_ptr<RootSignatureManager> rootSignatureManager_ = nullptr;
 
 	// パイプラインステート管理クラス
-	PipelineStateManager* pipelineStateManager_ = nullptr;
+	std::unique_ptr<PipelineStateManager> pipelineStateManager_ = nullptr;
 
 	// FPS固定クラス
-	FixFPS* fixFPS_ = nullptr;
+	std::unique_ptr<FixFPS> fixFPS_ = nullptr;
 
 	// ImGui管理クラス
-	ImGuiManager* imGuiManager_ = nullptr;
+	std::unique_ptr<ImGuiManager > imGuiManager_ = nullptr;
 };
 

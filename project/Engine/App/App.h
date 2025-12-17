@@ -1,4 +1,17 @@
 #pragma once
+#include "Window.h"
+#include "../Io/DumpExporter.h"
+#include "../Io/Logger.h"
+#include "../Io/Audio.h"
+#include "../Io/Input.h"
+#include "../Graphics/directXContext.h"
+#include "../Graphics/Renderer.h"
+#include "../Object/ResourceManager.h"
+#include "../Object/LightManager.h"
+#include "../Scene/SceneManager.h"
+#include "../Scene/GameContext.h"
+
+#include <memory>
 #include <Windows.h>
 #include <cstdint>
 #include <format>
@@ -23,17 +36,6 @@
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "mfuuid.lib")
 
-class DumpExporter;
-class Logger;
-class Window;
-class Audio;
-class Input;
-class Renderer;
-class ResourceManager;
-class LightManager;
-class SceneManager;
-class GameContext;
-
 /// <summary>
 /// アプリケーション全体の処理
 /// </summary>
@@ -56,37 +58,6 @@ public:
 	void Finalize();
 
 private:
-	
-	// ダンプファイル作成
-	DumpExporter* dumpExporter_ = nullptr;
-
-	// ログの出力
-	Logger* logger_ = nullptr;
-
-	// ウィンドウの作成
-	Window* window_ = nullptr;
-
-	// 音声の出力
-	Audio* audio_ = nullptr;
-
-	// キー・コントローラー入力
-	Input* input_ = nullptr;
-
-	// 描画
-	Renderer* renderer_ = nullptr;
-
-	// リソース管理
-	ResourceManager* resourceManager_ = nullptr;
-
-	// ライト管理
-	LightManager* lightManager_ = nullptr;
-
-	// ゲームシーンから利用できるデータや関数
-	GameContext* gameContext_ = nullptr;
-
-	// シーン管理
-	SceneManager* sceneManager_ = nullptr;
-
 	struct D3DResourceLeakChecker {
 		~D3DResourceLeakChecker() {
 			// リソースリークチェック
@@ -96,9 +67,43 @@ private:
 				debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
 				debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
 			}
+
 		}
 	};
-	D3DResourceLeakChecker* leakCheck_ = nullptr;
+	std::unique_ptr<D3DResourceLeakChecker> leakCheck_ = nullptr;
+
+	// ダンプファイル作成
+	std::unique_ptr<DumpExporter> dumpExporter_ = nullptr;
+
+	// ログの出力
+	std::unique_ptr<Logger> logger_ = nullptr;
+
+	// ウィンドウの作成
+	std::unique_ptr<Window> window_ = nullptr;
+
+	// 音声の出力
+	std::unique_ptr<Audio> audio_ = nullptr;
+
+	// キー・コントローラー入力
+	std::unique_ptr<Input> input_ = nullptr;
+
+	// DirectX管理
+	std::unique_ptr<DirectXContext> dxContext_ = nullptr;
+
+	// 描画
+	std::unique_ptr<Renderer> renderer_ = nullptr;
+
+	// リソース管理
+	std::unique_ptr<ResourceManager> resourceManager_ = nullptr;
+
+	// ライト管理
+	std::unique_ptr<LightManager> lightManager_ = nullptr;
+
+	// ゲームシーンから利用できるデータや関数
+	std::unique_ptr<GameContext> gameContext_ = nullptr;
+
+	// シーン管理
+	std::unique_ptr<SceneManager> sceneManager_ = nullptr;
 };
 
 

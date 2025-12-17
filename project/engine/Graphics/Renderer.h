@@ -2,16 +2,11 @@
 #include "../Io/Logger.h"
 #include "../Scene/DebugCamera.h"
 #include "../Object/Material.h"
-#include "../Object/Model.h"
-#include "../Object/InstancedModel.h"
-#include "../Object/Sprite.h"
-#include "../Object/ParticleSystem.h"
 #include "../Object/Transform.h"
 #include "../Object/TransformationMatrix.h"
 #include "../Object/VertexData.h"
 #include "../Object/LightManager.h"
 #include "BlendMode.h"
-#include "DirectXContext.h"
 #include "SRVManager.h"
 #include "CameraForGPU.h"
 
@@ -21,18 +16,20 @@
 #include <dxcapi.h>
 #include <memory>
 
+class Model;
+class InstancedModel;
+class Sprite;
+class ParticleSystem;
+class DirectXContext;
+class Camera;
+
 class Renderer {
 public:
 
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger);
-
-	/// <summary>
-	/// 解放処理(ループ終了後に行う)
-	/// </summary>
-	void Finalize();
+	void Initialize(DirectXContext* dxContext);
 
 	/// <summary>
 	/// トランスフォーム更新
@@ -68,16 +65,8 @@ public:
 	/// </summary>
 	void EndFrame();
 
-	// getter
-	int32_t GetWindowWidth() { return dxContext_.get()->GetWindowWidth(); }
-	int32_t GetWindowHeight() { return dxContext_.get()->GetWindowHeight(); }
-	DeviceManager* GetDeviceManager() { return dxContext_.get()->GetDeviceManager(); }
-	CommandListManager* GetCommandListManager() { return dxContext_.get()->GetCommandListManager(); }
-	DescriptorHeapManager* GetDescriptorHeapManager() { return dxContext_.get()->GetDescriptorHeapManager(); }
-	SRVManager* GetSRVManager() { return dxContext_.get()->GetSRVManager(); }
-
 private:
-	std::unique_ptr<DirectXContext> dxContext_ = nullptr;
+	DirectXContext* dxContext_ = nullptr;
 
 	// transform
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformBuffer_;

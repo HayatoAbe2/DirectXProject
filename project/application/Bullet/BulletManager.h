@@ -12,7 +12,6 @@ class Camera;
 
 class BulletManager {
 public:
-	~BulletManager();
 	void Update(MapCheck* mapCheck);
 	void Draw(GameContext* context, Camera* camera);
 	void Reset();

@@ -1,15 +1,16 @@
 #include <Windows.h>
 #include "Renderer.h"
-#include "DirectXContext.h"
 #include "CommandListManager.h"
 #include "PipelineStateManager.h"
 #include "RootSignatureManager.h"
 #include "DescriptorHeapManager.h"
 #include "DeviceManager.h"
 #include "../Object/Model.h"
-#include "../Object/Sprite.h"
 #include "../Object/InstancedModel.h"
+#include "../Object/Sprite.h"
 #include "../Object/ParticleSystem.h"
+#include "../Scene/Camera.h"
+#include "../Graphics/DirectXContext.h"
 
 #include <cassert>
 #include <format>
@@ -19,9 +20,8 @@
 
 #include "externals/DirectXTex/d3dx12.h"
 
-void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
-	dxContext_ = std::make_unique<DirectXContext>();
-	dxContext_->Initialize(clientWidth, clientHeight, hwnd, logger);
+void Renderer::Initialize(DirectXContext* dxContext) {
+	dxContext_ = dxContext;
 
 	// エンティティtransformバッファ初期化
 	UINT bufferSize = kCBSize * kMaxObjects;
@@ -45,10 +45,6 @@ void Renderer::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, 
 	// カメラバッファ作成
 	cameraBuffer_ = dxContext_->CreateBufferResource(sizeof(CameraForGPU));
 	cameraBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
-}
-
-void Renderer::Finalize() {
-	dxContext_->Finalize();
 }
 
 void Renderer::UpdateModelTransforms(
@@ -220,9 +216,9 @@ void Renderer::DrawSprite(Sprite* sprite, int blendMode) {
 }
 
 void Renderer::BeginFrame() {
-	dxContext_.get()->BeginFrame();
+	dxContext_->BeginFrame();
 }
 
 void Renderer::EndFrame() {
-	dxContext_.get()->EndFrame();
+	dxContext_->EndFrame();
 }

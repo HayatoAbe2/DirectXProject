@@ -9,7 +9,6 @@
 #include <vector>
 
 void Audio::Initialize() {
-	XAudio2Create(&xAudio2_, 0);
 	HRESULT hr;
 	// XAudioエンジンのインスタンスを生成する
 	hr = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
@@ -24,10 +23,18 @@ void Audio::Initialize() {
 
 void Audio::Finalize() {
 	HRESULT result;
-	result = MFShutdown();
-	assert(SUCCEEDED(result));
+
+	StopAll();
+
+	if (masterVoice_) {
+		masterVoice_->DestroyVoice();
+		masterVoice_ = nullptr;
+	}
 
 	xAudio2_.Reset();
+
+	result = MFShutdown();
+	assert(SUCCEEDED(result));
 }
 
 void Audio::SoundLoad(const wchar_t* filename) {
@@ -92,23 +99,16 @@ void Audio::SoundLoad(const wchar_t* filename) {
 	SoundData soundData;
 	soundData.wfex = *waveFormat;
 	soundData.bufferSize = static_cast<UINT>(mediaData.size());
-	soundData.pBuffer = new BYTE[soundData.bufferSize];
-	memcpy(soundData.pBuffer, mediaData.data(), soundData.bufferSize);
+	soundData.buffer = std::move(mediaData);
 
 	// mapに格納
-	soundMap_[filename] = soundData;
+	soundMap_[filename] = std::move(soundData);
+
+	CoTaskMemFree(waveFormat);
 }
 
 void Audio::SoundUnload(const wchar_t* filename) {
-	if (soundMap_.find(filename) == soundMap_.end()) {
-		return; // 存在しない場合は何もしない
-	}
-
 	soundMap_.erase(filename); // マップから削除
-
-	// バッファのメモリを解放
-	/*delete[] soundData->pBuffer;
-	soundData->pBuffer = nullptr;*/
 }
 
 void Audio::SoundPlay(const wchar_t* filename,bool isLoop) {
@@ -118,24 +118,37 @@ void Audio::SoundPlay(const wchar_t* filename,bool isLoop) {
 	HRESULT hr;
 
 	// 波形フォーマットを元にSourceVoiceの生成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	hr = xAudio2_->CreateSourceVoice(&pSourceVoice, &soundMap_[filename].wfex);
+	IXAudio2SourceVoice* sourceVoice = nullptr;
+	hr = xAudio2_->CreateSourceVoice(&sourceVoice, &soundMap_[filename].wfex);
 	assert(SUCCEEDED(hr));
 
 	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundMap_[filename].pBuffer;
-	buf.AudioBytes = soundMap_[filename].bufferSize;
+	buf.pAudioData = soundMap_[filename].buffer.data();
+	buf.AudioBytes = static_cast<UINT>(soundMap_[filename].bufferSize);
 	buf.Flags = XAUDIO2_END_OF_STREAM; // 波形データの終端を示すフラグ
 	if (isLoop) {
-		buf.LoopBegin = isLoop; // ループ
+		buf.LoopBegin = 0; // ループ
 		buf.LoopLength = 0;
 		buf.LoopCount = XAUDIO2_LOOP_INFINITE;
 	}
 	// 波形データの再生
-	hr = pSourceVoice->SubmitSourceBuffer(&buf);
+	hr = sourceVoice->SubmitSourceBuffer(&buf);
 	assert(SUCCEEDED(hr));
-	hr = pSourceVoice->Start();
+	hr = sourceVoice->Start();
 	assert(SUCCEEDED(hr));
+
+	voices_.push_back(sourceVoice);
+}
+
+void Audio::StopAll() {
+	for (auto* voice : voices_) {
+		if (voice) {
+			voice->Stop();
+			voice->FlushSourceBuffers();
+			voice->DestroyVoice();
+		}
+	}
+	voices_.clear();
 }
 

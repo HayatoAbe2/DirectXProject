@@ -1,11 +1,6 @@
 #include "BulletManager.h"
-#include "EffectManager.h"
 #include "MapCheck.h"
 #include "Bullet.h"
-
-BulletManager::~BulletManager() {
-	bullets_.clear();
-}
 
 void BulletManager::Update(MapCheck* mapCheck) {
 	for (const auto& bullet : bullets_) {

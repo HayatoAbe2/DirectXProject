@@ -8,8 +8,8 @@ class Audio {
 	struct SoundData {
 		// 波形フォーマット
 		WAVEFORMATEX wfex;
-		// バッファの先頭アドレス
-		BYTE* pBuffer;
+		// バッファ
+		std::vector<BYTE> buffer;
 		// バッファのサイズ
 		unsigned int bufferSize;
 	};
@@ -44,6 +44,12 @@ public:
 	/// <param name="filename">ファイルパス</param>
 	void SoundPlay(const wchar_t* filename,bool isLoop = false);
 
+	/// <summary>
+	/// 止める
+	/// </summary>
+	void StopAll();
+
+
 private:
 
 	// ロードした音声データを格納
@@ -54,5 +60,8 @@ private:
 
 	// マスターボイス
 	IXAudio2MasteringVoice* masterVoice_;
+
+	std::vector<IXAudio2SourceVoice*> voices_;
+
 };
 

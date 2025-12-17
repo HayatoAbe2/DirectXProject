@@ -11,14 +11,8 @@ SceneManager::SceneManager(GameContext* context) {
 	gameContext_ = context;
 }
 
-SceneManager::~SceneManager() {
-	if (currentScene_) {
-		delete currentScene_;
-	}
-}
-
 void SceneManager::Initialize() {
-	currentScene_ = new TitleScene();
+	currentScene_ = std::make_unique<TitleScene>();
 	currentSceneType_ = Scene::kTitle;
 
 	currentScene_->SetGameContext(gameContext_); // 初期化より前
@@ -30,18 +24,12 @@ void SceneManager::Update() {
 		currentScene_->Update();
 		if (currentScene_->IsFinished()) {
 			if (currentSceneType_ == Scene::kTitle) {
-				// 現在シーン削除
-				delete currentScene_;
-
 				// シーン切り替え
-				currentScene_ = new GameScene;
+				currentScene_ = std::make_unique<GameScene>();
 				currentSceneType_ = Scene::kGame;
 			} else if (currentSceneType_ == Scene::kGame) {
-				// 現在シーン削除
-				delete currentScene_;
-
 				// シーン切り替え
-				currentScene_ = new TitleScene;
+				currentScene_ = std::make_unique<TitleScene>();
 				currentSceneType_ = Scene::kTitle;
 			}
 

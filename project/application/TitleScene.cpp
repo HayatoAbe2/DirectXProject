@@ -2,7 +2,6 @@
 #include "Sprite.h"
 
 TitleScene::~TitleScene() {
-	context_->SoundUnload(L"Resources/Sounds/SE/press.mp3");
 }
 
 void TitleScene::Initialize() {

@@ -18,6 +18,7 @@
 #include <dxcapi.h>
 #include <mfobjects.h>
 #include <numbers>
+#include <memory>
 
 void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND hwnd, Logger* logger) {
 	HRESULT hr;
@@ -27,7 +28,7 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	logger_ = logger;
 
 	// FPS固定クラス初期化
-	fixFPS_ = new FixFPS;
+	fixFPS_ = std::make_unique<FixFPS>();
 	fixFPS_->Initialize();
 
 	// DXGIファクトリーの生成
@@ -35,27 +36,27 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	assert(SUCCEEDED(hr));
 
 	// デバイスマネージャー初期化
-	deviceManager_ = new DeviceManager;
+	deviceManager_ = std::make_unique<DeviceManager>();
 	deviceManager_->Initialize(dxgiFactory_.Get(), logger_);
 
 	// コマンドリストマネージャー初期化
-	commandListManager_ = new CommandListManager;
-	commandListManager_->Initialize(deviceManager_);
+	commandListManager_ = std::make_unique<CommandListManager>();
+	commandListManager_->Initialize(deviceManager_.get());
 
 	// スワップチェーンの生成
 	InitializeSwapChain(hwnd);
 
 	// ディスクリプタヒープの初期化
-	descriptorHeapManager_ = new DescriptorHeapManager;
+	descriptorHeapManager_ = std::make_unique<DescriptorHeapManager>();
 	descriptorHeapManager_->Initialize(deviceManager_->GetDevice().Get());
 
 	// RTV作成
-	renderTargetManager_ = new RenderTargetManager;
-	renderTargetManager_->InitializeSwapChainBuffers(swapChain_.Get(), deviceManager_->GetDevice().Get(), descriptorHeapManager_);
+	renderTargetManager_ = std::make_unique<RenderTargetManager>();
+	renderTargetManager_->InitializeSwapChainBuffers(swapChain_.Get(), deviceManager_->GetDevice().Get(), descriptorHeapManager_.get());
 
 	// SRVマネージャー
-	srvManager_ = new SRVManager;
-	srvManager_->Initialize(descriptorHeapManager_, deviceManager_->GetDevice().Get());
+	srvManager_ = std::make_unique<SRVManager>();
+	srvManager_->Initialize(descriptorHeapManager_.get(), deviceManager_->GetDevice().Get());
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource_ = CreateDepthStencilTextureResource(deviceManager_->GetDevice(), clientWidth_, clientHeight_);
@@ -67,14 +68,14 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	deviceManager_->GetDevice()->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, descriptorHeapManager_->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart());
 
 	// ルートシグネチャマネージャー
-	rootSignatureManager_ = new RootSignatureManager;
+	rootSignatureManager_ = std::make_unique<RootSignatureManager>();
 	rootSignatureManager_->Initialize(deviceManager_->GetDevice(), logger_);
 
-	shaderCompiler_ = new ShaderCompiler;
+	shaderCompiler_ = std::make_unique<ShaderCompiler>();
 	shaderCompiler_->Initialize();
 
 	// Shaderをコンパイルする
-	pipelineStateManager_ = new PipelineStateManager;
+	pipelineStateManager_ = std::make_unique<PipelineStateManager>();
 	pipelineStateManager_->SetVSBlob(shaderCompiler_->Compile(L"Resources/shaders/Object3D.VS.hlsl", L"vs_6_0", logger_));
 	pipelineStateManager_->SetPSBlob(shaderCompiler_->Compile(L"Resources/shaders/Object3D.PS.hlsl", L"ps_6_0", logger_));
 
@@ -84,15 +85,12 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	pipelineStateManager_->SetParticleVSBlob(shaderCompiler_->Compile(L"Resources/shaders/Particle.VS.hlsl", L"vs_6_0", logger_));
 	pipelineStateManager_->SetParticlePSBlob(shaderCompiler_->Compile(L"Resources/shaders/Particle.PS.hlsl", L"ps_6_0", logger_));
 
-	// コンパイラ解放
-	delete shaderCompiler_;
-
 	// PSOマネージャー
 	pipelineStateManager_->Initialize(deviceManager_->GetDevice(), rootSignatureManager_->GetStandardRootSignature(), rootSignatureManager_->GetInstancingRootSignature(),rootSignatureManager_->GetParticleRootSignature());
 
 	SetViewportAndScissor();
 
-	imGuiManager_ = new ImGuiManager;
+	imGuiManager_ = std::make_unique<ImGuiManager>();
 	int index = srvManager_->Allocate();
 	imGuiManager_->Initialize(&hwnd, deviceManager_->GetDevice().Get(),
 		swapChainDesc_.BufferCount,
@@ -104,17 +102,14 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 }
 
 void DirectXContext::Finalize() {
+	commandListManager_->GetCommandList()->Close();
+	commandListManager_->Wait();
+
+	descriptorHeapManager_.reset();
+	deviceManager_.reset();
+
 	if (rootSignatureManager_->GetErrorBlob()) rootSignatureManager_->GetErrorBlob()->Release();
 	imGuiManager_->Finalize();
-	delete imGuiManager_;
-	delete deviceManager_;
-	delete commandListManager_;
-	delete srvManager_;
-	delete descriptorHeapManager_;
-	delete renderTargetManager_;
-	delete rootSignatureManager_;
-	delete pipelineStateManager_;
-	delete fixFPS_;
 }
 
 void DirectXContext::BeginFrame() {
@@ -148,8 +143,8 @@ void DirectXContext::BeginFrame() {
 	// 指定した深度で画面全体をクリアする
 	commandListManager_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvManager_->GetHeap().Get() };
-	commandListManager_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvManager_->GetHeap().Get() };
+	commandListManager_->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
 	// Viewportを設定
 	commandListManager_->GetCommandList()->RSSetViewports(1, &viewport_);
 	// Scissorを設定
@@ -174,8 +169,8 @@ void DirectXContext::EndFrame() {
 	assert(SUCCEEDED(hr));
 
 	// GPUにコマンドリストの実行を行わせる
-	ID3D12CommandList* commandLists[] = { commandListManager_->GetCommandList().Get() };
-	commandListManager_->GetCommandQueue()->ExecuteCommandLists(1, commandLists);
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandListManager_->GetCommandList().Get() };
+	commandListManager_->GetCommandQueue()->ExecuteCommandLists(1, commandLists->GetAddressOf());
 
 
 	// GPUとOSに画面の交換を行うよう通知する

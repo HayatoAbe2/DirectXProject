@@ -1,7 +1,8 @@
 #pragma once
+#include "BaseScene.h"
+#include <memory>
 
 class Renderer;
-class BaseScene;
 class Input;
 class Audio;
 class GameContext;
@@ -12,7 +13,6 @@ class GameContext;
 class SceneManager {
 public:
 	SceneManager(GameContext* context);
-	~SceneManager();
 
 	// シーンの初期化
 	void Initialize();
@@ -25,7 +25,10 @@ public:
 
 private:
 	// 現在のシーン
-	BaseScene* currentScene_ = nullptr;
+	std::unique_ptr<BaseScene> currentScene_ = nullptr;
+
+	// 次のシーン
+	std::unique_ptr<BaseScene> nextScene_ = nullptr;
 
 	enum Scene {
 		kTitle,
