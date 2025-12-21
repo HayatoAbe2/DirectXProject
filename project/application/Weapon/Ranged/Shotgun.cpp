@@ -12,9 +12,8 @@ Shotgun::Shotgun(const RangedWeaponStatus& status, std::unique_ptr<Model> model,
 
 int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
 	for (int i = -2; i <= 2; ++i) {
-		auto bullet = std::make_unique<Model>();
+		auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 		bullet->SetTranslate(pos);
-		bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 
 		Vector3 rotatedDir = TransformVector(dir, MakeRotateYMatrix(float(std::numbers::pi) / 16.0f * i));
 		std::unique_ptr<SpreadBullet> newBullet = std::make_unique<SpreadBullet>(std::move(bullet), rotatedDir, status_, isEnemyBullet);

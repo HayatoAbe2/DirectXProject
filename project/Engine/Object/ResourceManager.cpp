@@ -268,9 +268,11 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 
 				// テクスチャ設定
 				texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
-				// SRVを作成
-				CreateTextureSRV(texture.get());
+			} else {
+				texture->SetMtlFilePath("Resources/white1x1.png");
 			}
+			// SRVを作成
+			CreateTextureSRV(texture.get());
 		}
 
 		///
@@ -310,7 +312,7 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		modelData->meshes.push_back(std::move(mesh));
 
 		// モデルにデータの参照
-		model->CopyModelData(modelData,this);
+		model->CopyModelData(modelData, this);
 
 		// キャッシュに登録
 		modelDataCache_.insert({ fullPath, std::move(modelData) });
@@ -395,9 +397,11 @@ std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 			aiString textureFilePath;
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
 			texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
-			// SRVを作成
-			CreateTextureSRV(texture.get());
+		} else {
+			texture->SetMtlFilePath("Resources/white1x1.png");
 		}
+		// SRVを作成
+		CreateTextureSRV(texture.get());
 	}
 
 	// VertexBuffer作成

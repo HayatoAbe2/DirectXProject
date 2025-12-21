@@ -80,4 +80,6 @@ private:
 	CameraForGPU* cameraData_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraBuffer_;
 
+	LightsForGPU* dummyLight_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> dummyLightBuffer_;
 };

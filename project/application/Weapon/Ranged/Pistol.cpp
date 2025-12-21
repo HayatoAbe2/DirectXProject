@@ -10,9 +10,8 @@ Pistol::Pistol(const RangedWeaponStatus& status, std::unique_ptr<Model> model, G
 }
 
 int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
-	auto bullet = std::make_unique<Model>();
+	auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 	bullet->SetTranslate(pos);
-	bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 	std::unique_ptr<RapidBullet> newBullet = std::make_unique<RapidBullet>(std::move(bullet), dir, status_, isEnemyBullet);
 	newBullet->Initialize(context);
 

@@ -45,7 +45,12 @@ void Renderer::Initialize(DirectXContext* dxContext) {
 	// カメラバッファ作成
 	cameraBuffer_ = dxContext_->CreateBufferResource(sizeof(CameraForGPU));
 	cameraBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+
+	// ライト非使用時のダミー
+	dummyLightBuffer_ = dxContext_->CreateBufferResource(sizeof(LightsForGPU));
+	dummyLightBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&dummyLight_));
 }
+
 
 void Renderer::UpdateModelTransforms(
 	Model* model,
@@ -117,9 +122,7 @@ void Renderer::DrawModel(Model* model, Camera* camera, LightManager* lightManage
 		cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
 
 		// SRVの設定
-		if (material->GetTextureSRVHandle().ptr != 0) {
-			cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
-		}
+		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
 		// カメラ
 		cmdList->SetGraphicsRootConstantBufferView(3, cameraBuffer_->GetGPUVirtualAddress());
 		// ライト
@@ -165,9 +168,7 @@ void Renderer::DrawModelInstance(InstancedModel* model, Camera* camera, LightMan
 		// wvp用のCBufferの場所を設定
 		cmdList->SetGraphicsRootConstantBufferView(1, model->GetInstanceCBV());
 		// SRVの設定
-		if (material->GetTextureSRVHandle().ptr != 0) {
-			cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
-		}
+		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
 		// インスタンス用SRVの設定
 		cmdList->SetGraphicsRootDescriptorTable(3, model->GetInstanceSRVHandle());
 		// カメラ
@@ -175,6 +176,8 @@ void Renderer::DrawModelInstance(InstancedModel* model, Camera* camera, LightMan
 		if (lightManager) {
 			// ライト
 			cmdList->SetGraphicsRootConstantBufferView(5, lightManager->GetLightResource()->GetGPUVirtualAddress());
+		} else {
+			cmdList->SetGraphicsRootConstantBufferView(5, dummyLightBuffer_->GetGPUVirtualAddress());
 		}
 		// ドローコール
 		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), model->GetNumInstance(), 0, 0);
