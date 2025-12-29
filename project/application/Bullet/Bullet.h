@@ -10,6 +10,7 @@ class MapCheck;
 class Bullet {
 public:
 	Bullet(std::unique_ptr<Model> model,const Vector3& direction,const RangedWeaponStatus& status,bool isEnemyBullet);
+	virtual ~Bullet() = default;
 	virtual void Update(MapCheck* mapCheck) = 0;
 	virtual void Draw(GameContext* context,Camera* camera) = 0;
 	virtual void Hit() = 0;

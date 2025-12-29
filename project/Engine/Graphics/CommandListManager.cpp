@@ -19,7 +19,7 @@ void CommandListManager::Initialize(DeviceManager* deviceManager) {
 void CommandListManager::InitializeFence() {
 	HRESULT hr;
 	// 初期値0でFenceを作る
-	uint64_t fenceValue_ = 0;
+	fenceValue_ = 0;
 	hr = deviceManager_->GetDevice()->CreateFence(fenceValue_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
 	assert(SUCCEEDED(hr));
 

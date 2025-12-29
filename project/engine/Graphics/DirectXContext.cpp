@@ -102,7 +102,6 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 }
 
 void DirectXContext::Finalize() {
-	commandListManager_->GetCommandList()->Close();
 	commandListManager_->Wait();
 
 	descriptorHeapManager_.reset();
