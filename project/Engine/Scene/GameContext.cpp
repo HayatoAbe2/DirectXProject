@@ -12,7 +12,9 @@ GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input, Resourc
 	resourceManager_ = resourceManager;
 	lightManager_ = lightManager;
 
-	std::mt19937 randomEngine_(randomDevice_());
+	std::mt19937 randomEngine(randomDevice_());
+	randomEngine_ = randomEngine;
+
 }
 
 Vector2 GameContext::GetWindowSize() const {
@@ -145,8 +147,8 @@ void GameContext::SoundLoad(const wchar_t* filename) {
 	audio_->SoundLoad(filename);
 }
 
-void GameContext::SoundPlay(const wchar_t* filename, bool isLoop) {
-	audio_->SoundPlay(filename, isLoop);
+void GameContext::SoundPlay(const wchar_t* filename, bool isLoop,float volume) {
+	audio_->SoundPlay(filename, isLoop,volume);
 }
 
 void GameContext::SoundUnload(const wchar_t* filename) {

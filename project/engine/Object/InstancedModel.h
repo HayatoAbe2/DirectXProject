@@ -39,6 +39,7 @@ public:
 		transforms_[index] = transform;
 	}
 	void SetInstanceTransforms(std::vector<Transform> transforms) {
+		transforms.resize(transforms_.size());
 		transforms_ = transforms;
 	}
 	void SetScale(int index, const Vector3& scale) {

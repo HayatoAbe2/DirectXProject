@@ -33,7 +33,7 @@ public:
 	void Draw(GameContext* context, Camera* camera);
 
 	// 被ダメージ時
-	void Hit(int damage,Vector3 from);
+	void Hit(float damage,Vector3 from, const float knockback);
 
 	// 敵ごとの関数
 	virtual void Attack(RangedWeapon* rangedWeapon, BulletManager* bulletManager, GameContext* context) = 0;

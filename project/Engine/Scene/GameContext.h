@@ -84,7 +84,7 @@ public:
 	/// 
 
 	void SoundLoad(const wchar_t* filename);
-	void SoundPlay(const wchar_t* filename, bool isLoop);
+	void SoundPlay(const wchar_t* filename, bool isLoop,float volume = 1.0f);
 	void SoundUnload(const wchar_t* filename);
 
 

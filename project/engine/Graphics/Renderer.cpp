@@ -186,7 +186,37 @@ void Renderer::DrawModelInstance(InstancedModel* model, Camera* camera, LightMan
 
 void Renderer::DrawParticles(ParticleSystem* particleSys, Camera* camera,int blendMode) {
 	particleSys->PreDraw(camera);
-	DrawModelInstance(particleSys->GetInstancedModel(), camera,nullptr,blendMode);
+
+	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
+	auto pso = dxContext_->GetPipelineStateManager()->GetParticlePSO(blendMode);
+	auto rootSig = dxContext_->GetRootSignatureManager()->GetParticleRootSignature().Get();
+
+	// PSO設定
+	cmdList->SetPipelineState(pso);
+	// RootSignatureを設定
+	cmdList->SetGraphicsRootSignature(rootSig);
+	// トポロジを三角形に設定
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 各メッシュを描画
+	for (auto& mesh : particleSys->GetInstancedModel()->GetData()->meshes) {
+		Material* material = particleSys->GetInstancedModel()->GetMaterial(0); // 複数マテリアル未対応
+		// マテリアル更新
+		material->UpdateGPU();
+
+		// マテリアルCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
+		// モデル描画
+		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
+		// wvp用のCBufferの場所を設定
+		cmdList->SetGraphicsRootConstantBufferView(1, particleSys->GetInstancedModel()->GetInstanceCBV());
+		// SRVの設定
+		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
+		// インスタンス用SRVの設定
+		cmdList->SetGraphicsRootDescriptorTable(3, particleSys->GetInstancedModel()->GetInstanceSRVHandle());
+		// ドローコール
+		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), particleSys->GetInstancedModel()->GetNumInstance(), 0, 0);
+	}
 }
 
 void Renderer::DrawSprite(Sprite* sprite, int blendMode) {

@@ -1,7 +1,7 @@
 #pragma once
 
 struct EnemyStatus {
-	int hp = 10; // hp
+	float hp = 10; // hp
 	float radius = 0.5f; 	// 半径
 	float moveSpeed = 0.1f;	// 移動の速さ
 	float defaultSearchRadius = 8.0f; // 検知範囲

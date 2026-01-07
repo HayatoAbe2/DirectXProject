@@ -5,8 +5,10 @@
 #include "GameContext.h"
 #include "Sprite.h"
 #include "ParticleSystem.h"
+#include <fstream>
+#include <sstream>
 
-void ItemManager::Initialize(WeaponManager* weaponManager,GameContext* context) {
+void ItemManager::Initialize(WeaponManager* weaponManager, GameContext* context) {
 	weaponManager_ = weaponManager;
 	context_ = context;
 
@@ -77,20 +79,61 @@ void ItemManager::Interact(Player* player) {
 }
 
 void ItemManager::Spawn(Vector3 pos, int index) {
+	// レア度ランダム
+	Rarity rarity{};
+	int random = context_->RandomInt(1, 200);
+	if (random < 80) {
+		rarity = Rarity::Common;
+	} else if (random < 140) {
+		rarity = Rarity::Rare;
+	} else if (random < 180) {
+		rarity = Rarity::Epic;
+	} else {
+		rarity = Rarity::Legendary;
+	}
+	Spawn(pos, index, rarity);
+}
+
+void ItemManager::Spawn(Vector3 pos, int index, Rarity rarity) {
 	// 設置する
-	auto rangedWeapon = std::move(weaponManager_->GetRangedWeapon(index));
-	auto newItem = std::make_unique<Item>(std::move(rangedWeapon), pos,context_);
+	auto rangedWeapon = std::move(weaponManager_->GetRangedWeapon(index, rarity));
+	auto newItem = std::make_unique<Item>(std::move(rangedWeapon), pos, context_, rarity);
 	items_.push_back(std::move(newItem));
 }
 
 void ItemManager::Drop(Vector3 pos, std::unique_ptr<RangedWeapon> weapon) {
 	// アイテムを落とす
 	if (weapon) {
-		auto newItem = std::make_unique<Item>(std::move(weapon), pos, context_);
+		auto newItem = std::make_unique<Item>(std::move(weapon), pos, context_,weapon->GetStatus().rarity);
 		items_.push_back(std::move(newItem));
 	}
 }
 
 void ItemManager::Reset() {
 	items_.clear();
+}
+
+void ItemManager::LoadCSV(const std::string& filePath, const float tileSize) {
+	std::ifstream file(filePath);
+	std::string line;
+
+	assert(file.is_open());
+
+	std::getline(file, line); // 最初の行をスキップ
+
+	while (std::getline(file, line)) {
+		std::stringstream ss(line);
+		std::string itemStr, xStr, zStr;
+
+		std::getline(ss, itemStr, ',');
+		std::getline(ss, xStr, ',');
+		std::getline(ss, zStr, ',');
+
+		int itemNum = std::stoi(itemStr);
+		float x = std::stof(xStr);
+		float z = std::stof(zStr);
+
+		Vector3 pos = Vector3{ x * tileSize, 0, z * tileSize };
+		Spawn(pos, itemNum);
+	}
 }

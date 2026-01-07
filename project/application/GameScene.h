@@ -48,6 +48,9 @@ private:
 	std::unique_ptr<Model> cloud_ = nullptr;
 	std::unique_ptr<Sprite> fade_ = nullptr;
 
+	std::unique_ptr<Sprite> resultBG_ = nullptr;
+	std::unique_ptr<Sprite> resultCursor_ = nullptr;
+
 	// プレイヤー
 	std::unique_ptr<Player> player_ = nullptr;
 
@@ -91,4 +94,8 @@ private:
 
 	// 階数
 	int currentFloor_ = 1;
+
+	bool isShowResult_ = false;
+	float resultTime_ = 0;
+	float resultArrowMove_ = 0;
 };

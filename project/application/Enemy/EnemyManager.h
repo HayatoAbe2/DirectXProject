@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include <vector>
 #include <memory>
+#include <string>
 
 class GameContext;
 class MapCheck;
@@ -18,6 +19,7 @@ public:
 	void Draw(GameContext* context, Camera* camera);
 	void Spawn(Vector3 pos,GameContext* context,WeaponManager* weaponManager, int enemyType);
 	void Reset();
+	void LoadCSV(std::string filePath, float tileSize, GameContext* context, WeaponManager* weaponManager);
 
 	std::vector<Enemy*> GetEnemies();
 private:

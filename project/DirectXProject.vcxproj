@@ -250,6 +250,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="application\Bullet\RapidBullet.cpp" />
     <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
     <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
+    <ClCompile Include="application\Bullet\WaveBullet.cpp" />
+    <ClCompile Include="application\Weapon\Ranged\Wavegun.cpp" />
+    <ClCompile Include="application\Enemy\Enemies\RedBat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -387,6 +390,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="application\Enemy\Enemies\Knight.h" />
     <ClInclude Include="application\Enemy\Enemies\HeavyKnight.h" />
     <ClInclude Include="engine\Object\Data\ModelData.h" />
+    <ClInclude Include="application\Bullet\WaveBullet.h" />
+    <ClInclude Include="application\Weapon\Ranged\Wavegun.h" />
+    <ClInclude Include="application\Rarity.h" />
+    <ClInclude Include="application\Enemy\Enemies\RedBat.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

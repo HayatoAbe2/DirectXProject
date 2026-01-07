@@ -17,7 +17,8 @@ public:
 
 	bool IsEnemyBullet() { return isEnemyBullet_; }
 	Transform GetTransform() { return model_->GetTransform(); }
-	int GetDamage() { return status_.damage; }
+	float GetDamage() { return status_.damage; }
+	float GetKnockback() { return status_.knockback; }
 	bool IsDead() { return isDead_; }
 	bool CanErase() { return canErase_; }
 	Vector3 GetPrePos() { return prePos_; }

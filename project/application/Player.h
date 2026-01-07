@@ -2,9 +2,9 @@
 #include "Transform.h"
 #include "MathUtils.h"
 #include "RangedWeapon.h"
+#include "GameContext.h"
 #include <vector>
 #include <memory>
-#include <GameContext.h>
 
 class Camera;
 class MapCheck;
@@ -26,17 +26,17 @@ public:
 	/// 更新
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
-	void Update(GameContext* context, MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera, BulletManager* bulletManager);
+	void Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera, BulletManager* bulletManager);
 
 	/// <summary>
 	/// 描画
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
 	/// <param name="camera">カメラ</param>
-	void Draw(GameContext* context, Camera* camera);
+	void Draw(Camera* camera);
 
 	// 被弾
-	void Hit(int damage, Vector3 from);
+	void Hit(float damage, Vector3 from);
 
 	Transform GetTransform() const { return transform_; }
 	float GetRadius() const { return radius_; }
@@ -46,11 +46,16 @@ public:
 	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
 	bool IsDead() { return hp_ <= 0; }
 
+	void Stop() { boostTime_ = 0; }
 
 private:
+	GameContext* context_ = nullptr;
+
 	// 操作説明
 	std::unique_ptr<Sprite> control_ = nullptr;
+	std::unique_ptr<Sprite> dashControl_ = nullptr;
 	std::unique_ptr<Sprite> equipment_ = nullptr;
+	std::vector<std::unique_ptr<Sprite>> enchants_[3]{};
 	std::unique_ptr<Sprite> life_ = nullptr;
 
 	// トランスフォーム
@@ -74,17 +79,33 @@ private:
 	Vector3 attackDirection_ = {};
 
 	// hp
-	int hp_ = 50;
-	int maxHp_ = 50;
+	float hp_ = 40;
+	float maxHp_ = 40;
 
 	// スタン時間
 	int stunTimer_ = 0;
+	bool isFall_ = false;
+	Vector3 landPos_{};
+	int redTime_ = 0;
+	int invincibleTimer_ = 0;
+	int invincibleTime_ = 20;
 
 	// モデル
 	std::unique_ptr<Model> model_ = nullptr;
 
+	// ダッシュ
+	bool canBoost_ = false;
+	bool isUsingBoost_ = false;
+	int boostTime_ = 0;
+	int maxBoostTime_ = 4;
+	float boostSpeed_ = 0.42f;
+	Vector3 boostDir_{};
+	int boostCoolTime_ = 10;
+
 	// 射撃
 	int shootCoolTime_ = 0;
+	int extraBulletWaitTime_ = 0;
+	bool canShootExtraBullet_ = false;
 
 	// 所持武器
 	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;

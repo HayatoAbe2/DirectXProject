@@ -85,7 +85,7 @@ void App::Initialize() {
 
 	// 音声データの読み込み
 	audio_->SoundLoad(L"Resources/Sounds/BGM/field.mp3");
-	audio_->SoundPlay(L"Resources/Sounds/BGM/field.mp3", true);
+	audio_->SoundPlay(L"Resources/Sounds/BGM/field.mp3", true,0.5f);
 }
 
 void App::Run() {

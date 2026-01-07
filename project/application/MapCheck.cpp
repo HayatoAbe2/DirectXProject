@@ -170,10 +170,10 @@ bool MapCheck::IsFall(const Vector2& pos, float radius) {
 	int mapW = static_cast<int>(map_[0].size());
 
 	// キャラのAABB（更新後）
-	float charMinX = pos.x - radius;
-	float charMaxX = pos.x + radius;
-	float charMinY = pos.y - radius;
-	float charMaxY = pos.y + radius;
+	float charMinX = pos.x - 0.1f;
+	float charMaxX = pos.x + 0.1f;
+	float charMinY = pos.y - 0.1f;
+	float charMaxY = pos.y + 0.1f;
 
 	// 衝突しそうな範囲だけループ（効率化）
 	int startY = std::max(0, static_cast<int>(charMinY / tileSize_));
@@ -192,8 +192,8 @@ bool MapCheck::IsFall(const Vector2& pos, float radius) {
 				float tileMaxY = tileMinY + tileSize_;
 
 				// 重なっていれば衝突
-				if (!(charMaxX < tileMinX || charMinX > tileMaxX ||
-					charMaxY < tileMinY || charMinY > tileMaxY)) {
+				if (charMaxX > tileMinX && charMinX < tileMaxX &&
+					charMaxY > tileMinY && charMinY < tileMaxY) {
 					return true;
 				}
 			}

@@ -181,10 +181,8 @@
     <ClCompile Include="engine\Object\ParticleSystem.cpp" />
     <ClCompile Include="application\MapTile.cpp" />
     <ClCompile Include="application\MapCheck.cpp" />
-    <ClCompile Include="application\Weapon\RangedWeapon.cpp" />
     <ClCompile Include="engine\Math\Vector2.cpp" />
     <ClCompile Include="application\ItemManager.cpp" />
-    <ClCompile Include="application\CollisionChecker.cpp" />
     <ClCompile Include="engine\Graphics\ImGuiManager.cpp" />
     <ClCompile Include="application\EffectManager.cpp" />
     <ClCompile Include="application\TitleScene.cpp" />
@@ -211,10 +209,6 @@
     <ClCompile Include="application\Bullet\NormalBullet.cpp">
       <Filter>Application\Bullet</Filter>
     </ClCompile>
-    <ClCompile Include="application\Bullet\SpreadBullet.cpp" />
-    <ClCompile Include="application\Weapon\Ranged\Shotgun.cpp" />
-    <ClCompile Include="application\Bullet\RapidBullet.cpp" />
-    <ClCompile Include="application\Weapon\Ranged\Pistol.cpp" />
     <ClCompile Include="application\Weapon\MeleeWeapon.cpp" />
     <ClCompile Include="application\Enemy\Enemy.cpp">
       <Filter>Application\Enemy</Filter>
@@ -234,6 +228,29 @@
     <ClCompile Include="engine\Object\LightManager.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
+    <ClCompile Include="application\Weapon\Ranged\Wavegun.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\CollisionChecker.cpp" />
+    <ClCompile Include="application\Bullet\WaveBullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Bullet\SpreadBullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Bullet\RapidBullet.cpp">
+      <Filter>Application\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\Ranged\Shotgun.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\RangedWeapon.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Weapon\Ranged\Pistol.cpp">
+      <Filter>Application\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="application\Enemy\Enemies\RedBat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -428,9 +445,7 @@
     <ClInclude Include="engine\Object\ParticleSystem.h" />
     <ClInclude Include="application\MapTile.h" />
     <ClInclude Include="application\MapCheck.h" />
-    <ClInclude Include="application\Weapon\RangedWeapon.h" />
     <ClInclude Include="application\ItemManager.h" />
-    <ClInclude Include="application\CollisionChecker.h" />
     <ClInclude Include="engine\Graphics\ImGuiManager.h" />
     <ClInclude Include="application\EffectManager.h" />
     <ClInclude Include="application\TitleScene.h" />
@@ -463,10 +478,6 @@
     <ClInclude Include="application\Bullet\NormalBullet.h">
       <Filter>Application\Bullet</Filter>
     </ClInclude>
-    <ClInclude Include="application\Bullet\SpreadBullet.h" />
-    <ClInclude Include="application\Weapon\Ranged\Shotgun.h" />
-    <ClInclude Include="application\Bullet\RapidBullet.h" />
-    <ClInclude Include="application\Weapon\Ranged\Pistol.h" />
     <ClInclude Include="application\Weapon\MeleeWeapon.h" />
     <ClInclude Include="engine\Object\Node.h" />
     <ClInclude Include="application\Enemy\Enemy.h">
@@ -497,6 +508,30 @@
       <Filter>Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="engine\Object\Data\ModelData.h" />
+    <ClInclude Include="application\Rarity.h" />
+    <ClInclude Include="application\Weapon\Ranged\Wavegun.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\CollisionChecker.h" />
+    <ClInclude Include="application\Bullet\WaveBullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Bullet\SpreadBullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Bullet\RapidBullet.h">
+      <Filter>Application\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\Ranged\Shotgun.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\RangedWeapon.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Weapon\Ranged\Pistol.h">
+      <Filter>Application\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="application\Enemy\Enemies\RedBat.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">

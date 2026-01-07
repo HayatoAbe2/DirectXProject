@@ -1,5 +1,6 @@
 #pragma once
 #include "RangedWeapon.h"
+#include "Rarity.h"
 #include <memory>
 
 class GameContext;
@@ -8,7 +9,7 @@ class Camera;
 class Item {
 public:
 	~Item();
-	Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context);
+	Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context,Rarity rarity);
 	void Draw(GameContext* context, Camera* camera);
 
 	Transform GetTransform() { if (rangedWeapon_) { return rangedWeapon_->GetWeaponModel()->GetTransform(); } return{}; }
@@ -26,5 +27,8 @@ private:
 	int lightIndex_ = 0;
 
 	bool isDead_ = false;
+
+	// レア度
+	Rarity rarity_{};
 };
 

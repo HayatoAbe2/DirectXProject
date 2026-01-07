@@ -148,7 +148,7 @@ void Enemy::Draw(GameContext* context, Camera* camera) {
 	context->DrawModel(model_.get(), camera);
 }
 
-void Enemy::Hit(int damage, Vector3 from) {
+void Enemy::Hit(float damage, Vector3 from, const float knockback) {
 
 	status_.hp -= damage;
 	if (status_.hp <= 0) { isDead_ = true; }
@@ -158,7 +158,7 @@ void Enemy::Hit(int damage, Vector3 from) {
 		stunTimer_ = 10 - status_.stunResist;
 
 		// ノックバック
-		velocity_ = Normalize(model_->GetTransform().translate - from) * 0.3f;
+		velocity_ = Normalize(model_->GetTransform().translate - from) * knockback;
 	}
 
 	// 強制的に発見

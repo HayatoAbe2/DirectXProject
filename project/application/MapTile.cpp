@@ -123,6 +123,18 @@ void MapTile::LoadCSV(const std::string& filePath) {
 			}
 		}
 	}
+	int preSize = int(transformsWall.size());
+	transformsWall.resize(wall_->GetNumInstance());
+	for (int i = preSize; i < int(wall_->GetTransforms().size()); ++i) {
+		transformsWall[i].scale = {};
+	}
+
+	preSize = int(transformsFloor.size());
+	transformsFloor.resize(floor_->GetNumInstance());
+	for (int i = preSize; i < int(floor_->GetTransforms().size()); ++i) {
+		transformsFloor[i].scale = {};
+	}
+
 	floor_->SetInstanceTransforms(transformsFloor);
 	wall_->SetInstanceTransforms(transformsWall);
 	goal_->SetTransform(transformGoal);

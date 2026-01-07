@@ -42,7 +42,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 			};
 			Transform transform = model_->GetTransform();
 			transform.translate += randomVector + velocity_ * 0.5f;
-			transform.scale = { 1.0f,1.0f,1.0f };
+			transform.scale = model_->GetTransform().scale * 2.0f;
 			particle_->Emit(transform, -velocity_ * 0.5f);
 		}
 	}
@@ -59,7 +59,7 @@ void NormalBullet::Update(MapCheck* mapCheck) {
 
 void NormalBullet::Draw(GameContext* context, Camera* camera) {
 	if (!isDead_) {
-		context->DrawModel(model_.get(), camera, BlendMode::Add);
+		//context->DrawModel(model_.get(), camera, BlendMode::Add);
 	}
 
 	// パーティクル
@@ -68,20 +68,22 @@ void NormalBullet::Draw(GameContext* context, Camera* camera) {
 }
 
 void NormalBullet::Hit() {
-	isDead_ = true;
+	if (particleField_) {
+		isDead_ = true;
 
-	// 飛散パーティクル
-	particleField_->SetGravity(-0.4f, model_->GetTransform().translate);
-	hitParticle_->AddField(std::move(particleField_));
-	for (int i = 0; i < hitParticleNum_; ++i) {
-		Vector3 randomVector = {
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		};
-		Transform transform = model_->GetTransform();
-		transform.translate += randomVector;
-		transform.scale = { 1.5f,1.5f,1.5f };
-		hitParticle_->Emit(transform, {});
+		// 飛散パーティクル
+		particleField_->SetGravity(-0.4f, model_->GetTransform().translate);
+		hitParticle_->AddField(std::move(particleField_));
+		for (int i = 0; i < hitParticleNum_; ++i) {
+			Vector3 randomVector = {
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			};
+			Transform transform = model_->GetTransform();
+			transform.translate += randomVector;
+			transform.scale = model_->GetTransform().scale * 3.0f;
+			hitParticle_->Emit(transform, {});
+		}
 	}
 }

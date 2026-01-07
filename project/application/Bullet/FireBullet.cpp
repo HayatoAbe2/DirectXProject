@@ -1,6 +1,6 @@
 #include "FireBullet.h"
 #include "GameContext.h"
-#include "MapCheck.h"
+#include "MapCheck.h" 
 #include "ParticleSystem.h"
 #include "Camera.h"
 #include <sstream>
@@ -16,12 +16,14 @@ void FireBullet::Initialize(GameContext* context) {
 	explosionParticle_->Initialize(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", particleNum_));
 	explosionParticle_->SetLifeTime(10);
 	explosionParticle_->SetColor({ 0.7f, 0.03f, 0.0f, 1.0f });
+
 	particleField_ = std::make_unique<ParticleField>();
 	particleField_->SetCheckArea(false);
 
 	lightIndex_ = context_->AddPointLight();
 	auto& light = context_->GetPointLight(lightIndex_);
 	light.radius = 1.5f;
+	light.color = { 1,1,1,1 };
 }
 
 void FireBullet::Update(MapCheck* mapCheck) {
@@ -50,7 +52,7 @@ void FireBullet::Update(MapCheck* mapCheck) {
 			};
 			Transform transform = model_->GetTransform();
 			transform.translate += randomVector + velocity_ * 0.5f;
-			transform.scale = { 2.0f,2.0f,2.0f };
+			transform.scale = model_->GetTransform().scale * 2.0f;
 			particle_->Emit(transform, -velocity_ * 0.2f);
 		}
 	}
@@ -69,13 +71,13 @@ void FireBullet::Update(MapCheck* mapCheck) {
 }
 
 void FireBullet::Draw(GameContext* context, Camera* camera) {
-	if (isDead_ && !shaked_) {
+	if (isDead_ && !shaked_ && lifeTime_ > 0) {
 		camera->StartShake(2.0f, 3);
 		shaked_ = true;
 	}
 
 	if (!isDead_) {
-		context->DrawModel(model_.get(), camera, BlendMode::Add);
+		//context->DrawModel(model_.get(), camera, BlendMode::Add);
 	}
 
 	// パーティクル
@@ -84,22 +86,26 @@ void FireBullet::Draw(GameContext* context, Camera* camera) {
 }
 
 void FireBullet::Hit() {
-	isDead_ = true;
-	context_->RemovePointLight(lightIndex_);
-	context_->SoundPlay(L"Resources/Sounds/SE/aasssdexplosion.mp3", false);
+	if (particleField_) {
+		isDead_ = true;
+		context_->RemovePointLight(lightIndex_);
+		if (lifeTime_ > 0) { // 自然消滅のときは音を鳴らさない
+			context_->SoundPlay(L"Resources/Sounds/SE/explosion.mp3", false);
+		}
 
-	// 爆発開始
-	particleField_->SetGravity(-0.6f, model_->GetTransform().translate);
-	explosionParticle_->AddField(std::move(particleField_));
-	for (int i = 0; i < explosionParticleNum_; ++i) {
-		Vector3 randomVector = {
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
-		};
-		Transform transform = model_->GetTransform();
-		transform.translate += randomVector;
-		transform.scale = { 1.5f,1.5f,1.5f };
-		explosionParticle_->Emit(transform, {});
+		// 爆発開始
+		particleField_->SetGravity(-0.6f, model_->GetTransform().translate);
+		explosionParticle_->AddField(std::move(particleField_));
+		for (int i = 0; i < explosionParticleNum_; ++i) {
+			Vector3 randomVector = {
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			context_->RandomFloat(-particleRange_ / 2.0f, particleRange_ / 2.0f),
+			};
+			Transform transform = model_->GetTransform();
+			transform.translate += randomVector;
+			transform.scale = { 1.5f,1.5f,1.5f };
+			explosionParticle_->Emit(transform, {});
+		}
 	}
 }

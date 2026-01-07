@@ -42,7 +42,7 @@ public:
 	/// 再生
 	/// </summary>
 	/// <param name="filename">ファイルパス</param>
-	void SoundPlay(const wchar_t* filename,bool isLoop = false);
+	void SoundPlay(const wchar_t* filename,bool isLoop = false,float volume = 1.0f);
 
 	/// <summary>
 	/// 止める

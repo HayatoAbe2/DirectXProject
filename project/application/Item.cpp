@@ -8,7 +8,7 @@ Item::~Item() {
 	context_->RemovePointLight(lightIndex_);
 }
 
-Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context) {
+Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* context,Rarity rarity) {
 	rangedWeapon_ = std::move(rangedWeapon);
 	rangedWeapon_->GetWeaponModel()->SetTranslate(pos);
 	if (rangedWeapon_ && dynamic_cast<FireBall*>(rangedWeapon_.get())) {
@@ -21,6 +21,20 @@ Item::Item(std::unique_ptr<RangedWeapon> rangedWeapon, Vector3 pos,GameContext* 
 	pointLight.position = pos;
 	pointLight.intensity = 1.0f;
 	pointLight.radius = 3.0f;
+	switch (rarity) {
+	case static_cast<int>(Rarity::Common):
+		pointLight.color = { 0.5f,0.5f,0.5f,1.0f };
+		break;
+	case static_cast<int>(Rarity::Rare):
+		pointLight.color = { 0.1f,0.1f,0.7f,1.0f };
+		break;
+	case static_cast<int>(Rarity::Epic):
+		pointLight.color = { 0.8f,0.1f,0.8f,1.0f };
+		break;
+	case static_cast<int>(Rarity::Legendary):
+		pointLight.color = { 1.0f,0.8f,0.0f,1.0f };
+		break;
+	}
 
 	context_ = context;
 }

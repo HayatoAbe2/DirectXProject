@@ -25,6 +25,7 @@ void Audio::Finalize() {
 	HRESULT result;
 
 	StopAll();
+	Sleep(10);
 
 	if (masterVoice_) {
 		masterVoice_->DestroyVoice();
@@ -111,7 +112,7 @@ void Audio::SoundUnload(const wchar_t* filename) {
 	soundMap_.erase(filename); // マップから削除
 }
 
-void Audio::SoundPlay(const wchar_t* filename,bool isLoop) {
+void Audio::SoundPlay(const wchar_t* filename,bool isLoop,float volume) {
 	if (soundMap_.find(filename) == soundMap_.end()) {
 		return; // 存在しない場合は何もしない
 	}
@@ -121,6 +122,8 @@ void Audio::SoundPlay(const wchar_t* filename,bool isLoop) {
 	IXAudio2SourceVoice* sourceVoice = nullptr;
 	hr = xAudio2_->CreateSourceVoice(&sourceVoice, &soundMap_[filename].wfex);
 	assert(SUCCEEDED(hr));
+
+	sourceVoice->SetVolume(volume);
 
 	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};

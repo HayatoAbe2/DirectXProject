@@ -2,12 +2,13 @@
 #include "MathUtils.h"
 #include "Item.h"
 #include "GameContext.h"
+#include "Rarity.h"
 #include <vector>
+#include <string>
 #include <memory>
 
 class Player;
 class WeaponManager;
-class GameContext;
 class Camera;
 
 class ItemManager {
@@ -17,8 +18,10 @@ public:
 	void Draw(Camera* camera);
 	void Interact(Player* player);
 	void Spawn(Vector3 pos,int index);
+	void Spawn(Vector3 pos,int index,Rarity rarity);
 	void Drop(Vector3 pos,std::unique_ptr<RangedWeapon> weapon);
 	void Reset();
+	void LoadCSV(const std::string& filePath,const float tileSize);
 	
 private:
 	GameContext* context_ = nullptr;

@@ -24,9 +24,9 @@ void TitleScene::Initialize() {
 	control_->SetSize({ 270,39 });
 	control_->SetPosition({ 640 - 135,710 - 200 });
 
-	//logo_ = context_->LoadSprite("Resources/Logo/logo.png");
-	//logo_->SetSize({ 270,39 });
-	//logo_->SetPosition({ 640 - 135,700 - 200 });
+	logo_ = context_->LoadSprite("Resources/Control/title.png");
+	logo_->SetSize({ 610,150 });
+	logo_->SetPosition({ 640 - 305,700 - 500 });
 }
 
 void TitleScene::Update() {
@@ -64,6 +64,9 @@ void TitleScene::Update() {
 
 void TitleScene::Draw() {
 	context_->DrawModel(skydome_.get(), camera_.get());
+
 	context_->DrawSprite(control_.get());
+	context_->DrawSprite(logo_.get());
+
 	context_->DrawSprite(fade_.get());
 }

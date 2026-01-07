@@ -9,6 +9,9 @@
 #include "Bat.h"
 #include "Knight.h"
 #include "HeavyKnight.h"
+#include "RedBat.h"
+#include <fstream>
+#include <sstream>
 
 void EnemyManager::Initialize(GameContext* context) {
 }
@@ -50,8 +53,8 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.hp = 10;
        status.radius = 0.5f;
        status.moveSpeed = 0.15f;
-       status.defaultSearchRadius = 8.0f;
-       status.loseSightRadius = 30.0f;
+       status.defaultSearchRadius = 80.0f;
+       status.loseSightRadius = 100.0f;
        status.loseSightTime = 180;
        status.moveTime = 60;
        status.stopTime = 5;
@@ -67,8 +70,8 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.hp = 20;
        status.radius = 0.9f;
        status.moveSpeed = 0.07f;
-       status.defaultSearchRadius = 12.0f;
-       status.loseSightRadius = 20.0f;
+       status.defaultSearchRadius = 80.0f;
+       status.loseSightRadius = 100.0f;
        status.loseSightTime = 300;
        status.moveTime = 60;
        status.stopTime = 60;
@@ -81,12 +84,13 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
    case 3:
        enemyModel = context->LoadModel("Resources/Enemy", "knight2.obj");
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
+       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
        status.hp = 150;
        status.radius = 1.5f;
        status.moveSpeed = 0.07f;
-       status.defaultSearchRadius = 12.0f;
-       status.loseSightRadius = 20.0f;
+       status.defaultSearchRadius = 100.0f;
+       status.loseSightRadius = 300.0f;
        status.loseSightTime = 300;
        status.moveTime = 60;
        status.stopTime = 60;
@@ -100,23 +104,50 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        enemyModel = context->LoadModel("Resources/Enemy", "bat2.obj");
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
        rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Pistol)));
-       status.hp = 100;
+       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Wavegun)));
+       status.hp = 110;
        status.radius = 0.75f;
        status.moveSpeed = 0.15f;
-       status.defaultSearchRadius = 8.0f;
-       status.loseSightRadius = 30.0f;
+       status.defaultSearchRadius = 100.0f;
+       status.loseSightRadius = 300.0f;
        status.loseSightTime = 180;
-       status.moveTime = 60;
+       status.moveTime = 60; 
        status.stopTime = 5;
+       status.stunResist = 30;
        status.canFly = true;
 
-       enemies_.push_back(std::make_unique<Bat>(std::move(enemyModel), pos, status, std::move(rangedWeapon)));
+       enemies_.push_back(std::make_unique<RedBat>(std::move(enemyModel), pos, status, std::move(rangedWeapons)));
        break;
    }
 }
 
 void EnemyManager::Reset() {
 	enemies_.clear();
+}
+
+void EnemyManager::LoadCSV(std::string filePath, float tileSize, GameContext* context, WeaponManager* weaponManager) {
+    std::ifstream file(filePath);
+    std::string line;
+
+    assert(file.is_open());
+
+    std::getline(file, line); // 最初の行をスキップ
+
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string enemyStr, xStr, zStr;
+
+        std::getline(ss, enemyStr, ',');
+        std::getline(ss, xStr, ',');
+        std::getline(ss, zStr, ',');
+
+        int enemyNum = std::stoi(enemyStr);
+        float x = std::stof(xStr);
+        float z = std::stof(zStr);
+
+        Vector3 pos = Vector3{ x * tileSize, 0, z * tileSize };
+        Spawn(pos, context,weaponManager, enemyNum);
+    }
 }
 
 std::vector<Enemy*> EnemyManager::GetEnemies() {

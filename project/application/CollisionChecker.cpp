@@ -32,7 +32,7 @@ void CollisionChecker::Check(Enemy* enemy, Bullet* bullet, Camera* camera) {
 
 	if (Length(enemy->GetTransform().translate - bullet->GetTransform().translate) <=
 		enemy->GetRadius() + bullet->GetTransform().scale.x / 2.0f) {
-		enemy->Hit(bullet->GetDamage(),bullet->GetPrePos());
+		enemy->Hit(bullet->GetDamage(),bullet->GetPrePos(),bullet->GetKnockback());
 		bullet->Hit();
 		camera->StartShake(1.0f, 3);
 		effectManager_->SpawnHitEffect(bullet->GetTransform().translate);

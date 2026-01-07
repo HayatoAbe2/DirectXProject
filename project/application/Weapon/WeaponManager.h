@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Rarity.h"
 #include <vector>
 #include <memory>
 
@@ -8,15 +9,16 @@ class RangedWeapon;
 
 class WeaponManager {
 public:
-	void Initilaize(GameContext* context);
+	void Initialize(GameContext* context);
 
-	std::unique_ptr<RangedWeapon> GetRangedWeapon(int index);
+	std::unique_ptr<RangedWeapon> GetRangedWeapon(int index,Rarity rarity = Rarity::Common);
 	
 	enum class WEAPON {
-		FireBall,
+		Pistol,
 		AssaultRifle,
 		Shotgun,
-		Pistol,
+		FireBall,
+		Wavegun,
 	};
 private:
 	GameContext* context_ = nullptr;
