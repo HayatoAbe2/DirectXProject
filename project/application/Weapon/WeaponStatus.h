@@ -36,14 +36,3 @@ struct RangedWeaponStatus {
 	// レア度
 	Rarity rarity;
 };
-
-struct MeleeWeaponStatus {
-	// ダメージ
-	float damage;
-	// 攻撃中減速
-	float weight;
-	// 攻撃の前隙
-	int chargeTime;
-	// 攻撃クールダウン
-	int attackCoolTime;
-};

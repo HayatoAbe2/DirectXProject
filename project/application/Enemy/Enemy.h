@@ -14,6 +14,7 @@ class Player;
 
 class Enemy {
 public:
+	virtual ~Enemy() = default;
 	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::unique_ptr<RangedWeapon> rWeapon);
 	// ボス敵
 	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<RangedWeapon>> rWeapons);
