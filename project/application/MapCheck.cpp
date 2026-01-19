@@ -8,7 +8,8 @@ void MapCheck::Initialize(std::vector<std::vector<MapTile::Tile>> map, float til
 	tileSize_ = tileSize;
 }
 
-void MapCheck::ResolveCollisionX(Vector2& pos, float radius, bool isFlying) {
+bool MapCheck::ResolveCollisionX(Vector2& pos, float radius, bool isFlying) {
+	bool isHit = false;
 	int mapH = static_cast<int>(map_.size());
 	int mapW = static_cast<int>(map_[0].size());
 
@@ -59,6 +60,8 @@ void MapCheck::ResolveCollisionX(Vector2& pos, float radius, bool isFlying) {
 				// 押し戻したのでAABB更新
 				charMinX = pos.x - radius;
 				charMaxX = pos.x + radius;
+
+				isHit = true;
 			}
 		}
 	}
@@ -67,9 +70,12 @@ void MapCheck::ResolveCollisionX(Vector2& pos, float radius, bool isFlying) {
 	float minX = 0;
 	float maxX = mapW * tileSize_;
 	pos.x = std::clamp(pos.x, minX + radius, maxX - radius);
+
+	return isHit;
 }
 
-void MapCheck::ResolveCollisionY(Vector2& pos, float radius, bool isFlying) {
+bool MapCheck::ResolveCollisionY(Vector2& pos, float radius, bool isFlying) {
+	bool isHit = false;
 	int mapH = static_cast<int>(map_.size());
 	int mapW = static_cast<int>(map_[0].size());
 
@@ -118,6 +124,8 @@ void MapCheck::ResolveCollisionY(Vector2& pos, float radius, bool isFlying) {
 				// AABB更新
 				charMinY = pos.y - radius;
 				charMaxY = pos.y + radius;
+
+				isHit = true;
 			}
 		}
 	}
@@ -126,6 +134,8 @@ void MapCheck::ResolveCollisionY(Vector2& pos, float radius, bool isFlying) {
 	float minY = 0;
 	float maxY = mapH * tileSize_;
 	pos.y = std::clamp(pos.y, minY + radius, maxY - radius);
+
+	return isHit;
 }
 
 bool MapCheck::IsHitWall(const Vector2& pos, float radius) {

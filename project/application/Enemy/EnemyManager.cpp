@@ -56,8 +56,6 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.defaultSearchRadius = 80.0f;
        status.loseSightRadius = 100.0f;
        status.loseSightTime = 180;
-       status.moveTime = 60;
-       status.stopTime = 5;
        status.stunResist = 0;
        status.canFly = true;
 
@@ -73,8 +71,6 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.defaultSearchRadius = 80.0f;
        status.loseSightRadius = 100.0f;
        status.loseSightTime = 300;
-       status.moveTime = 60;
-       status.stopTime = 60;
        status.stunResist = 2;
        status.canFly = false;
 
@@ -92,8 +88,6 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.defaultSearchRadius = 100.0f;
        status.loseSightRadius = 300.0f;
        status.loseSightTime = 300;
-       status.moveTime = 60;
-       status.stopTime = 60;
        status.stunResist = 30;
        status.canFly = false;
 
@@ -111,8 +105,6 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.defaultSearchRadius = 100.0f;
        status.loseSightRadius = 300.0f;
        status.loseSightTime = 180;
-       status.moveTime = 60; 
-       status.stopTime = 5;
        status.stunResist = 30;
        status.canFly = true;
 

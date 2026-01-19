@@ -29,7 +29,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 	for (auto& mesh : model_->GetData()->meshes) {
 		auto data = model_->GetMaterial(0)->GetData();
 		data.color = { 1.0f,1.0f,1.0f,1.0f };
-		model_->GetMaterial(0)->SetData(data);      
+		model_->GetMaterial(0)->SetData(data);
 	}
 
 	if (!isFall_) {
@@ -37,28 +37,36 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 		if (stunTimer_ <= 0) {
 			// 移動
 			if (target_) {
+				// 発見中
+				if (rotateTimer_ >= rotateTime_) {
+					Vector3 targetDir = Normalize(player->GetTransform().translate - model_->GetTransform().translate);
+					velocity_ = Vector3{ targetDir.x,0,targetDir.z } *status_.moveSpeed;
+					rotateTimer_ = 0;
+					rotateTime_ = context->RandomInt(minRotateTimer_, maxRotateTimer_);
+				}
+
+			} else {
+				// プレイヤーを見つけてない
 				if (isMoving_) {
-					moveTimer_++;
-					if (moveTimer_ > status_.moveTime) {
-						moveTimer_ = 0;
+					randomTimer_++;
+					if (randomTimer_ >= randomMoveTime_) {
+						randomTimer_ = 0;
 						isMoving_ = false;
+						randomStopTime_ = context->RandomInt(minRandomStopTime_, maxRandomStopTime_);
 						velocity_ = {};
 					}
 				} else {
-					stopTimer_++;
-					if (stopTimer_ > status_.stopTime) {
-						stopTimer_ = 0;
+					randomTimer_++;
+					if (randomTimer_ >= randomStopTime_) {
+						randomTimer_ = 0;
 						isMoving_ = true;
+						randomMoveTime_ = context->RandomInt(minRandomMoveTime_, maxRandomMoveTime_);
 
 						Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
-						velocity_.x = direction.x * status_.moveSpeed;
-						velocity_.z = direction.y * status_.moveSpeed;
+						velocity_.x = direction.x * status_.moveSpeed / 2.0f;
+						velocity_.z = direction.y * status_.moveSpeed / 2.0f;
 					}
 				}
-			} else {
-				moveTimer_ = 0;
-				stopTimer_ = 0;
-				velocity_ = { 0,0,0 };
 			}
 
 			// 速度をもとに移動
@@ -130,8 +138,8 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 			}
 
 			if (stunTimer_ <= 0 && !status_.canFly) {
-				isFall_ = mapCheck->IsFall(pos, status_.radius); 
-				if(isFall_){ context->SoundPlay(L"Resources/Sounds/SE/fall.mp3",false); }
+				isFall_ = mapCheck->IsFall(pos, status_.radius);
+				if (isFall_) { context->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false); }
 			}
 			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
 		}

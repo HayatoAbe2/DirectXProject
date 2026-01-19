@@ -70,6 +70,16 @@ protected:
 	// 発見範囲
 	float searchRadius_ = 8.0f;
 
+	// 未発見移動
+	int randomMoveTime_ = 45; // 動く時間
+	const int minRandomMoveTime_ = 60;
+	const int maxRandomMoveTime_ = 180;
+	int randomStopTime_ = 30; // その後止まる時間
+	const int minRandomStopTime_ = 30;
+	const int maxRandomStopTime_ = 90;
+	int randomTimer_ = 0;
+	bool isMoving_ = false;
+
 	// 見失いカウント
 	int loseSightTimer_ = 0;
 
@@ -83,9 +93,10 @@ protected:
 	bool isFall_ = false;
 
 	// 行動変更タイマー
-	int moveTimer_ = 0;
-	int stopTimer_ = 0;
-	bool isMoving_ = false;
+	int rotateTimer_ = 5;
+	int rotateTime_ = 5;
+	const int minRotateTimer_ = 5;
+	const int maxRotateTimer_ = 20;
 
 	// 攻撃モーション
 	int attackMotionStart_ = 30;

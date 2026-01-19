@@ -64,9 +64,7 @@ void TitleScene::Update() {
 
 void TitleScene::Draw() {
 	context_->DrawModel(skydome_.get(), camera_.get());
-
 	context_->DrawSprite(control_.get());
 	context_->DrawSprite(logo_.get());
-
 	context_->DrawSprite(fade_.get());
 }
