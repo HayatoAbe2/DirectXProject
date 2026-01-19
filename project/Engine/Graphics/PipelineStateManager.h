@@ -28,7 +28,7 @@ public:
 private:
 
 	// inputLayout
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[3] = {};
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs_[4] = {};
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc_;
 
 	// BlendStateの設定
@@ -72,7 +72,6 @@ private:
 	D3D12_BLEND_DESC CreateMultiplyBlendDesc();
 	D3D12_BLEND_DESC CreateScreenBlendDesc();
 
-	D3D12_DEPTH_STENCIL_DESC CreateDefaultDepthDesc();
 	void CreatePSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC& baseDesc, const D3D12_BLEND_DESC& blendDesc, Microsoft::WRL::ComPtr<ID3D12PipelineState>* outPSO);
 
 };

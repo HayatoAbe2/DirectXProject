@@ -76,10 +76,6 @@ void FireBullet::Draw(GameContext* context, Camera* camera) {
 		shaked_ = true;
 	}
 
-	if (!isDead_) {
-		//context->DrawModel(model_.get(), camera, BlendMode::Add);
-	}
-
 	// パーティクル
 	context->DrawParticle(particle_.get(), camera, BlendMode::Add);
 	context->DrawParticle(explosionParticle_.get(), camera, BlendMode::Add);

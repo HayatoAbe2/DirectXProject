@@ -34,7 +34,7 @@ void App::Initialize() {
 	const int32_t kClientHeight = 720;
 	window_ = std::make_unique<Window>();
 	window_->Initialize(kClientWidth, kClientHeight);
-	logger_->Log(logger_->GetStream(), std::format("[Window] Initializetion complete.\n"));
+	logger_->Log(logger_->GetStream(), std::format("[Window] Initialization complete.\n"));
 
 #ifdef _DEBUG
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugController = nullptr;

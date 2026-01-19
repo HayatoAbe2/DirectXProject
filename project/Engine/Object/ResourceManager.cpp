@@ -249,6 +249,14 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 					vertex.texcoord = { texcoord.x, texcoord.y };
 					vertex.position.x *= -1.0f;
 					vertex.normal.x *= -1.0f;
+					// 頂点カラー
+					if(mesh->HasVertexColors(0)) {
+						aiColor4D& color = mesh->mColors[0][vertexIndex];
+						vertex.color = { color.r, color.g, color.b, color.a };
+					} else {
+						// なかったら白色
+						vertex.color = { 1.0f,1.0f,1.0f,1.0f };
+					}
 					vertices.push_back(vertex);
 				}
 			}
@@ -556,6 +564,7 @@ std::unique_ptr<Sprite> ResourceManager::LoadSprite(std::string texturePath) {
 
 	for (UINT i = 0; i < 4; ++i) {
 		vertexData[i].normal = { 0.0f,0.0f,-1.0f };
+		vertexData[i].color = { 1.0f,1.0f,1.0f,1.0f };
 	}
 
 	sprite->SetVertexResource(vertexResource);

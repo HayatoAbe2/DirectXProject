@@ -65,7 +65,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     
-    // マテリアル
+    // マテリアルの色
     float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 baseColor;
     if (gMaterial.useTexture != 0)
@@ -83,6 +83,9 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         baseColor = gMaterial.color;
     }
+    
+    // 頂点カラー
+    baseColor *= input.color;
     
     output.color = baseColor;
     

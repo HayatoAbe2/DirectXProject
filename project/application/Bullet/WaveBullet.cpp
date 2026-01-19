@@ -67,10 +67,6 @@ void WaveBullet::Update(MapCheck* mapCheck) {
 }
 
 void WaveBullet::Draw(GameContext* context, Camera* camera) {
-	if (!isDead_) {
-		//context->DrawModel(model_.get(), camera, BlendMode::Add);
-	}
-
 	// パーティクル
 	context->DrawParticle(particle_.get(), camera, BlendMode::Add);
 	context->DrawParticle(hitParticle_.get(), camera, BlendMode::Add);
