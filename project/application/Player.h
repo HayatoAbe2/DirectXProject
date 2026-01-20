@@ -57,6 +57,7 @@ private:
 	std::unique_ptr<Sprite> equipment_ = nullptr;
 	std::vector<std::unique_ptr<Sprite>> enchants_[3]{};
 	std::unique_ptr<Sprite> life_ = nullptr;
+	std::unique_ptr<Model> direction_ = nullptr;
 
 	// トランスフォーム
 	Transform transform_;
@@ -116,5 +117,7 @@ private:
 	float moveParticleRange_ = 1.0f;
 	int moveParticleEmitTimer_ = 0;
 	int moveParticleEmitInterval_ = 20;
+
+	float dirDisplayAlpha_ = 0.3f;
 };
 

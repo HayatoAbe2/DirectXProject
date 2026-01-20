@@ -8,13 +8,6 @@
 #include "ImGuiManager.h"
 
 GameScene::~GameScene() {
-	context_->SoundUnload(L"Resources/Sounds/SE/explosion.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/shoot.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/fire.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/floorClear.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/fall.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/warp.mp3");
-	context_->SoundUnload(L"Resources/Sounds/SE/hit.mp3");
 }
 
 void GameScene::Initialize() {

@@ -24,9 +24,6 @@ void Audio::Initialize() {
 void Audio::Finalize() {
 	HRESULT result;
 
-	StopAll();
-	Sleep(10);
-
 	if (masterVoice_) {
 		masterVoice_->DestroyVoice();
 		masterVoice_ = nullptr;
@@ -146,12 +143,18 @@ void Audio::SoundPlay(const wchar_t* filename,bool isLoop,float volume) {
 
 void Audio::StopAll() {
 	for (auto* voice : voices_) {
-		if (voice) {
-			voice->Stop();
-			voice->FlushSourceBuffers();
-			voice->DestroyVoice();
-		}
+		if (!voice) continue;
+
+		// 再生中なら停止
+		voice->Stop(0);
+		voice->FlushSourceBuffers();
+
+		// DestroyVoice は非同期で安全に呼ぶ
+		voice->DestroyVoice();
+		// DestroyVoice 後に voice にアクセスしない
 	}
 	voices_.clear();
 }
+
+
 

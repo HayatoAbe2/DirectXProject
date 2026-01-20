@@ -56,6 +56,12 @@ void Player::Initialize(std::unique_ptr<Model> playerModel, GameContext* context
 	life_->SetSize({ 290,68 });
 	life_->SetPosition({ 10,10 });
 
+	direction_ = std::make_unique<Model>();
+	direction_ = context_->LoadModel("Resources/Direction", "Direction.obj");
+	auto data = direction_->GetMaterial(0)->GetData();
+	data.color = { 1,0,0,dirDisplayAlpha_ };
+	direction_->GetMaterial(0)->SetData(data);
+
 	moveParticle_ = std::make_unique<ParticleSystem>();
 	moveParticle_->Initialize(std::move(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", moveParticleNum_)));
 	moveParticle_->SetLifeTime(10);
@@ -372,6 +378,10 @@ void Player::Draw(Camera* camera) {
 		rangedWeapon_->GetWeaponModel()->SetTransform(weaponTransform_);
 		context_->DrawModel(rangedWeapon_->GetWeaponModel(), camera);
 		context_->DrawSprite(control_.get());
+
+		// 照準方向
+		direction_->SetTransform(weaponTransform_);
+		context_->DrawModel(direction_.get(), camera);
 
 		switch (rangedWeapon_->GetStatus().rarity) {
 		case static_cast<int>(Rarity::Common):

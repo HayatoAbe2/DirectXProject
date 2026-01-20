@@ -145,6 +145,15 @@ void App::Finalize() {
 		gameContext_.reset();
 
 		// Audio
+		audio_->StopAll();
+		audio_->SoundUnload(L"Resources/Sounds/SE/press.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/explosion.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/shoot.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/fire.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/floorClear.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/fall.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/warp.mp3");
+		audio_->SoundUnload(L"Resources/Sounds/SE/hit.mp3");
 		audio_->Finalize();
 		audio_.reset();
 		logger_->Log(logger_->GetStream(), std::format("[Audio] Shutdown complete.\n"));
