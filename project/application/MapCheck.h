@@ -12,7 +12,7 @@ public:
 	bool ResolveCollisionX(Vector2& pos, float radius, bool isFlying);
 	bool ResolveCollisionY(Vector2& pos, float radius, bool isFlying);
 	bool IsHitWall(const Vector2& pos, float radius);
-	bool IsFall(const Vector2& pos, float radius);
+	bool IsFall(const Vector2& pos);
 	bool IsGoal(const Vector2& pos, float radius, bool canGoal);
 
 private:	

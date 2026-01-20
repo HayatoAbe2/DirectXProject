@@ -97,8 +97,8 @@ private:
 	bool canBoost_ = false;
 	bool isUsingBoost_ = false;
 	int boostTime_ = 0;
-	int maxBoostTime_ = 4;
-	float boostSpeed_ = 0.42f;
+	int maxBoostTime_ = 10;
+	float boostSpeed_ = 0.3f;
 	Vector3 boostDir_{};
 	int boostCoolTime_ = 10;
 

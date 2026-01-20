@@ -175,7 +175,7 @@ bool MapCheck::IsHitWall(const Vector2& pos, float radius) {
 	return false;
 }
 
-bool MapCheck::IsFall(const Vector2& pos, float radius) {
+bool MapCheck::IsFall(const Vector2& pos) {
 	int mapH = static_cast<int>(map_.size());
 	int mapW = static_cast<int>(map_[0].size());
 
@@ -193,23 +193,13 @@ bool MapCheck::IsFall(const Vector2& pos, float radius) {
 
 	for (int y = startY; y <= endY; ++y) {
 		for (int x = startX; x <= endX; ++x) {
-			if (map_[y][x] == MapTile::Tile::None) {
+			if (map_[y][x] != MapTile::Tile::None) {
 
-				// タイルAABB
-				float tileMinX = x * tileSize_;
-				float tileMinY = y * tileSize_;
-				float tileMaxX = tileMinX + tileSize_;
-				float tileMaxY = tileMinY + tileSize_;
-
-				// 重なっていれば衝突
-				if (charMaxX > tileMinX && charMinX < tileMaxX &&
-					charMaxY > tileMinY && charMinY < tileMaxY) {
-					return true;
-				}
+				return false;
 			}
 		}
 	}
-	return false;
+	return true;
 }
 
 bool MapCheck::IsGoal(const Vector2& pos, float radius, bool canGoal) {

@@ -50,7 +50,6 @@ public:
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
 
     Node ReadNode(aiNode* node);
-
     
     /// <summary>
     /// モデルのファイル読み込み
@@ -67,6 +66,7 @@ public:
 
     uint32_t AllocateTransformCB() { return nextId_++; }
 private:
+
     Logger* logger_ = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Device> device_ = nullptr;
 	CommandListManager* commandListManager_ = nullptr;

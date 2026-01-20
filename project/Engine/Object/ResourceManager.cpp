@@ -189,6 +189,13 @@ Node ResourceManager::ReadNode(aiNode* node) {
 	result.localMatrix.m[3][3] = aiLocalMatrix[3][3];
 
 	result.name = node->mName.C_Str();
+
+	// メッシュインデックスの読み込み
+	for (uint32_t i = 0; i < node->mNumMeshes; ++i) {
+		result.meshIndices.push_back(node->mMeshes[i]);
+	}
+
+	// 子ノードの読み込み
 	result.children.resize(node->mNumChildren);
 	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
 		// 階層構造を作成
@@ -204,6 +211,16 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 
 	model->SetTransformCBHandle(AllocateTransformCB());
 
+	// assimpでモデル作成
+	Assimp::Importer importer;
+	// ファイルパス
+	std::string filePath = directoryPath + "/" + filename;
+	// obj->DirectX12変換
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
+
+	// rootNode
+	model->SetRootNode(ReadNode(scene->mRootNode));
+
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
 	auto it = modelDataCache_.find(fullPath);
@@ -212,54 +229,73 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 		// あった場合、マテリアルを作成しなおす
 		auto cacheData = it->second;
 		model->CopyModelData(cacheData, this);
-		return model;
 
 	} else {
-		// assimpでモデル作成
-		Assimp::Importer importer;
-		// ファイルパス
-		std::string filePath = directoryPath + "/" + filename;
-		// obj->DirectX12変換
-		const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
-		assert(scene->HasMeshes());
-
-		///
-		/// メッシュ頂点の設定
-		/// 
-
-		std::vector<VertexData> vertices; // メッシュ頂点
-
 		for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
-			aiMesh* mesh = scene->mMeshes[meshIndex];
-			assert(mesh->HasNormals());
-			assert(mesh->HasTextureCoords(0));
+			// 新規メッシュ
+			std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 
-			for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
-				aiFace& face = mesh->mFaces[faceIndex];
+			aiMesh* aiMesh = scene->mMeshes[meshIndex];
+			assert(aiMesh->HasNormals());
+			assert(aiMesh->HasTextureCoords(0));
+
+			// subMesh
+			SubMesh subMesh;
+			subMesh.materialIndex_ = aiMesh->mMaterialIndex - 1;
+
+			for (uint32_t faceIndex = 0; faceIndex < aiMesh->mNumFaces; ++faceIndex) {
+				aiFace& face = aiMesh->mFaces[faceIndex];
+
 				assert(face.mNumIndices == 3); // 三角形
+				for (uint32_t i = 0; i < face.mNumIndices; ++i) {
 
-				for (uint32_t element = 0; element < face.mNumIndices; ++element) {
-					uint32_t vertexIndex = face.mIndices[element];
-					aiVector3D& position = mesh->mVertices[vertexIndex];
-					aiVector3D& normal = mesh->mNormals[vertexIndex];
-					aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+					///
+					/// メッシュ頂点の設定
+					/// 
+
+					uint32_t vertexIndex = face.mIndices[i];
+					aiVector3D& position = aiMesh->mVertices[vertexIndex];
+					aiVector3D& normal = aiMesh->mNormals[vertexIndex];
+					aiVector3D& texcoord = aiMesh->mTextureCoords[0][vertexIndex];
+
+					// 頂点データ
 					VertexData vertex;
 					vertex.position = { position.x,position.y,position.z, 1.0f };
 					vertex.normal = { normal.x,normal.y,normal.z };
 					vertex.texcoord = { texcoord.x, texcoord.y };
-					vertex.position.x *= -1.0f;
+					vertex.position.x *= -1.0f; // 左手系
 					vertex.normal.x *= -1.0f;
-					// 頂点カラー
-					if(mesh->HasVertexColors(0)) {
-						aiColor4D& color = mesh->mColors[0][vertexIndex];
+					if (aiMesh->HasVertexColors(0)) {
+						// 頂点カラー
+						aiColor4D& color = aiMesh->mColors[0][vertexIndex];
 						vertex.color = { color.r, color.g, color.b, color.a };
 					} else {
 						// なかったら白色
 						vertex.color = { 1.0f,1.0f,1.0f,1.0f };
 					}
-					vertices.push_back(vertex);
+
+					subMesh.vertices_.push_back(vertex);
 				}
 			}
+
+			// VertexBuffers
+			size_t size = sizeof(VertexData) * subMesh.vertices_.size();
+			subMesh.vertexBuffer_ = CreateBufferResource(size);
+			VertexData* dst = nullptr;
+			subMesh.vertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+			memcpy(dst, subMesh.vertices_.data(), size);
+			subMesh.vertexBuffer_->Unmap(0, nullptr);
+
+			// VBV
+			subMesh.vertexBufferView_.BufferLocation = subMesh.vertexBuffer_->GetGPUVirtualAddress();
+			subMesh.vertexBufferView_.SizeInBytes = UINT(size);
+			subMesh.vertexBufferView_.StrideInBytes = sizeof(VertexData);
+
+			// メッシュに追加
+			mesh->GetPrimitives().push_back(subMesh);
+
+			// モデルデータにメッシュ追加
+			modelData->meshes.push_back(std::move(mesh));
 		}
 
 		///
@@ -283,31 +319,6 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 			CreateTextureSRV(texture.get());
 		}
 
-		///
-		/// メッシュの設定
-		///
-
-		// VertexBuffer作成
-		size_t size = sizeof(VertexData) * vertices.size();
-		Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(size);
-		VertexData* dst = nullptr;
-		vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
-		memcpy(dst, vertices.data(), size);
-		vertexBuffer->Unmap(0, nullptr);
-
-		// VBV作成
-		D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-		vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-		vertexBufferView.SizeInBytes = UINT(size);
-		vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-		// Meshに格納
-		std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
-		mesh->SetVertices(vertices);			// 頂点
-		mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
-		mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
-		mesh->rootNode = ReadNode(scene->mRootNode); // 階層の根
-
 		// マテリアル初期化
 		std::unique_ptr<Material> material = std::make_unique<Material>();
 		bool useTexture = false;
@@ -317,7 +328,6 @@ std::unique_ptr<Model> ResourceManager::LoadModelFile(const std::string& directo
 
 		// モデルデータ作成
 		modelData->defaultMaterials_.push_back(std::move(material));
-		modelData->meshes.push_back(std::move(mesh));
 
 		// モデルにデータの参照
 		model->CopyModelData(modelData, this);
@@ -336,6 +346,16 @@ std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 	std::shared_ptr<ModelData> modelData = std::make_shared<ModelData>(); // データ
 
 	model->SetTransformCBHandle(AllocateTransformCB());
+
+	// assimpでモデル作成
+	Assimp::Importer importer;
+	// ファイルパス
+	std::string filePath = directoryPath + "/" + filename;
+	// obj->DirectX12変換
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs | aiProcess_Triangulate);
+
+	// rootNode
+	model->SetRootNode(ReadNode(scene->mRootNode));
 
 	// キャッシュにあるか確認
 	std::string fullPath = directoryPath + "/" + filename;
@@ -365,45 +385,86 @@ std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 		return model; // キャッシュにあったのでそれを返す
 	}
 
-	std::vector<VertexData> vertices; // 頂点
-	std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
-
-	// assimpでobjを読む
-	Assimp::Importer importer;
-	std::string filePath = directoryPath + "/" + filename;
-	// obj->DirectX12変換
-	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
-	assert(scene->HasMeshes());
 	for (uint32_t meshIndex = 0; meshIndex < scene->mNumMeshes; ++meshIndex) {
-		aiMesh* mesh = scene->mMeshes[meshIndex];
-		assert(mesh->HasNormals());
-		assert(mesh->HasTextureCoords(0));
+		// 新規メッシュ
+		std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
 
-		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
-			aiFace& face = mesh->mFaces[faceIndex];
+		aiMesh* aiMesh = scene->mMeshes[meshIndex];
+		assert(aiMesh->HasNormals());
+		assert(aiMesh->HasTextureCoords(0));
+
+		// subMesh
+		SubMesh subMesh;
+		subMesh.materialIndex_ = aiMesh->mMaterialIndex - 1;
+
+		for (uint32_t faceIndex = 0; faceIndex < aiMesh->mNumFaces; ++faceIndex) {
+			aiFace& face = aiMesh->mFaces[faceIndex];
+
 			assert(face.mNumIndices == 3); // 三角形
+			for (uint32_t i = 0; i < face.mNumIndices; ++i) {
 
-			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
-				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D& position = mesh->mVertices[vertexIndex];
-				aiVector3D& normal = mesh->mNormals[vertexIndex];
-				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+				///
+				/// メッシュ頂点の設定
+				/// 
+
+				uint32_t vertexIndex = face.mIndices[i];
+				aiVector3D& position = aiMesh->mVertices[vertexIndex];
+				aiVector3D& normal = aiMesh->mNormals[vertexIndex];
+				aiVector3D& texcoord = aiMesh->mTextureCoords[0][vertexIndex];
+
+				// 頂点データ
 				VertexData vertex;
 				vertex.position = { position.x,position.y,position.z, 1.0f };
 				vertex.normal = { normal.x,normal.y,normal.z };
 				vertex.texcoord = { texcoord.x, texcoord.y };
-				vertex.position.x *= -1.0f;
+				vertex.position.x *= -1.0f; // 左手系
 				vertex.normal.x *= -1.0f;
-				vertices.push_back(vertex);
+				if (aiMesh->HasVertexColors(0)) {
+					// 頂点カラー
+					aiColor4D& color = aiMesh->mColors[0][vertexIndex];
+					vertex.color = { color.r, color.g, color.b, color.a };
+				} else {
+					// なかったら白色
+					vertex.color = { 1.0f,1.0f,1.0f,1.0f };
+				}
+
+				subMesh.vertices_.push_back(vertex);
 			}
 		}
+
+		// VertexBuffers
+		size_t size = sizeof(VertexData) * subMesh.vertices_.size();
+		subMesh.vertexBuffer_ = CreateBufferResource(size);
+		VertexData* dst = nullptr;
+		subMesh.vertexBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&dst));
+		memcpy(dst, subMesh.vertices_.data(), size);
+		subMesh.vertexBuffer_->Unmap(0, nullptr);
+
+		// VBV
+		subMesh.vertexBufferView_.BufferLocation = subMesh.vertexBuffer_->GetGPUVirtualAddress();
+		subMesh.vertexBufferView_.SizeInBytes = UINT(size);
+		subMesh.vertexBufferView_.StrideInBytes = sizeof(VertexData);
+
+		// メッシュに追加
+		mesh->GetPrimitives().push_back(subMesh);
+
+		// モデルデータにメッシュ追加
+		modelData->meshes.push_back(std::move(mesh));
 	}
+
+	///
+	/// マテリアルの設定
+	/// 
+
+	std::shared_ptr<Texture> texture = std::make_shared<Texture>();	// テクスチャ
 
 	for (uint32_t materialIndex = 0; materialIndex < scene->mNumMaterials; ++materialIndex) {
 		aiMaterial* material = scene->mMaterials[materialIndex];
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
 			aiString textureFilePath;
 			material->GetTexture(aiTextureType_DIFFUSE, 0, &textureFilePath);
+
+			// テクスチャ設定
 			texture->SetMtlFilePath(directoryPath + "/" + textureFilePath.C_Str());
 		} else {
 			texture->SetMtlFilePath("Resources/white1x1.png");
@@ -411,26 +472,6 @@ std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 		// SRVを作成
 		CreateTextureSRV(texture.get());
 	}
-
-	// VertexBuffer作成
-	size_t size = sizeof(VertexData) * vertices.size();
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer = CreateBufferResource(size);
-	VertexData* dst = nullptr;
-	vertexBuffer->Map(0, nullptr, reinterpret_cast<void**>(&dst));
-	memcpy(dst, vertices.data(), size);
-	vertexBuffer->Unmap(0, nullptr);
-
-	// VBV作成
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = UINT(size);
-	vertexBufferView.StrideInBytes = sizeof(VertexData);
-
-	// Meshに格納
-	std::unique_ptr<Mesh> mesh = std::make_unique<Mesh>();
-	mesh->SetVertices(vertices);			// 頂点
-	mesh->SetVertexBuffer(vertexBuffer);	// 頂点バッファ
-	mesh->SetVBV(vertexBufferView);			// 頂点バッファビュー
 
 	// マテリアル初期化
 	std::unique_ptr<Material> material = std::make_unique<Material>();
@@ -441,7 +482,6 @@ std::unique_ptr<InstancedModel> ResourceManager::LoadModelFile(const std::string
 
 	// モデルデータ作成
 	modelData->defaultMaterials_.push_back(std::move(material));
-	modelData->meshes.push_back(std::move(mesh));
 
 	// モデルにデータの参照
 	model->SetData(modelData, this);

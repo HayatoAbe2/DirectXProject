@@ -67,6 +67,11 @@ public:
 	// トランスフォームCBハンドルセット
 	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
 
+	// 根ノードを設定
+	const void SetRootNode(const Node& rootNode) { rootNode_ = rootNode; }
+
+
+
 	// データの取得
 	std::shared_ptr<ModelData> GetData() { return data_; }
 
@@ -76,6 +81,8 @@ public:
 	// トランスフォームCBハンドル取得
 	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
 
+	// rootNode取得
+	const Node& GetRootNode() const { return rootNode_; }
 
 private:
 
@@ -87,6 +94,9 @@ private:
 
 	// トランスフォームCBハンドル
 	uint32_t transformCBHandle_ = 0;
+
+	// 根ノード
+	Node rootNode_{};
 
 	// 複数体描画用（必要なときだけ使う）
 	int numInstance_ = 1;

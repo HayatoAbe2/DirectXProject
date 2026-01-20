@@ -59,8 +59,8 @@ void Renderer::UpdateModelTransforms(
 	// トランスフォーム更新
 	TransformationMatrix data;
 	data.World = MakeAffineMatrix(model->GetTransform());
-	data.WVP = 
-		model->GetData()->meshes[0]->rootNode.localMatrix *
+	data.WVP =
+		model->GetRootNode().localMatrix *
 		data.World
 		* camera->viewMatrix_
 		* camera->projectionMatrix_;
@@ -91,7 +91,7 @@ void Renderer::UpdateSpriteTransform(Sprite* sprite) {
 
 void Renderer::DrawModel(Model* model, Camera* camera, LightManager* lightManager, int blendMode) {
 	// GPUに渡すデータの更新
-	UpdateModelTransforms(model,camera);
+	UpdateModelTransforms(model, camera);
 	cameraData_->position = camera->transform_.translate;
 	lightManager->Update();
 
@@ -108,27 +108,31 @@ void Renderer::DrawModel(Model* model, Camera* camera, LightManager* lightManage
 
 	// 各メッシュを描画
 	for (auto& mesh : model->GetData()->meshes) {
-		Material* material = model->GetMaterial(0); // 複数マテリアル未対応
-		// マテリアル更新
-		material->UpdateGPU();
+		for (const auto& subMesh : mesh->GetPrimitives()) {
 
-		// マテリアルCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
-		// メッシュVBV
-		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-		// トランスフォームCBV
-		D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
-			transformBuffer_->GetGPUVirtualAddress() + kCBSize * model->GetTransformCBHandle();
-		cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
+			Material* material = model->GetMaterial(subMesh.materialIndex_);
 
-		// SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
-		// カメラ
-		cmdList->SetGraphicsRootConstantBufferView(3, cameraBuffer_->GetGPUVirtualAddress());
-		// ライト
-		cmdList->SetGraphicsRootConstantBufferView(4, lightManager->GetLightResource()->GetGPUVirtualAddress());
-		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), 1, 0, 0);
+			// マテリアル更新
+			material->UpdateGPU();
+
+			// マテリアルCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
+			// メッシュVBV
+			cmdList->IASetVertexBuffers(0, 1, &subMesh.vertexBufferView_);	// VBVを設定
+			// トランスフォームCBV
+			D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
+				transformBuffer_->GetGPUVirtualAddress() + kCBSize * model->GetTransformCBHandle();
+			cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
+
+			// SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
+			// カメラ
+			cmdList->SetGraphicsRootConstantBufferView(3, cameraBuffer_->GetGPUVirtualAddress());
+			// ライト
+			cmdList->SetGraphicsRootConstantBufferView(4, lightManager->GetLightResource()->GetGPUVirtualAddress());
+			// ドローコール
+			cmdList->DrawInstanced(UINT(subMesh.vertices_.size()), 1, 0, 0);
+		}
 	}
 }
 
@@ -157,34 +161,38 @@ void Renderer::DrawModelInstance(InstancedModel* model, Camera* camera, LightMan
 
 	// 各メッシュを描画
 	for (auto& mesh : model->GetData()->meshes) {
-		Material* material = model->GetMaterial(0); // 複数マテリアル未対応
-		// マテリアル更新
-		material->UpdateGPU();
+		for (const auto& subMesh : mesh->GetPrimitives()) {
 
-		// マテリアルCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
-		// モデル描画
-		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-		// wvp用のCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(1, model->GetInstanceCBV());
-		// SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
-		// インスタンス用SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(3, model->GetInstanceSRVHandle());
-		// カメラ
-		cmdList->SetGraphicsRootConstantBufferView(4, cameraBuffer_->GetGPUVirtualAddress());
-		if (lightManager) {
-			// ライト
-			cmdList->SetGraphicsRootConstantBufferView(5, lightManager->GetLightResource()->GetGPUVirtualAddress());
-		} else {
-			cmdList->SetGraphicsRootConstantBufferView(5, dummyLightBuffer_->GetGPUVirtualAddress());
+			Material* material = model->GetMaterial(subMesh.materialIndex_);
+
+			// マテリアル更新
+			material->UpdateGPU();
+
+			// マテリアルCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
+			// モデル描画
+			cmdList->IASetVertexBuffers(0, 1, &subMesh.vertexBufferView_);	// VBVを設定
+			// wvp用のCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(1, model->GetInstanceCBV());
+			// SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
+			// インスタンス用SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(3, model->GetInstanceSRVHandle());
+			// カメラ
+			cmdList->SetGraphicsRootConstantBufferView(4, cameraBuffer_->GetGPUVirtualAddress());
+			if (lightManager) {
+				// ライト
+				cmdList->SetGraphicsRootConstantBufferView(5, lightManager->GetLightResource()->GetGPUVirtualAddress());
+			} else {
+				cmdList->SetGraphicsRootConstantBufferView(5, dummyLightBuffer_->GetGPUVirtualAddress());
+			}
+			// ドローコール
+			cmdList->DrawInstanced(UINT(subMesh.vertices_.size()), model->GetNumInstance(), 0, 0);
 		}
-		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), model->GetNumInstance(), 0, 0);
 	}
 }
 
-void Renderer::DrawParticles(ParticleSystem* particleSys, Camera* camera,int blendMode) {
+void Renderer::DrawParticles(ParticleSystem* particleSys, Camera* camera, int blendMode) {
 	particleSys->PreDraw(camera);
 
 	auto cmdList = dxContext_->GetCommandListManager()->GetCommandList();
@@ -200,22 +208,25 @@ void Renderer::DrawParticles(ParticleSystem* particleSys, Camera* camera,int ble
 
 	// 各メッシュを描画
 	for (auto& mesh : particleSys->GetInstancedModel()->GetData()->meshes) {
-		Material* material = particleSys->GetInstancedModel()->GetMaterial(0); // 複数マテリアル未対応
-		// マテリアル更新
-		material->UpdateGPU();
+		for (const auto& subMesh : mesh->GetPrimitives()) {
 
-		// マテリアルCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
-		// モデル描画
-		cmdList->IASetVertexBuffers(0, 1, &mesh->GetVBV());	// VBVを設定
-		// wvp用のCBufferの場所を設定
-		cmdList->SetGraphicsRootConstantBufferView(1, particleSys->GetInstancedModel()->GetInstanceCBV());
-		// SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
-		// インスタンス用SRVの設定
-		cmdList->SetGraphicsRootDescriptorTable(3, particleSys->GetInstancedModel()->GetInstanceSRVHandle());
-		// ドローコール
-		cmdList->DrawInstanced(UINT(mesh->GetVertices().size()), particleSys->GetInstancedModel()->GetNumInstance(), 0, 0);
+			Material* material = particleSys->GetInstancedModel()->GetMaterial(subMesh.materialIndex_);
+			// マテリアル更新
+			material->UpdateGPU();
+
+			// マテリアルCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(0, material->GetCBV()->GetGPUVirtualAddress());
+			// モデル描画
+			cmdList->IASetVertexBuffers(0, 1, &subMesh.vertexBufferView_);	// VBVを設定
+			// wvp用のCBufferの場所を設定
+			cmdList->SetGraphicsRootConstantBufferView(1, particleSys->GetInstancedModel()->GetInstanceCBV());
+			// SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(2, material->GetTextureSRVHandle());
+			// インスタンス用SRVの設定
+			cmdList->SetGraphicsRootDescriptorTable(3, particleSys->GetInstancedModel()->GetInstanceSRVHandle());
+			// ドローコール
+			cmdList->DrawInstanced(UINT(subMesh.vertices_.size()), particleSys->GetInstancedModel()->GetNumInstance(), 0, 0);
+		}
 	}
 }
 

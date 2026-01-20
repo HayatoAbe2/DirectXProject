@@ -138,7 +138,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 			}
 
 			if (stunTimer_ <= 0 && !status_.canFly) {
-				isFall_ = mapCheck->IsFall(pos, status_.radius);
+				isFall_ = mapCheck->IsFall(pos);
 				if (isFall_) { context->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false); }
 			}
 			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });

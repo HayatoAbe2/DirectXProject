@@ -323,6 +323,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Object\Lights\PointLight.h" />
     <ClInclude Include="Engine\Object\InstanceGPUData.h" />
     <ClInclude Include="Engine\Object\ResourceManager.h" />
+    <ClInclude Include="Engine\Object\SubMesh.h" />
     <ClInclude Include="Engine\Object\Texture.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />

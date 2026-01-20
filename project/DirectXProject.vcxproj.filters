@@ -265,17 +265,17 @@
     <ClCompile Include="Application\MapTile.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="Application\Enemy\Enemies\RedBat.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
     <ClCompile Include="Application\CollisionChecker.cpp">
       <Filter>Application</Filter>
     </ClCompile>
-    <ClCompile Include="Application\EffectManager.cpp">
-      <Filter>Engine\Object</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Graphics\ImGuiManager.cpp">
       <Filter>Engine\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\EffectManager.cpp">
+      <Filter>Application</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Enemy\Enemies\RedBat.cpp">
+      <Filter>Application\Enemy\Enemies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -563,17 +563,11 @@
     <ClInclude Include="Application\Rarity.h">
       <Filter>Application</Filter>
     </ClInclude>
-    <ClInclude Include="Application\Enemy\Enemies\RedBat.h">
-      <Filter>Application</Filter>
-    </ClInclude>
     <ClInclude Include="Application\CollisionChecker.h">
       <Filter>Application</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\CameraForGPU.h">
       <Filter>Engine\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\EffectManager.h">
-      <Filter>Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Object\Lights\DirectionalLight.h">
       <Filter>Engine\Graphics\Lights</Filter>
@@ -591,6 +585,15 @@
       <Filter>Engine\Object</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Object\Node.h">
+      <Filter>Engine\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\EffectManager.h">
+      <Filter>Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Enemy\Enemies\RedBat.h">
+      <Filter>Application\Enemy\Enemies</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Object\SubMesh.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
   </ItemGroup>

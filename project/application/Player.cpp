@@ -78,7 +78,17 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 	if (!isFall_) {
 		if (isUsingBoost_) {
 			// ダッシュ
-			velocity_ += boostDir_ * boostSpeed_;
+			velocity_ = boostDir_ * boostSpeed_;
+
+			Vector2 pos = { transform_.translate.x,transform_.translate.z };
+			for (int i = 0; i < 4; ++i) {
+				pos.x += velocity_.x / 4.0f;
+				mapCheck->ResolveCollisionX(pos, radius_, isUsingBoost_);
+				pos.y += velocity_.z / 4.0f;
+				mapCheck->ResolveCollisionY(pos, radius_, isUsingBoost_);
+			}
+			transform_.translate.x = pos.x;
+			transform_.translate.z = pos.y;
 
 			boostTime_++;
 
@@ -87,7 +97,7 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 				boostTime_ = 0;
 
 				// 落下判定
-				if (mapCheck->IsFall({ transform_.translate.x,transform_.translate.z }, radius_)) {
+				if (mapCheck->IsFall({ transform_.translate.x,transform_.translate.z })) {
 					isFall_ = true;
 					context_->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false);
 				}
@@ -325,7 +335,7 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 				mapCheck->ResolveCollisionY(pos, radius_, true);
 			}
 
-			if (stunTimer_ <= 0 && mapCheck->IsFall(pos, radius_)) {
+			if (stunTimer_ <= 0 && mapCheck->IsFall(pos)) {
 				context_->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false);
 			}
 

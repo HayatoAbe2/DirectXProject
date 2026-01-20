@@ -27,6 +27,9 @@ public:
 	// トランスフォームCBハンドルセット
 	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
 
+	// 根ノードを設定
+	const void SetRootNode(const Node& rootNode) { rootNode_ = rootNode; }
+
 	///
 	/// Getter
 	///
@@ -43,6 +46,9 @@ public:
 	// トランスフォームCBハンドル取得
 	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
 
+	// rootNode取得
+	const Node& GetRootNode() const { return rootNode_; }
+
 private:
 	// トランスフォーム
 	Transform transform_ = { { 1,1,1 },{}, {} };
@@ -55,5 +61,7 @@ private:
 
 	// トランスフォームCBハンドル
 	uint32_t transformCBHandle_ = 0;
-};
 
+	// 根ノード
+	Node rootNode_{};
+};
