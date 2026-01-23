@@ -60,6 +60,7 @@ public:
 	const D3D12_GPU_VIRTUAL_ADDRESS GetInstanceCBV()const { return instanceTransformationResource_->GetGPUVirtualAddress(); }
 
 	void UpdateInstanceTransform(Camera* camera, const std::vector<Transform>& transforms, std::vector<Vector4>& color);
+	void UpdateInstanceTransformWithNode(Camera* camera, const Matrix4x4& nodeWorld, const std::vector<Vector4>& colors);
 
 	// データの設定
 	void SetData(std::shared_ptr<ModelData> data, ResourceManager* rm);
@@ -68,8 +69,7 @@ public:
 	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
 
 	// 根ノードを設定
-	const void SetRootNode(const Node& rootNode) { rootNode_ = rootNode; }
-
+	void SetRootNode(std::unique_ptr<Node> rootNode) { rootNode_ = std::move(rootNode); }
 
 
 	// データの取得
@@ -82,7 +82,7 @@ public:
 	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
 
 	// rootNode取得
-	const Node& GetRootNode() const { return rootNode_; }
+	Node* GetRootNode() { return rootNode_.get(); }
 
 private:
 
@@ -96,7 +96,7 @@ private:
 	uint32_t transformCBHandle_ = 0;
 
 	// 根ノード
-	Node rootNode_{};
+	std::unique_ptr<Node> rootNode_{};
 
 	// 複数体描画用（必要なときだけ使う）
 	int numInstance_ = 1;

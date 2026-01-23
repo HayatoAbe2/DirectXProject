@@ -42,14 +42,14 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
    auto enemyModel = std::make_unique<Model>();
    enemyModel->SetTranslate(pos);
 
-   std::unique_ptr<RangedWeapon> rangedWeapon = nullptr;
-   std::vector<std::unique_ptr<RangedWeapon>> rangedWeapons;
+   std::unique_ptr<Weapon> weapon = nullptr;
+   std::vector<std::unique_ptr<Weapon>> weapons;
    EnemyStatus status;
 
    switch (enemyType) {
    case 1:
        enemyModel = context->LoadModel("Resources/Enemy", "bat.obj");
-       rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall));
+       weapon = weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall));
        status.hp = 10;
        status.radius = 0.5f;
        status.moveSpeed = 0.15f;
@@ -59,12 +59,12 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 0;
        status.canFly = true;
 
-       enemies_.push_back(std::make_unique<Bat>(std::move(enemyModel), pos, status, std::move(rangedWeapon)));
+       enemies_.push_back(std::make_unique<Bat>(std::move(enemyModel), pos, status, std::move(weapon)));
        break;
 
    case 2:
        enemyModel = context->LoadModel("Resources/Enemy", "knight.obj");
-       rangedWeapon = weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle));
+       weapon = weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle));
        status.hp = 20;
        status.radius = 0.9f;
        status.moveSpeed = 0.07f;
@@ -74,14 +74,14 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 2;
        status.canFly = false;
 
-       enemies_.push_back(std::make_unique<Knight>(std::move(enemyModel), pos, status, std::move(rangedWeapon)));
+       enemies_.push_back(std::make_unique<Knight>(std::move(enemyModel), pos, status, std::move(weapon)));
        break;
 
    case 3:
        enemyModel = context->LoadModel("Resources/Enemy", "knight2.obj");
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall)));
        status.hp = 150;
        status.radius = 1.5f;
        status.moveSpeed = 0.07f;
@@ -91,14 +91,14 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 30;
        status.canFly = false;
 
-       enemies_.push_back(std::make_unique<HeavyKnight>(std::move(enemyModel), pos, status, std::move(rangedWeapons)));
+       enemies_.push_back(std::make_unique<HeavyKnight>(std::move(enemyModel), pos, status, std::move(weapons)));
        break;
 
    default:
        enemyModel = context->LoadModel("Resources/Enemy", "bat2.obj");
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::FireBall)));
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Pistol)));
-       rangedWeapons.push_back(weaponManager->GetRangedWeapon(int(WeaponManager::WEAPON::Wavegun)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::Pistol)));
+       weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::Wavegun)));
        status.hp = 110;
        status.radius = 0.75f;
        status.moveSpeed = 0.15f;
@@ -108,7 +108,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 30;
        status.canFly = true;
 
-       enemies_.push_back(std::make_unique<RedBat>(std::move(enemyModel), pos, status, std::move(rangedWeapons)));
+       enemies_.push_back(std::make_unique<RedBat>(std::move(enemyModel), pos, status, std::move(weapons)));
        break;
    }
 }

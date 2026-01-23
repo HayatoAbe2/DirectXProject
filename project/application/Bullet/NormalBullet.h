@@ -5,7 +5,7 @@
 
 class NormalBullet :public Bullet{
 public:
-	NormalBullet(std::unique_ptr<Model> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
+	NormalBullet(std::unique_ptr<Model> model, const Vector3& direction, const WeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {
 	};
 	void Initialize(GameContext* context);

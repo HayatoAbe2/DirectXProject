@@ -51,7 +51,7 @@ void PipelineStateManager::CreateStandardPSO() {
 	baseDesc.BlendState = CreateNoneBlendDesc();
 
 	// ラスタライザ
-	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	baseDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 	baseDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 
 	// DepthStencil

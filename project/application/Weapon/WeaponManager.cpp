@@ -1,7 +1,7 @@
 #include "WeaponManager.h"
 #include "GameContext.h"
 #include "WeaponStatus.h"
-#include "RangedWeapon.h"
+#include "Weapon.h"
 #include "Pistol.h"
 #include "AssaultRifle.h"
 #include "Shotgun.h"
@@ -13,9 +13,9 @@ void WeaponManager::Initialize(GameContext* context) {
 	context_ = context;
 }
 
-std::unique_ptr<RangedWeapon> WeaponManager::GetRangedWeapon(int index, Rarity rarity) {
+std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 	auto model = std::make_unique<Model>();
-	RangedWeaponStatus status;
+	WeaponStatus status;
 
 	// エンチャント付与
 	status.rarity = rarity;

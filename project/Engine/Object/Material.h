@@ -11,7 +11,7 @@ public:
     void Initialize(ResourceManager* rm, bool useTexture, bool enableLighting);
     void UpdateGPU(); // GPUに転送
 
-    void SetData(const MaterialData& data) { data_ = data; }
+    void SetData(MaterialData data) { data_ = data; }
 	const MaterialData GetData()const { return data_; }
 
     Microsoft::WRL::ComPtr<ID3D12Resource> GetCBV() { return constantBuffer_; }

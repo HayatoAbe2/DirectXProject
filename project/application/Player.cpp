@@ -32,30 +32,6 @@ void Player::Initialize(std::unique_ptr<Model> playerModel, GameContext* context
 	transform_.translate.x = 1;
 	transform_.translate.z = 1;
 
-	// 操作
-	control_ = context->LoadSprite("Resources/Control/leftClick.png");
-	control_->SetSize({ 48,65 });
-	control_->SetPosition({ 640 - 24 + 100,710 - 65 });
-
-	dashControl_ = context->LoadSprite("Resources/Control/dash.png");
-	dashControl_->SetSize({ 212,32 });
-	dashControl_->SetPosition({ 10, 100 });
-
-	equipment_ = context->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
-	equipment_->SetSize({ 120,120 });
-	equipment_->SetPosition({ 640 - 60,710 - 160 });
-
-	for (int i = 0; i < 3; ++i) {
-		enchants_->push_back(context->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));
-		enchants_->at(i)->SetSize({ 240,40 });
-		enchants_->at(i)->SetPosition({ 640 + 80,float(710 - 180 + i * 40) });
-	}
-
-	life_ = std::make_unique<Sprite>();
-	life_ = context->LoadSprite("Resources/UI/gauge.png");
-	life_->SetSize({ 290,68 });
-	life_->SetPosition({ 10,10 });
-
 	direction_ = std::make_unique<Model>();
 	direction_ = context_->LoadModel("Resources/Direction", "Direction.obj");
 	auto data = direction_->GetMaterial(0)->GetData();
@@ -199,59 +175,6 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 		// アイテム取得
 		if (context_->IsTrigger(DIK_F)) {
 			itemManager_->Interact(this);
-			if (rangedWeapon_) {
-
-				// 武器アイコン
-				if (dynamic_cast<AssaultRifle*>(rangedWeapon_.get())) {
-					equipment_ = context_->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
-				} else if (dynamic_cast<Pistol*>(rangedWeapon_.get())) {
-					equipment_ = context_->LoadSprite("Resources/Control/equipmentPistol.png");
-				} else if (dynamic_cast<Shotgun*>(rangedWeapon_.get())) {
-					equipment_ = context_->LoadSprite("Resources/Control/equipmentShotgun.png");
-				} else if (dynamic_cast<FireBall*>(rangedWeapon_.get())) {
-					equipment_ = context_->LoadSprite("Resources/Control/equipmentSpellbook.png");
-				} else if (dynamic_cast<Wavegun*>(rangedWeapon_.get())) {
-					equipment_ = context_->LoadSprite("Resources/Control/equipmentWavegun.png");
-				}
-				equipment_->SetSize({ 120, 120 });
-				equipment_->SetPosition({ 640 - 60, 710 - 160 });
-
-				// 効果
-				for (int i = 0; i < static_cast<int>(rangedWeapon_->GetStatus().rarity); ++i) {
-					auto enchant = rangedWeapon_->GetStatus().enchants[i];
-					switch (enchant) {
-					case static_cast<int>(Enchants::increaseDamage):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));
-						break;
-					case static_cast<int>(Enchants::bigBullet):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSize.png"));
-						break;
-					case static_cast<int>(Enchants::fastBullet):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSpeed.png"));
-						break;
-					case static_cast<int>(Enchants::shortCooldown):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseFireRate.png"));
-						break;
-					case static_cast<int>(Enchants::hardKnockback):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseKnockback.png"));
-						break;
-					case static_cast<int>(Enchants::extraBullet):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/extraBullet.png"));
-						break;
-					case static_cast<int>(Enchants::moveSpeed):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/IncreaseMovespeed.png"));//
-						break;
-					case static_cast<int>(Enchants::resist):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageResist.png"));
-						break;
-					case static_cast<int>(Enchants::avoid):
-						enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));// 未使用
-						break;
-					}
-					enchants_->at(i)->SetSize({ 240,40 });
-					enchants_->at(i)->SetPosition({ 640 + 80,float(710 - 180 + i * 40) });
-				}
-			}
 		}
 
 		// 攻撃の向き
@@ -267,20 +190,20 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 			transform_.rotate.y = -std::atan2(attackDirection_.z, attackDirection_.x) + float(std::numbers::pi) / 2.0f;
 
 			// 減速
-			if (rangedWeapon_) {
-				moveSpeed_ = defaultMoveSpeed_ * (1.0f - rangedWeapon_->GetStatus().weight);
+			if (weapon_) {
+				moveSpeed_ = defaultMoveSpeed_ * (1.0f - weapon_->GetStatus().weight);
 			}
 		} else {
 			moveSpeed_ = defaultMoveSpeed_;
 		}
 
-		if (rangedWeapon_) {
-			rangedWeapon_->Update();
+		if (weapon_) {
+			weapon_->Update();
 			weaponTransform_ = transform_;
 			weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
 
 			// enchant分の速度
-			for (auto enchant : rangedWeapon_->GetStatus().enchants) {
+			for (auto enchant : weapon_->GetStatus().enchants) {
 				if (enchant == Enchants::moveSpeed) {
 					moveSpeed_ *= 1.15f;
 				}
@@ -291,11 +214,11 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 		// 射撃
 		if (shootCoolTime_ <= 0) {
 			if (context_->IsClickLeft()) {
-				if (rangedWeapon_) {
-					shootCoolTime_ = rangedWeapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+				if (weapon_) {
+					shootCoolTime_ = weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
 
 					// 追加効果
-					for (auto enchant : rangedWeapon_->GetStatus().enchants) {
+					for (auto enchant : weapon_->GetStatus().enchants) {
 						switch (enchant) {
 						case static_cast<int>(Enchants::shortCooldown):
 							shootCoolTime_ = shootCoolTime_ * 3 / 4;
@@ -311,7 +234,7 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 
 					if (canShootExtraBullet_) {
 						if (--extraBulletWaitTime_ <= 0) {
-							rangedWeapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+							weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
 							canShootExtraBullet_ = false;
 						}
 					}
@@ -347,7 +270,7 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 
 			transform_.translate = { pos.x,model_->GetTransform().translate.y,pos.y };
 
-			if (rangedWeapon_) {
+			if (weapon_) {
 				weaponTransform_ = transform_;
 				weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
 			}
@@ -372,40 +295,16 @@ void Player::Draw(Camera* camera) {
 
 	model_->SetTransform(transform_);
 	context_->DrawModel(model_.get(), camera);
-	context_->DrawSprite(dashControl_.get());
 
-	if (rangedWeapon_) {
-		rangedWeapon_->GetWeaponModel()->SetTransform(weaponTransform_);
-		context_->DrawModel(rangedWeapon_->GetWeaponModel(), camera);
-		context_->DrawSprite(control_.get());
-
+	if (weapon_) {
+		// 武器描画
+		weapon_->GetWeaponModel()->SetTransform(weaponTransform_);
+		context_->DrawModel(weapon_->GetWeaponModel(), camera);
+	
 		// 照準方向
 		direction_->SetTransform(weaponTransform_);
 		context_->DrawModel(direction_.get(), camera);
-
-		switch (rangedWeapon_->GetStatus().rarity) {
-		case static_cast<int>(Rarity::Common):
-			equipment_->SetColor({ 0.5f,0.5f,0.5f,1.0f });
-			break;
-		case static_cast<int>(Rarity::Rare):
-			equipment_->SetColor({ 0.1f,0.1f,0.7f,1.0f });
-			break;
-		case static_cast<int>(Rarity::Epic):
-			equipment_->SetColor({ 0.8f,0.1f,0.8f,1.0f });
-			break;
-		case static_cast<int>(Rarity::Legendary):
-			equipment_->SetColor({ 1.0f,0.8f,0.0f,1.0f });
-			break;
-		}
-		context_->DrawSprite(equipment_.get());
-		for (int i = 0; i < static_cast<int>(rangedWeapon_->GetStatus().rarity); ++i) {
-			context_->DrawSprite(enchants_->at(i).get());
-		}
 	}
-
-	life_->SetTextureRect(0, 0, (hp_ / maxHp_) * 290, 68);
-	life_->SetSize({ (hp_ / maxHp_) * 290,68 });
-	context_->DrawSprite(life_.get());
 
 	// パーティクル
 	context_->DrawParticle(moveParticle_.get(), camera, BlendMode::Add);
@@ -423,9 +322,9 @@ void Player::Draw(Camera* camera) {
 void Player::Hit(float damage, Vector3 from) {
 	if (invincibleTimer_ <= 0) {
 		// 軽減の計算
-		if (rangedWeapon_) {
+		if (weapon_) {
 			// 追加効果
-			for (auto enchant : rangedWeapon_->GetStatus().enchants) {
+			for (auto enchant : weapon_->GetStatus().enchants) {
 				switch (enchant) {
 				case static_cast<int>(Enchants::resist):
 					damage *= 0.8f; // 軽減
@@ -466,4 +365,4 @@ void Player::Hit(float damage, Vector3 from) {
 	}
 }
 
-void Player::SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon) { rangedWeapon_ = std::move(rangedWeapon); }
+void Player::SetWeapon(std::unique_ptr<Weapon> weapon) { weapon_ = std::move(weapon); }

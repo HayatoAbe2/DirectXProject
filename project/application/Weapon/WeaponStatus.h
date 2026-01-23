@@ -15,7 +15,7 @@ enum Enchants {
 };
 constexpr int enchantsCount = int(Enchants::resist) + 1;
 
-struct RangedWeaponStatus {
+struct WeaponStatus {
 	// ダメージ
 	float damage;
 	// 射撃中減速率

@@ -1,14 +1,14 @@
 #pragma once
 #include "Transform.h"
 #include "MathUtils.h"
-#include "RangedWeapon.h"
+#include "Weapon.h"
 #include "GameContext.h"
 #include <vector>
 #include <memory>
 
 class Camera;
 class MapCheck;
-class RangedWeapon;
+class Weapon;
 class ItemManager;
 class BulletManager;
 
@@ -41,9 +41,13 @@ public:
 	Transform GetTransform() const { return transform_; }
 	float GetRadius() const { return radius_; }
 	float GetInteractRadius() const { return interactRadius_; }
+	Weapon* GetWeapon() { return weapon_.get(); }
+	float GetHP() { return hp_; }
+	float GetMaxHP() { return maxHp_; }
+
 	void SetTransform(const Transform& transform) { transform_ = transform; }
-	std::unique_ptr<RangedWeapon> DropRangedWeapon() { return std::move(rangedWeapon_); };
-	void SetWeapon(std::unique_ptr<RangedWeapon> rangedWeapon);
+	std::unique_ptr<Weapon> DropWeapon() { return std::move(weapon_); };
+	void SetWeapon(std::unique_ptr<Weapon> weapon);
 	bool IsDead() { return hp_ <= 0; }
 
 	void Stop() { boostTime_ = 0; }
@@ -51,12 +55,7 @@ public:
 private:
 	GameContext* context_ = nullptr;
 
-	// 操作説明
-	std::unique_ptr<Sprite> control_ = nullptr;
-	std::unique_ptr<Sprite> dashControl_ = nullptr;
-	std::unique_ptr<Sprite> equipment_ = nullptr;
-	std::vector<std::unique_ptr<Sprite>> enchants_[3]{};
-	std::unique_ptr<Sprite> life_ = nullptr;
+	// 照準
 	std::unique_ptr<Model> direction_ = nullptr;
 
 	// トランスフォーム
@@ -68,14 +67,14 @@ private:
 
 	// アイテム取得範囲
 	float interactRadius_ = 1.5f;
-	
+
 	// 速度
 	Vector3 velocity_ = { 0,0,0 };
 
 	// 移動の速さ
 	float moveSpeed_ = 0.2f;
 	const float defaultMoveSpeed_ = 0.2f;
-	
+
 	// 攻撃の向き
 	Vector3 attackDirection_ = {};
 
@@ -109,7 +108,7 @@ private:
 	bool canShootExtraBullet_ = false;
 
 	// 所持武器
-	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
+	std::unique_ptr<Weapon> weapon_ = nullptr;
 
 	// 移動パーティクル
 	std::unique_ptr<ParticleSystem> moveParticle_;

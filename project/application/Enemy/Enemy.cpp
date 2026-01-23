@@ -8,21 +8,21 @@
 #include <numbers>
 #include <cmath>
 
-Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<RangedWeapon> rWeapon) {
+Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<Weapon> rWeapon) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
 
-	rangedWeapon_ = std::move(rWeapon);
+	weapon_ = std::move(rWeapon);
 }
 
-Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<RangedWeapon>> rWeapons) {
+Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<Weapon>> rWeapons) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
 
 	bossWeapons_ = std::move(rWeapons);
-	rangedWeapon_ = std::move(bossWeapons_[0]);
+	weapon_ = std::move(bossWeapons_[0]);
 }
 
 void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
@@ -36,37 +36,23 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 
 		if (stunTimer_ <= 0) {
 			// 移動
-			if (target_) {
-				// 発見中
-				if (rotateTimer_ >= rotateTime_) {
-					Vector3 targetDir = Normalize(player->GetTransform().translate - model_->GetTransform().translate);
+			if (target_) { // 発見中
+				float length = Length(target_->GetTransform().translate - model_->GetTransform().translate);
+
+				if (length > minDistance_) {
+					// プレイヤー方向に移動
+					Vector3 targetDir = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
 					velocity_ = Vector3{ targetDir.x,0,targetDir.z } *status_.moveSpeed;
+				}
+
+				if (rotateTimer_ >= rotateTime_) {
+					// 方向転換の間隔
 					rotateTimer_ = 0;
 					rotateTime_ = context->RandomInt(minRotateTimer_, maxRotateTimer_);
 				}
 
 			} else {
-				// プレイヤーを見つけてない
-				if (isMoving_) {
-					randomTimer_++;
-					if (randomTimer_ >= randomMoveTime_) {
-						randomTimer_ = 0;
-						isMoving_ = false;
-						randomStopTime_ = context->RandomInt(minRandomStopTime_, maxRandomStopTime_);
-						velocity_ = {};
-					}
-				} else {
-					randomTimer_++;
-					if (randomTimer_ >= randomStopTime_) {
-						randomTimer_ = 0;
-						isMoving_ = true;
-						randomMoveTime_ = context->RandomInt(minRandomMoveTime_, maxRandomMoveTime_);
-
-						Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
-						velocity_.x = direction.x * status_.moveSpeed / 2.0f;
-						velocity_.z = direction.y * status_.moveSpeed / 2.0f;
-					}
-				}
+				Wait(context);
 			}
 
 			// 速度をもとに移動
@@ -103,7 +89,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 					searchRadius_ = status_.defaultSearchRadius;
 				}
 
-				Attack(rangedWeapon_.get(), bulletManager, context);
+				Attack(weapon_.get(), bulletManager, context);
 			}
 
 			// 攻撃前警告
@@ -119,36 +105,68 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				model_->SetScale({ sizeEase,sizeEase,sizeEase });
 			}
 		} else {
-			stunTimer_--;
-
-			// ノックバック
-			model_->SetScale({ 1,1,1 });
-			float length = Length(velocity_);
-			length -= 0.05f;
-			if (length < 0) { length = 0; }
-			velocity_ = Normalize(velocity_) * length;
-
-			// 速度をもとに移動
-			Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
-			for (int i = 0; i < 3; ++i) { // 3回に分ける
-				pos.x += velocity_.x / 3.0f;
-				mapCheck->ResolveCollisionX(pos, status_.radius, true);
-				pos.y += velocity_.z / 3.0f;
-				mapCheck->ResolveCollisionY(pos, status_.radius, true);
-			}
-
-			if (stunTimer_ <= 0 && !status_.canFly) {
-				isFall_ = mapCheck->IsFall(pos);
-				if (isFall_) { context->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false); }
-			}
-			model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
+			Stun(context, mapCheck);
 		}
 	} else {
-		// 落下
-		model_->SetTranslate(model_->GetTransform().translate - Vector3{ 0,0.7f,0 });
-		if (model_->GetTransform().translate.y < -10.0f) {
-			isDead_ = true;
+		Fall();
+	}
+}
+
+void Enemy::Wait(GameContext* context) {
+	// プレイヤーを見つけてない
+	if (isMoving_) {
+		randomTimer_++;
+		if (randomTimer_ >= randomMoveTime_) {
+			randomTimer_ = 0;
+			isMoving_ = false;
+			randomStopTime_ = context->RandomInt(minRandomStopTime_, maxRandomStopTime_);
+			velocity_ = {};
 		}
+	} else {
+		randomTimer_++;
+		if (randomTimer_ >= randomStopTime_) {
+			randomTimer_ = 0;
+			isMoving_ = true;
+			randomMoveTime_ = context->RandomInt(minRandomMoveTime_, maxRandomMoveTime_);
+
+			Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
+			velocity_.x = direction.x * status_.moveSpeed / 2.0f;
+			velocity_.z = direction.y * status_.moveSpeed / 2.0f;
+		}
+	}
+}
+
+void Enemy::Stun(GameContext* context, MapCheck* mapCheck) {
+	stunTimer_--;
+
+	// ノックバック
+	model_->SetScale({ 1,1,1 });
+	float length = Length(velocity_);
+	length -= 0.05f;
+	if (length < 0) { length = 0; }
+	velocity_ = Normalize(velocity_) * length;
+
+	// 速度をもとに移動
+	Vector2 pos = { model_->GetTransform().translate.x,model_->GetTransform().translate.z };
+	for (int i = 0; i < 3; ++i) { // 3回に分ける
+		pos.x += velocity_.x / 3.0f;
+		mapCheck->ResolveCollisionX(pos, status_.radius, true);
+		pos.y += velocity_.z / 3.0f;
+		mapCheck->ResolveCollisionY(pos, status_.radius, true);
+	}
+
+	if (stunTimer_ <= 0 && !status_.canFly) {
+		isFall_ = mapCheck->IsFall(pos);
+		if (isFall_) { context->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false); }
+	}
+	model_->SetTranslate({ pos.x,model_->GetTransform().translate.y,pos.y });
+}
+
+void Enemy::Fall() {
+	// 落下
+	model_->SetTranslate(model_->GetTransform().translate - Vector3{ 0,0.7f,0 });
+	if (model_->GetTransform().translate.y < -10.0f) {
+		isDead_ = true;
 	}
 }
 

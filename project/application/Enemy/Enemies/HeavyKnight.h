@@ -3,9 +3,9 @@
 #include <memory>
 class HeavyKnight : public Enemy {
 public:
-	HeavyKnight(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<RangedWeapon>> rWeapons) :
+	HeavyKnight(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<Weapon>> rWeapons) :
 		Enemy(std::move(model), pos, status, move(rWeapons)) {}
-	void Attack(RangedWeapon* rangedWeapon, BulletManager* bulletManager, GameContext* context) override;
+	void Attack(Weapon* weapon, BulletManager* bulletManager, GameContext* context) override;
 
 private:
 	const int maxCombo_ = 8;

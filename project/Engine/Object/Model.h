@@ -28,7 +28,7 @@ public:
 	void SetTransformCBHandle(uint32_t handle) { transformCBHandle_ = handle; }
 
 	// 根ノードを設定
-	const void SetRootNode(const Node& rootNode) { rootNode_ = rootNode; }
+	void SetRootNode(std::unique_ptr<Node> rootNode) { rootNode_ = std::move(rootNode); }
 
 	///
 	/// Getter
@@ -47,7 +47,7 @@ public:
 	uint32_t GetTransformCBHandle() { return transformCBHandle_; }
 
 	// rootNode取得
-	const Node& GetRootNode() const { return rootNode_; }
+	Node* GetRootNode() { return rootNode_.get(); }
 
 private:
 	// トランスフォーム
@@ -63,5 +63,5 @@ private:
 	uint32_t transformCBHandle_ = 0;
 
 	// 根ノード
-	Node rootNode_{};
+	std::unique_ptr<Node> rootNode_{};
 };

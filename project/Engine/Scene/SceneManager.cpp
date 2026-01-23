@@ -3,8 +3,8 @@
 #include "../Graphics/Renderer.h"
 #include "../Io/Input.h"
 #include "BaseScene.h"
-#include "../../application/GameScene.h"
-#include "../../application/TitleScene.h"
+#include "GameScene.h"
+#include "TitleScene.h"
 #include "GameContext.h"
 
 SceneManager::SceneManager(GameContext* context) {

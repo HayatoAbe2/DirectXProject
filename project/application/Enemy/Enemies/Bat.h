@@ -4,9 +4,9 @@
 
 class Bat : public Enemy {
 public:
-	Bat(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<RangedWeapon> rWeapon) :
+	Bat(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<Weapon> rWeapon) :
 		Enemy(std::move(model), pos, status, move(rWeapon)){};
-	void Attack(RangedWeapon* rangedWeapon, BulletManager* bulletManager, GameContext* context) override;
+	void Attack(Weapon* weapon, BulletManager* bulletManager, GameContext* context) override;
 
 private:
 };

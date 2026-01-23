@@ -4,7 +4,7 @@
 #include "GameContext.h"
 class FireBullet : public Bullet{
 public:
-	FireBullet(std::unique_ptr<Model> model, const Vector3& direction, const RangedWeaponStatus& status, bool isEnemyBullet) :
+	FireBullet(std::unique_ptr<Model> model, const Vector3& direction, const WeaponStatus& status, bool isEnemyBullet) :
 		Bullet(std::move(model), direction, status, isEnemyBullet) {};
 	void Initialize(GameContext* context);
 	void Update(MapCheck* mapCheck) override;

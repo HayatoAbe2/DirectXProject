@@ -49,6 +49,18 @@
     <Filter Include="Engine\Graphics\Lights">
       <UniqueIdentifier>{aa21c1f4-3532-4367-a17b-50bfdc1eb7ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Application\Map">
+      <UniqueIdentifier>{8ad3eebf-5b87-4d69-b1fc-2370de7abd89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Item">
+      <UniqueIdentifier>{2e078e81-3a12-4218-8ded-923a3fbfff3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Scene">
+      <UniqueIdentifier>{1909c90f-9fa8-4559-a282-2ff633c02d63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Application\Effect">
+      <UniqueIdentifier>{dc5b9f0e-5d65-4009-8fe2-909594bb87e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Externals\imgui\imgui.cpp">
@@ -159,9 +171,6 @@
     <ClCompile Include="Engine\Io\Logger.cpp">
       <Filter>Engine\IO</Filter>
     </ClCompile>
-    <ClCompile Include="Application\GameScene.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
     <ClCompile Include="Application\Player.cpp">
       <Filter>Application</Filter>
     </ClCompile>
@@ -235,7 +244,7 @@
     <ClCompile Include="Application\Weapon\Weapons\Shotgun.cpp">
       <Filter>Application\Weapon</Filter>
     </ClCompile>
-    <ClCompile Include="Application\Weapon\RangedWeapon.cpp">
+    <ClCompile Include="Application\Weapon\Weapon.cpp">
       <Filter>Application\Weapon</Filter>
     </ClCompile>
     <ClCompile Include="Application\Weapon\Weapons\Pistol.cpp">
@@ -250,33 +259,37 @@
     <ClCompile Include="Engine\Object\ParticleField.cpp">
       <Filter>Engine\Object</Filter>
     </ClCompile>
-    <ClCompile Include="Application\TitleScene.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
-    <ClCompile Include="Application\Item.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
-    <ClCompile Include="Application\ItemManager.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
-    <ClCompile Include="Application\MapCheck.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
-    <ClCompile Include="Application\MapTile.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
     <ClCompile Include="Application\CollisionChecker.cpp">
       <Filter>Application</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\ImGuiManager.cpp">
       <Filter>Engine\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Application\EffectManager.cpp">
-      <Filter>Application</Filter>
-    </ClCompile>
     <ClCompile Include="Application\Enemy\Enemies\RedBat.cpp">
       <Filter>Application\Enemy\Enemies</Filter>
     </ClCompile>
+    <ClCompile Include="Application\Map\MapTile.cpp">
+      <Filter>Application\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Map\MapCheck.cpp">
+      <Filter>Application\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Item\Item.cpp">
+      <Filter>Application\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Item\ItemManager.cpp">
+      <Filter>Application\Item</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Scene\TitleScene.cpp">
+      <Filter>Application\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Scene\GameScene.cpp">
+      <Filter>Application\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Effect\EffectManager.cpp">
+      <Filter>Application\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Application\Effect\SoulEffect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -440,9 +453,6 @@
     <ClInclude Include="Engine\Object\VertexData.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Application\GameScene.h">
-      <Filter>Application</Filter>
-    </ClInclude>
     <ClInclude Include="Application\Player.h">
       <Filter>Application</Filter>
     </ClInclude>
@@ -530,7 +540,7 @@
     <ClInclude Include="Application\Weapon\Weapons\Shotgun.h">
       <Filter>Application\Weapon</Filter>
     </ClInclude>
-    <ClInclude Include="Application\Weapon\RangedWeapon.h">
+    <ClInclude Include="Application\Weapon\Weapon.h">
       <Filter>Application\Weapon</Filter>
     </ClInclude>
     <ClInclude Include="Application\Weapon\Weapons\Pistol.h">
@@ -544,21 +554,6 @@
     </ClInclude>
     <ClInclude Include="Engine\Object\Particle.h">
       <Filter>Engine\Object</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\TitleScene.h">
-      <Filter>Application</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\Item.h">
-      <Filter>Application</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\ItemManager.h">
-      <Filter>Application</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\MapCheck.h">
-      <Filter>Application</Filter>
-    </ClInclude>
-    <ClInclude Include="Application\MapTile.h">
-      <Filter>Application</Filter>
     </ClInclude>
     <ClInclude Include="Application\Rarity.h">
       <Filter>Application</Filter>
@@ -587,15 +582,34 @@
     <ClInclude Include="Engine\Object\Node.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
-    <ClInclude Include="Application\EffectManager.h">
-      <Filter>Application</Filter>
-    </ClInclude>
     <ClInclude Include="Application\Enemy\Enemies\RedBat.h">
       <Filter>Application\Enemy\Enemies</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Object\SubMesh.h">
       <Filter>Engine\Object</Filter>
     </ClInclude>
+    <ClInclude Include="Application\Map\MapTile.h">
+      <Filter>Application\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Map\MapCheck.h">
+      <Filter>Application\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Item\Item.h">
+      <Filter>Application\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Item\ItemManager.h">
+      <Filter>Application\Item</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Scene\TitleScene.h">
+      <Filter>Application\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Scene\GameScene.h">
+      <Filter>Application\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Effect\EffectManager.h">
+      <Filter>Application\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Application\Effect\SoulEffect.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\imgui\LICENSE.txt">

@@ -4,7 +4,7 @@
 #include "GameContext.h"
 #include "RapidBullet.h"
 
-Pistol::Pistol(const RangedWeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
+Pistol::Pistol(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
 	status_ = status;
 	model_ = std::move(model);
 }

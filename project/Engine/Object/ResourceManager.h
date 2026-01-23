@@ -27,6 +27,7 @@ class SRVManager;
 class CommandListManager;
 class Logger;
 class Camera;
+struct SubMesh;
 
 /// <summary>
 /// テクスチャ、モデルなどの管理
@@ -49,7 +50,8 @@ public:
 
     void CreateInstancingSRV(InstancedModel* model, const int numInstance_);
 
-    Node ReadNode(aiNode* node);
+    std::unique_ptr<Node> ReadNode(aiNode* node);
+    SubMesh CreateSubMesh(aiMesh* aiMesh);
     
     /// <summary>
     /// モデルのファイル読み込み
@@ -65,6 +67,8 @@ public:
     std::unique_ptr<Sprite> LoadSprite(std::string texturePath);
 
     uint32_t AllocateTransformCB() { return nextId_++; }
+
+    Matrix4x4 ConvertAssimpMatrixToLHRow(const aiMatrix4x4& m);
 private:
 
     Logger* logger_ = nullptr;

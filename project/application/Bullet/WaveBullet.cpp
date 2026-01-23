@@ -24,7 +24,7 @@ void WaveBullet::Update(MapCheck* mapCheck) {
 
 		// 移動方向計算
 		Vector3 currentVel = velocity_;
-		float sinWave_ = sinf(0.4f * float(std::numbers::pi) * time_);
+		float sinWave_ = sinf(0.4f * float(std::numbers::pi) * time_ - 0.5f);
 		currentVel = TransformVector(velocity_, MakeRotateYMatrix(float(std::numbers::pi) / 5.0f * sinWave_));
 
 		prePos_ = model_->GetTransform().translate;

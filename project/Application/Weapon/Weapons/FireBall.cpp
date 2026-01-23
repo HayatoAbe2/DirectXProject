@@ -4,7 +4,7 @@
 #include "GameContext.h"
 #include "FireBullet.h"
 
-FireBall::FireBall(const RangedWeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
+FireBall::FireBall(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
 	status_ = status;
 	model_ = std::move(model);
 }

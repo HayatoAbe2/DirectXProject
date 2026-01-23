@@ -5,7 +5,7 @@
 #include "SpreadBullet.h"
 #include "numbers"
 
-Shotgun::Shotgun(const RangedWeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
+Shotgun::Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
 	status_ = status;
 	model_ = std::move(model);
 }

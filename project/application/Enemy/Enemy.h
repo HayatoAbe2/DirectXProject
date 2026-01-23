@@ -1,6 +1,6 @@
 #pragma once
 #include "WeaponStatus.h"
-#include "RangedWeapon.h"
+#include "Weapon.h"
 #include <MathUtils.h>
 #include <vector>
 #include <memory>
@@ -15,9 +15,9 @@ class Player;
 class Enemy {
 public:
 	virtual ~Enemy() = default;
-	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::unique_ptr<RangedWeapon> rWeapon);
+	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::unique_ptr<Weapon> rWeapon);
 	// ボス敵
-	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<RangedWeapon>> rWeapons);
+	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<Weapon>> rWeapons);
 
 
 	/// <summary>
@@ -25,6 +25,11 @@ public:
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
 	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager);
+
+	// Update内関数
+	void Wait(GameContext* context);
+	void Stun(GameContext* context, MapCheck* mapCheck);
+	void Fall();
 
 	/// <summary>
 	/// 描画
@@ -37,7 +42,7 @@ public:
 	void Hit(float damage,Vector3 from, const float knockback);
 
 	// 敵ごとの関数
-	virtual void Attack(RangedWeapon* rangedWeapon, BulletManager* bulletManager, GameContext* context) = 0;
+	virtual void Attack(Weapon* weapon, BulletManager* bulletManager, GameContext* context) = 0;
 
 	Transform GetTransform() const { return model_->GetTransform(); }
 	float GetRadius() const { return status_.radius; }
@@ -58,8 +63,8 @@ protected:
 	std::unique_ptr<Model> model_ = nullptr;
 
 	// 武器
-	std::unique_ptr<RangedWeapon> rangedWeapon_ = nullptr;
-	std::vector<std::unique_ptr<RangedWeapon>> bossWeapons_; // 複数ある場合
+	std::unique_ptr<Weapon> weapon_ = nullptr;
+	std::vector<std::unique_ptr<Weapon>> bossWeapons_; // 複数ある場合
 
 	// 射撃クールダウン
 	int attackCoolTimer_ = 90;
@@ -101,5 +106,7 @@ protected:
 	// 攻撃モーション
 	int attackMotionStart_ = 30;
 	float EaseIn(float start, float end, float t);
+
+	float minDistance_ = 2.5f;
 };
 

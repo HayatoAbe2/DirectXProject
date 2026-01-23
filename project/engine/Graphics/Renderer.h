@@ -9,6 +9,8 @@
 #include "BlendMode.h"
 #include "SRVManager.h"
 #include "CameraForGPU.h"
+#include "Node.h"
+#include "Mesh.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -54,6 +56,16 @@ public:
 	void DrawParticles(ParticleSystem* particleSys, Camera* camera, int blendMode);
 
 	void DrawSprite(Sprite* sprite, int blendMode);
+
+	// ノードごとに描画
+	void DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parent);
+
+	// メッシュを描画
+	void DrawMesh(Model* model, Mesh* mesh);
+
+	// インスタンシング描画版
+	void DrawNodeInstance(InstancedModel* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parentWorld);
+	void DrawMeshInstance(InstancedModel* model, Mesh* mesh);
 
 	/// <summary>
 	/// フレーム開始時の処理(描画開始時に行う)

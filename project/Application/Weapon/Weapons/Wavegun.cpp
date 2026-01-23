@@ -5,7 +5,7 @@
 #include "WaveBullet.h"
 #include "numbers"
 
-Wavegun::Wavegun(const RangedWeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
+Wavegun::Wavegun(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
 	status_ = status;
 	model_ = std::move(model);
 }

@@ -4,7 +4,7 @@
 #include "GameContext.h"
 #include "NormalBullet.h"
 
-AssaultRifle::AssaultRifle(const RangedWeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
+AssaultRifle::AssaultRifle(const WeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
 	status_ = status;
 	model_ = std::move(model);
 }

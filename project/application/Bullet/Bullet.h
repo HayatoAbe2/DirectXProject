@@ -9,7 +9,7 @@ class MapCheck;
 
 class Bullet {
 public:
-	Bullet(std::unique_ptr<Model> model,const Vector3& direction,const RangedWeaponStatus& status,bool isEnemyBullet);
+	Bullet(std::unique_ptr<Model> model,const Vector3& direction,const WeaponStatus& status,bool isEnemyBullet);
 	virtual ~Bullet() = default;
 	virtual void Update(MapCheck* mapCheck) = 0;
 	virtual void Draw(GameContext* context,Camera* camera) = 0;
@@ -34,7 +34,7 @@ protected:
 	std::unique_ptr<Model> model_ = nullptr;
 
 	// 弾ステータス
-	RangedWeaponStatus status_;
+	WeaponStatus status_;
 
 	// 生存時間
 	int lifeTime_ = 0;
