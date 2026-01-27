@@ -14,9 +14,18 @@ public:
 
 	Model* GetWeaponModel() { return model_.get(); }
 	const WeaponStatus& GetStatus() const { return status_; }
+	bool CanShoot() { return reloadTimer_ <= 0; }
+	int GetReloadTimer() { return reloadTimer_; }
+	int GetAmmoLeft() { return ammoLeft_; }
+
+	void StartReload() { isReloading_ = true; }
 	
 protected:
 	WeaponStatus status_;
 	std::unique_ptr<Model> model_;
+	int ammoLeft_ = 0;
+	int reloadTimer_ = 0;
+	bool isReloading_ = false;
+
 };
 

@@ -30,6 +30,10 @@ struct WeaponStatus {
 	int bulletLifeTime;
 	// ノックバック
 	float knockback;
+	// 弾数
+	int magazineSize;
+	// リロード時間
+	int reloadTime;
 
 	// エンチャント
 	std::vector<Enchants> enchants;

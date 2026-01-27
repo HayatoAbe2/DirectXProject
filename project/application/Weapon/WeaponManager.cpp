@@ -33,6 +33,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 20;
 		status.bulletLifeTime = 60;
 		status.knockback = 0.3f;
+		status.magazineSize = 10;
+		status.reloadTime = 30;
 		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
 		return std::make_unique<Pistol>(status, std::move(model), context_);
 		break;
@@ -45,6 +47,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 6;
 		status.bulletLifeTime = 60;
 		status.knockback = 0.1f;
+		status.magazineSize = 30;
+		status.reloadTime = 75;
 		model = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
 		return std::make_unique<AssaultRifle>(status, std::move(model), context_);
 		break;
@@ -57,6 +61,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 40;
 		status.bulletLifeTime = 9;
 		status.knockback = 0.3f;
+		status.magazineSize = 7;
+		status.reloadTime = 90;
 		model = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
 		return std::make_unique<Shotgun>(status, std::move(model), context_);
 		break;
@@ -69,6 +75,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 60;
 		status.bulletLifeTime = 300;
 		status.knockback = 0.5f;
+		status.magazineSize = -1;
+		status.reloadTime = 0;
 		model = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
 		return std::make_unique<FireBall>(status, std::move(model), context_);
 		break;
@@ -81,6 +89,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 10;
 		status.bulletLifeTime = 180;
 		status.knockback = 0.25f;
+		status.magazineSize = 9;
+		status.reloadTime = 50;
 		model = context_->LoadModel("Resources/Weapons", "Wavegun.obj");
 		return std::make_unique<Wavegun>(status, std::move(model), context_);
 		break;

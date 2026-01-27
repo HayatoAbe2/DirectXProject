@@ -290,6 +290,7 @@
       <Filter>Application\Effect</Filter>
     </ClCompile>
     <ClCompile Include="Application\Effect\SoulEffect.cpp" />
+    <ClCompile Include="Application\UIDrawer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -610,6 +611,7 @@
       <Filter>Application\Effect</Filter>
     </ClInclude>
     <ClInclude Include="Application\Effect\SoulEffect.h" />
+    <ClInclude Include="Application\UIDrawer.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\imgui\LICENSE.txt">

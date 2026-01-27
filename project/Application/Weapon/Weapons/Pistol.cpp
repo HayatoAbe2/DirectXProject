@@ -6,10 +6,16 @@
 
 Pistol::Pistol(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
 	status_ = status;
+	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
 }
 
 int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+	if (ammoLeft_ == 0) {
+		// 弾切れ
+		return 0;
+	}
+
 	auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 	bullet->SetTranslate(pos);
 	std::unique_ptr<RapidBullet> newBullet = std::make_unique<RapidBullet>(std::move(bullet), dir, status_, isEnemyBullet);
@@ -22,6 +28,7 @@ int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameCo
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		ammoLeft_--;
 		return status_.shootCoolTime;
 	}
 }

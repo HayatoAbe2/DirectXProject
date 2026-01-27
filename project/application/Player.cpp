@@ -32,19 +32,28 @@ void Player::Initialize(std::unique_ptr<Model> playerModel, GameContext* context
 	transform_.translate.x = 1;
 	transform_.translate.z = 1;
 
+	// 残像
+	instancing_ = context_->LoadInstancedModel("Resources/Player", "player.obj", 2);
+	MaterialData data = instancing_->GetMaterial(0)->GetData();
+	data.color = { 0.3f,0.3f,1,0.2f };
+	data.enableLighting = false;
+	instancing_->GetMaterial(0)->SetData(data);
+
+	// 方向線
 	direction_ = std::make_unique<Model>();
 	direction_ = context_->LoadModel("Resources/Direction", "Direction.obj");
-	auto data = direction_->GetMaterial(0)->GetData();
-	data.color = { 1,0,0,dirDisplayAlpha_ };
+	auto dData = direction_->GetMaterial(0)->GetData();
+	dData.color = { 1,0,0,dirDisplayAlpha_ };
 	direction_->GetMaterial(0)->SetData(data);
 
+	// 移動時パーティクル
 	moveParticle_ = std::make_unique<ParticleSystem>();
 	moveParticle_->Initialize(std::move(context->LoadInstancedModel("Resources/Particle/Fire", "fireEffect.obj", moveParticleNum_)));
 	moveParticle_->SetLifeTime(10);
 	moveParticle_->SetColor({ 0.6f, 0.6f, 0.6f, 1.0f });
 }
 
-void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camera, BulletManager* bulletManager) {
+void Player::Update(MapCheck* mapCheck, ItemManager* itemManager, Camera* camera, BulletManager* bulletManager) {
 	invincibleTimer_--;
 	if (redTime_) {
 		redTime_--;
@@ -59,126 +68,20 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 
 	if (!isFall_) {
 		if (isUsingBoost_) {
-			// ダッシュ
-			velocity_ = boostDir_ * boostSpeed_;
-
-			Vector2 pos = { transform_.translate.x,transform_.translate.z };
-			for (int i = 0; i < 4; ++i) {
-				pos.x += velocity_.x / 4.0f;
-				mapCheck->ResolveCollisionX(pos, radius_, isUsingBoost_);
-				pos.y += velocity_.z / 4.0f;
-				mapCheck->ResolveCollisionY(pos, radius_, isUsingBoost_);
-			}
-			transform_.translate.x = pos.x;
-			transform_.translate.z = pos.y;
-
-			boostTime_++;
-
-			if (maxBoostTime_ <= boostTime_) { // 終了時
-				isUsingBoost_ = false;
-				boostTime_ = 0;
-
-				// 落下判定
-				if (mapCheck->IsFall({ transform_.translate.x,transform_.translate.z })) {
-					isFall_ = true;
-					context_->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false);
-				}
-			}
-
+			Boost(mapCheck);
 		} else {
-			// 入力方向
-			Vector2 input = { 0,0 };
-
-			// 移動
-			input.x = context_->GetLeftStick().x;
-			input.y = context_->GetLeftStick().y;
-
-			if (context_->IsPress(DIK_A)) {
-				input.x = -1;
-			}
-
-			if (context_->IsPress(DIK_D)) {
-				input.x = 1;
-			}
-
-			if (context_->IsPress(DIK_W)) {
-				input.y = -1;
-			}
-
-			if (context_->IsPress(DIK_S)) {
-				input.y = 1;
-			}
-
-			// 入力を反映
-			Vector2 normalized = Normalize(input);
-			velocity_.x = normalized.x * moveSpeed_;
-			velocity_.z = -normalized.y * moveSpeed_;
-
-			boostCoolTime_--;
-
-			// ダッシュ入力
-			if (context_->IsTrigger(DIK_SPACE) && Length(normalized) > 0.1f && boostCoolTime_ < 0) {
-				isUsingBoost_ = true;
-				boostDir_ = { normalized.x,0,-normalized.y };
-				// ダッシュ前の位置を記憶
-				landPos_ = transform_.translate;
-
-				for (int i = 0; i < 5; ++i) {
-					Vector3 randomVector = {
-					context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
-					-0.5f,
-					context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
-					};
-					Transform transform = model_->GetTransform();
-					transform.translate += randomVector;
-					transform.scale = { 1.0f,1.0f,1.0f };
-					moveParticle_->Emit(transform, -velocity_ * 0.4f);
-				}
-				moveParticleEmitTimer_ = 0;
-			}
+			Move(mapCheck);
 		}
 
-		// 速度をもとに移動
-		Vector2 pos = { transform_.translate.x,transform_.translate.z };
-		for (int i = 0; i < 4; ++i) {
-			pos.x += velocity_.x / 4.0f;
-			mapCheck->ResolveCollisionX(pos, radius_, isUsingBoost_);
-			pos.y += velocity_.z / 4.0f;
-			mapCheck->ResolveCollisionY(pos, radius_, isUsingBoost_);
-		}
-		transform_.translate.x = pos.x;
-		transform_.translate.z = pos.y;
-
-		if (velocity_.x != 0 || velocity_.z != 0) {
-			// 移動による向き変更
-			transform_.rotate.y = -std::atan2(velocity_.z, velocity_.x) + float(std::numbers::pi) / 2.0f;
-
-			// パーティクル
-			moveParticleEmitTimer_++;
-			if (moveParticleEmitTimer_ >= moveParticleEmitInterval_) {
-				for (int i = 0; i < 3; ++i) {
-					Vector3 randomVector = {
-					context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
-					-0.5f,
-					context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
-					};
-					Transform transform = model_->GetTransform();
-					transform.translate += randomVector;
-					transform.scale = { 1.0f,1.0f,1.0f };
-					moveParticle_->Emit(transform, -velocity_ * 0.4f);
-				}
-				moveParticleEmitTimer_ = 0;
-			}
-		}
 		moveParticle_->Update();
 
 		// アイテム取得
 		if (context_->IsTrigger(DIK_F)) {
-			itemManager_->Interact(this);
+			itemManager->Interact(this);
 		}
 
 		// 攻撃の向き
-		if (context_->IsClickLeft()) {
+		if (context_->IsClickLeft() || context_->IsClickRight()) {
 			Vector2 win = context_->GetWindowSize();
 			Vector2 mouse = context_->GetMousePosition();
 			mouse.y = win.y - mouse.y;
@@ -199,8 +102,6 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 
 		if (weapon_) {
 			weapon_->Update();
-			weaponTransform_ = transform_;
-			weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
 
 			// enchant分の速度
 			for (auto enchant : weapon_->GetStatus().enchants) {
@@ -214,31 +115,7 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 		// 射撃
 		if (shootCoolTime_ <= 0) {
 			if (context_->IsClickLeft()) {
-				if (weapon_) {
-					shootCoolTime_ = weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
-
-					// 追加効果
-					for (auto enchant : weapon_->GetStatus().enchants) {
-						switch (enchant) {
-						case static_cast<int>(Enchants::shortCooldown):
-							shootCoolTime_ = shootCoolTime_ * 3 / 4;
-							break;
-						case static_cast<int>(Enchants::extraBullet):
-							if (context_->RandomInt(1, 20) <= 3) {
-								extraBulletWaitTime_ = 10;
-								canShootExtraBullet_ = true;
-							}
-							break;
-						}
-					}
-
-					if (canShootExtraBullet_) {
-						if (--extraBulletWaitTime_ <= 0) {
-							weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
-							canShootExtraBullet_ = false;
-						}
-					}
-				}
+				Shoot(bulletManager);
 			}
 		} else {
 			shootCoolTime_--;
@@ -269,29 +146,32 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager_, Camera* camer
 			}
 
 			transform_.translate = { pos.x,model_->GetTransform().translate.y,pos.y };
-
-			if (weapon_) {
-				weaponTransform_ = transform_;
-				weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
-			}
 		}
 
 	} else {
-		// 落下
-		transform_.translate.y -= 1.0f;
-		if (transform_.translate.y < -20.0f) {
-			hp_ -= maxHp_ / 12.0f;
-			invincibleTimer_ = invincibleTime_;
+		Fall();
+	}
 
-			// その前にいた位置に戻す
-			transform_.translate = landPos_;
-			isFall_ = false;
-			stunTimer_ = 0;
-		}
+	// 残像
+	instancingTransforms[3] = instancingTransforms[2];
+	instancingTransforms[2] = instancingTransforms[1];
+	instancingTransforms[1] = instancingTransforms[0];
+	instancingTransforms[0] = transform_;
+
+	for (int i = 0; i < 2; ++i) {
+		instancing_->SetInstanceTransforms(i, instancingTransforms[i * 2 + 1]);
+	}
+
+	if (weapon_) {
+		weaponTransform_ = transform_;
+		weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
 	}
 }
 
 void Player::Draw(Camera* camera) {
+	if (isUsingBoost_) {
+		context_->DrawInstancedModel(instancing_.get(), camera);
+	}
 
 	model_->SetTransform(transform_);
 	context_->DrawModel(model_.get(), camera);
@@ -300,7 +180,7 @@ void Player::Draw(Camera* camera) {
 		// 武器描画
 		weapon_->GetWeaponModel()->SetTransform(weaponTransform_);
 		context_->DrawModel(weapon_->GetWeaponModel(), camera);
-	
+
 		// 照準方向
 		direction_->SetTransform(weaponTransform_);
 		context_->DrawModel(direction_.get(), camera);
@@ -356,12 +236,170 @@ void Player::Hit(float damage, Vector3 from) {
 				auto data = model_->GetMaterial(0)->GetData();
 				data.color = { 1.0f,0.2f,0.2f,1.0f };
 				model_->GetMaterial(0)->SetData(data);
-				redTime_ = 2;
+				redTime_ = 3;
 
 				// 被ダメージ時の位置を記憶
 				landPos_ = transform_.translate;
 			}
 		}
+	}
+}
+
+void Player::Move(MapCheck* mapCheck) {
+	// 入力方向
+	Vector2 input = { 0,0 };
+
+	// 移動
+	input.x = context_->GetLeftStick().x;
+	input.y = context_->GetLeftStick().y;
+
+	if (context_->IsPress(DIK_A)) {
+		input.x = -1;
+	}
+
+	if (context_->IsPress(DIK_D)) {
+		input.x = 1;
+	}
+
+	if (context_->IsPress(DIK_W)) {
+		input.y = -1;
+	}
+
+	if (context_->IsPress(DIK_S)) {
+		input.y = 1;
+	}
+
+	// 入力を反映
+	Vector2 normalized = Normalize(input);
+	velocity_.x = normalized.x * moveSpeed_;
+	velocity_.z = -normalized.y * moveSpeed_;
+
+	boostCoolTime_--;
+
+	// ダッシュ入力
+	if (context_->IsTrigger(DIK_SPACE) && Length(normalized) > 0.1f && boostCoolTime_ < 0) {
+		isUsingBoost_ = true;
+		boostDir_ = { normalized.x,0,-normalized.y };
+		// ダッシュ前の位置を記憶
+		landPos_ = transform_.translate;
+
+		for (int i = 0; i < 5; ++i) {
+			Vector3 randomVector = {
+			context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
+			-0.5f,
+			context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
+			};
+			Transform transform = model_->GetTransform();
+			transform.translate += randomVector;
+			transform.scale = { 1.0f,1.0f,1.0f };
+			moveParticle_->Emit(transform, -velocity_ * 0.4f);
+		}
+		moveParticleEmitTimer_ = 0;
+	}
+
+	// 速度をもとに移動
+	Vector2 pos = { transform_.translate.x,transform_.translate.z };
+	for (int i = 0; i < 4; ++i) {
+		pos.x += velocity_.x / 4.0f;
+		mapCheck->ResolveCollisionX(pos, radius_, isUsingBoost_);
+		pos.y += velocity_.z / 4.0f;
+		mapCheck->ResolveCollisionY(pos, radius_, isUsingBoost_);
+	}
+	transform_.translate.x = pos.x;
+	transform_.translate.z = pos.y;
+
+	if (velocity_.x != 0 || velocity_.z != 0) {
+		// 移動による向き変更
+		transform_.rotate.y = -std::atan2(velocity_.z, velocity_.x) + float(std::numbers::pi) / 2.0f;
+
+		// パーティクル
+		moveParticleEmitTimer_++;
+		if (moveParticleEmitTimer_ >= moveParticleEmitInterval_) {
+			for (int i = 0; i < 3; ++i) {
+				Vector3 randomVector = {
+				context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
+				-0.5f,
+				context_->RandomFloat(-moveParticleRange_ / 2.0f, moveParticleRange_ / 2.0f),
+				};
+				Transform transform = model_->GetTransform();
+				transform.translate += randomVector;
+				transform.scale = { 1.0f,1.0f,1.0f };
+				moveParticle_->Emit(transform, -velocity_ * 0.4f);
+			}
+			moveParticleEmitTimer_ = 0;
+		}
+	}
+}
+
+void Player::Shoot(BulletManager* bulletManager) {
+	if (weapon_) {
+		shootCoolTime_ = weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+
+		// 追加効果
+		for (auto enchant : weapon_->GetStatus().enchants) {
+			switch (enchant) {
+			case static_cast<int>(Enchants::shortCooldown):
+				shootCoolTime_ = shootCoolTime_ * 3 / 4;
+				break;
+			case static_cast<int>(Enchants::extraBullet):
+				if (context_->RandomInt(1, 20) <= 3) {
+					extraBulletWaitTime_ = 10;
+					canShootExtraBullet_ = true;
+				}
+				break;
+			}
+		}
+
+		if (canShootExtraBullet_) {
+			if (--extraBulletWaitTime_ <= 0) {
+				weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+				canShootExtraBullet_ = false;
+			}
+		}
+
+		if (!weapon_->CanShoot() && context_->IsTriggerLeft()) { weapon_->StartReload(); }
+	}
+}
+
+void Player::Boost(MapCheck* mapCheck) {
+	// ダッシュ
+	velocity_ = boostDir_ * boostSpeed_;
+
+	Vector2 pos = { transform_.translate.x,transform_.translate.z };
+	for (int i = 0; i < 4; ++i) {
+		pos.x += velocity_.x / 4.0f;
+		mapCheck->ResolveCollisionX(pos, radius_, isUsingBoost_);
+		pos.y += velocity_.z / 4.0f;
+		mapCheck->ResolveCollisionY(pos, radius_, isUsingBoost_);
+	}
+	transform_.translate.x = pos.x;
+	transform_.translate.z = pos.y;
+
+	boostTime_++;
+
+	if (maxBoostTime_ <= boostTime_) { // 終了時
+		isUsingBoost_ = false;
+		boostTime_ = 0;
+
+		// 落下判定
+		if (mapCheck->IsFall({ transform_.translate.x,transform_.translate.z })) {
+			isFall_ = true;
+			context_->SoundPlay(L"Resources/Sounds/SE/fall.mp3", false);
+		}
+	}
+}
+
+void Player::Fall() {
+	// 落下
+	transform_.translate.y -= 1.0f;
+	if (transform_.translate.y < -20.0f) {
+		hp_ -= maxHp_ / 12.0f;
+		invincibleTimer_ = invincibleTime_;
+
+		// その前にいた位置に戻す
+		transform_.translate = landPos_;
+		isFall_ = false;
+		stunTimer_ = 0;
 	}
 }
 

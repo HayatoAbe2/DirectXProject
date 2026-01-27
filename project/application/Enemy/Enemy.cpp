@@ -26,10 +26,15 @@ Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std:
 }
 
 void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
-	for (auto& mesh : model_->GetData()->meshes) {
-		auto data = model_->GetMaterial(0)->GetData();
-		data.color = { 1.0f,1.0f,1.0f,1.0f };
-		model_->GetMaterial(0)->SetData(data);
+	if (hitColorTime_) {
+		hitColorTime_--;
+		if (hitColorTime_ <= 0) {
+			for (auto& mesh : model_->GetData()->meshes) {
+				auto data = model_->GetMaterial(0)->GetData();
+				data.color = { 1.0f,1.0f,1.0f,1.0f };
+				model_->GetMaterial(0)->SetData(data);
+			}
+		}
 	}
 
 	if (!isFall_) {
@@ -130,8 +135,8 @@ void Enemy::Wait(GameContext* context) {
 			randomMoveTime_ = context->RandomInt(minRandomMoveTime_, maxRandomMoveTime_);
 
 			Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
-			velocity_.x = direction.x * status_.moveSpeed / 2.0f;
-			velocity_.z = direction.y * status_.moveSpeed / 2.0f;
+			velocity_.x = direction.x * status_.moveSpeed / 3.0f;
+			velocity_.z = direction.y * status_.moveSpeed / 3.0f;
 		}
 	}
 }
@@ -196,6 +201,7 @@ void Enemy::Hit(float damage, Vector3 from, const float knockback) {
 	auto data = model_->GetMaterial(0)->GetData();
 	data.color = { 1.0f,0.2f,0.2f,1.0f };
 	model_->GetMaterial(0)->SetData(data);
+	hitColorTime_ = 3;
 }
 
 // EaseInBackの数値調整版

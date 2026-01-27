@@ -38,6 +38,11 @@ public:
 	// 被弾
 	void Hit(float damage, Vector3 from);
 
+	void Move(MapCheck* mapCheck);
+	void Shoot(BulletManager* bulletManager);
+	void Boost(MapCheck* mapCheck);
+	void Fall();
+
 	Transform GetTransform() const { return transform_; }
 	float GetRadius() const { return radius_; }
 	float GetInteractRadius() const { return interactRadius_; }
@@ -92,6 +97,8 @@ private:
 
 	// モデル
 	std::unique_ptr<Model> model_ = nullptr;
+	std::unique_ptr<InstancedModel> instancing_ = nullptr;
+	Transform instancingTransforms[4]{};
 
 	// ダッシュ
 	bool canBoost_ = false;

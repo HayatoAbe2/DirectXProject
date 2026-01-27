@@ -77,11 +77,11 @@ protected:
 
 	// 未発見移動
 	int randomMoveTime_ = 45; // 動く時間
-	const int minRandomMoveTime_ = 60;
-	const int maxRandomMoveTime_ = 180;
+	const int minRandomMoveTime_ = 30;
+	const int maxRandomMoveTime_ = 120;
 	int randomStopTime_ = 30; // その後止まる時間
 	const int minRandomStopTime_ = 30;
-	const int maxRandomStopTime_ = 90;
+	const int maxRandomStopTime_ = 150;
 	int randomTimer_ = 0;
 	bool isMoving_ = false;
 
@@ -93,6 +93,7 @@ protected:
 
 	// スタン時間
 	int stunTimer_ = 0;
+	int hitColorTime_ = 0;
 
 	// 落下
 	bool isFall_ = false;

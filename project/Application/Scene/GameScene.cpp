@@ -259,6 +259,7 @@ void GameScene::Reset() {
 	enemyManager_->Reset();
 	itemManager_->Reset();
 	bulletManager_->Reset();
+	player_->Stop();
 
 	int floorType = 0;
 	std::string tilePath;

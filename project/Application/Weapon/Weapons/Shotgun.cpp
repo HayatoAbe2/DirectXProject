@@ -7,10 +7,16 @@
 
 Shotgun::Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
 	status_ = status;
+	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
 }
 
 int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+	if (ammoLeft_ == 0) {
+		// 弾切れ
+		return 0;
+	}
+
 	for (int i = -2; i <= 2; ++i) {
 		auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 		bullet->SetTranslate(pos);
@@ -26,6 +32,7 @@ int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameC
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		ammoLeft_--;
 		return status_.shootCoolTime;
 	}
 }
