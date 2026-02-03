@@ -174,7 +174,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\DeviceManager.cpp" />
     <ClCompile Include="Engine\Graphics\PipelineStateManager.cpp" />
     <ClCompile Include="Engine\Graphics\RootSignatureManager.cpp" />
-    <ClCompile Include="Engine\Math\AABB.cpp" />
+    <ClCompile Include="Engine\Math\CollisionShape\AABB.cpp" />
     <ClCompile Include="Engine\App\App.cpp" />
     <ClCompile Include="Engine\Io\Audio.cpp" />
     <ClCompile Include="Engine\Math\Sphere.cpp" />
@@ -254,6 +254,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\Enemy\Enemies\RedBat.cpp" />
     <ClCompile Include="Application\Effect\SoulEffect.cpp" />
     <ClCompile Include="Application\UIDrawer.cpp" />
+    <ClCompile Include="Engine\Math\CollisionShape\Ray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -314,7 +315,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Object\Node.h" />
     <ClInclude Include="Engine\Graphics\PipelineStateManager.h" />
     <ClInclude Include="Engine\Graphics\RootSignatureManager.h" />
-    <ClInclude Include="Engine\Math\AABB.h" />
+    <ClInclude Include="Engine\Math\CollisionShape\AABB.h" />
     <ClInclude Include="Engine\App\App.h" />
     <ClInclude Include="Engine\Io\Audio.h" />
     <ClInclude Include="Engine\Math\Sphere.h" />
@@ -397,6 +398,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\Enemy\Enemies\RedBat.h" />
     <ClInclude Include="Application\Effect\SoulEffect.h" />
     <ClInclude Include="Application\UIDrawer.h" />
+    <ClInclude Include="Engine\Math\CollisionShape\Ray.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\imgui\LICENSE.txt" />

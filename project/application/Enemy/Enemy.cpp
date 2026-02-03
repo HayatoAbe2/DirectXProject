@@ -8,15 +8,20 @@
 #include <numbers>
 #include <cmath>
 
-Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::unique_ptr<Weapon> rWeapon) {
+Enemy::Enemy(std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel,
+	Vector3 pos, EnemyStatus status, std::unique_ptr<Weapon> rWeapon) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
+	shadowModel_ = std::move(shadowModel);
+	auto matData = shadowModel_->GetMaterial(0)->GetData();
+	matData.color = { 0,0,0,1 };
+	shadowModel_->GetMaterial(0)->SetData(matData);
 	status_ = status;
 
 	weapon_ = std::move(rWeapon);
 }
 
-Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<Weapon>> rWeapons) {
+Enemy::Enemy(std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, Vector3 pos, EnemyStatus status, std::vector<std::unique_ptr<Weapon>> rWeapons) {
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
@@ -25,7 +30,7 @@ Enemy::Enemy(std::unique_ptr<Model> model, Vector3 pos, EnemyStatus status, std:
 	weapon_ = std::move(bossWeapons_[0]);
 }
 
-void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
+void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager, Camera* camera) {
 	if (hitColorTime_) {
 		hitColorTime_--;
 		if (hitColorTime_ <= 0) {
@@ -47,7 +52,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				if (length > minDistance_) {
 					// プレイヤー方向に移動
 					Vector3 targetDir = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
-					velocity_ = Vector3{ targetDir.x,0,targetDir.z } *status_.moveSpeed;
+					velocity_ = Vector3{ targetDir.x,0,targetDir.z } * status_.moveSpeed;
 				}
 
 				if (rotateTimer_ >= rotateTime_) {
@@ -58,6 +63,11 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 
 			} else {
 				Wait(context);
+
+				if (targetAutoFound_) {
+					target_ = player;
+					targetAutoFound_ = false;
+				}
 			}
 
 			// 速度をもとに移動
@@ -74,8 +84,10 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 
 			// ターゲット発見
 			if (Length(player->GetTransform().translate - model_->GetTransform().translate) < searchRadius_) {
-				target_ = player;
-				loseSightTimer_ = 0;
+				if (mapCheck->EnemyCanSeePlayer(model_->GetTransform().translate, player->GetTransform().translate)) {
+					target_ = player;
+					loseSightTimer_ = 0;
+				}
 			} else {
 				// 見失う
 				loseSightTimer_++;
@@ -94,7 +106,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 					searchRadius_ = status_.defaultSearchRadius;
 				}
 
-				Attack(weapon_.get(), bulletManager, context);
+				Attack(weapon_.get(), bulletManager, context, camera);
 			}
 
 			// 攻撃前警告
@@ -176,6 +188,13 @@ void Enemy::Fall() {
 }
 
 void Enemy::Draw(GameContext* context, Camera* camera) {
+	// 影描画
+	Transform shadowTransform = model_->GetTransform();
+	shadowTransform.scale.y = 0.0f;
+	shadowTransform.translate.y = 0.01f;
+	shadowModel_->SetTransform(shadowTransform);
+	context->DrawModel(shadowModel_.get(), camera);
+
 	context->DrawModel(model_.get(), camera);
 }
 
@@ -194,7 +213,7 @@ void Enemy::Hit(float damage, Vector3 from, const float knockback) {
 
 	// 強制的に発見
 	if (target_ == nullptr) {
-		searchRadius_ *= 10.0f;
+		targetAutoFound_ = true;
 	}
 
 	// ダメージを受けたら赤くする

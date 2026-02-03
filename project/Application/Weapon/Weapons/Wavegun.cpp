@@ -5,13 +5,14 @@
 #include "WaveBullet.h"
 #include "numbers"
 
-Wavegun::Wavegun(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
+Wavegun::Wavegun(const WeaponStatus& status, std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, GameContext* context) {
 	status_ = status;
 	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
+	shadowModel_ = std::move(shadowModel);
 }
 
-int Wavegun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+int Wavegun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
 	if (ammoLeft_ == 0) {
 		// 弾切れ
 		return 0;
@@ -21,7 +22,6 @@ int Wavegun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameC
 	bullet->SetTranslate(pos);
 	std::unique_ptr<WaveBullet> newBullet = std::make_unique<WaveBullet>(std::move(bullet), dir, status_, isEnemyBullet);
 	newBullet->Initialize(context);
-
 	bulletManager->AddBullet(std::move(newBullet));
 
 	context->SoundPlay(L"Resources/Sounds/SE/shoot.mp3", false);
@@ -29,6 +29,7 @@ int Wavegun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameC
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		camera->StartShake(0.5f, 2);
 		ammoLeft_--;
 		return status_.shootCoolTime;
 	}

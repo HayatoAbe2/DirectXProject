@@ -4,13 +4,14 @@
 #include "GameContext.h"
 #include "NormalBullet.h"
 
-AssaultRifle::AssaultRifle(const WeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
+AssaultRifle::AssaultRifle(const WeaponStatus& status, std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, GameContext* context) {
 	status_ = status;
 	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
+	shadowModel_ = std::move(shadowModel);
 }
 
-int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
 	if (ammoLeft_ == 0) {
 		// 弾切れ
 		return 0;
@@ -27,6 +28,7 @@ int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, 
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		camera->StartShake(0.5f, 2);
 		ammoLeft_--;
 		return status_.shootCoolTime;
 	}

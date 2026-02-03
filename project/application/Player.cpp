@@ -26,9 +26,13 @@ Player::~Player() {
 
 }
 
-void Player::Initialize(std::unique_ptr<Model> playerModel, GameContext* context) {
+void Player::Initialize(std::unique_ptr<Model> playerModel, std::unique_ptr<Model> playerShadow, GameContext* context) {
 	context_ = context;
 	model_ = std::move(playerModel);
+	shadowModel_ = std::move(playerShadow);
+	auto matData = shadowModel_->GetMaterial(0)->GetData();
+	matData.color = { 0,0,0,1 };
+	shadowModel_->GetMaterial(0)->SetData(matData);
 	transform_.translate.x = 1;
 	transform_.translate.z = 1;
 
@@ -103,22 +107,35 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager, Camera* camera
 		if (weapon_) {
 			weapon_->Update();
 
-			// enchant分の速度
+			// 武器のトランスフォーム
+			weaponTransform_ = transform_;
+			weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
+
+			// enchant分の移動速度
 			for (auto enchant : weapon_->GetStatus().enchants) {
 				if (enchant == Enchants::moveSpeed) {
 					moveSpeed_ *= 1.15f;
 				}
 			}
 
-		}
+			if (shootCoolTime_ <= 0) {
+				// 射撃
+				if (context_->IsClickLeft()) {
+					Shoot(bulletManager, camera);
+				}
 
-		// 射撃
-		if (shootCoolTime_ <= 0) {
-			if (context_->IsClickLeft()) {
-				Shoot(bulletManager);
+				// リロード
+				/*if (context_->IsTrigger(DIK_R)) {
+					weapon_->StartReload();
+				}*/
+
+				// 入れ替え
+				/*if (context_->IsTrigger(DIK_TAB)) {
+					weapon_.swap(subWeapon_);
+				}*/
+			} else {
+				shootCoolTime_--;
 			}
-		} else {
-			shootCoolTime_--;
 		}
 
 		// ノックバック中(操作はさせる)
@@ -161,22 +178,31 @@ void Player::Update(MapCheck* mapCheck, ItemManager* itemManager, Camera* camera
 	for (int i = 0; i < 2; ++i) {
 		instancing_->SetInstanceTransforms(i, instancingTransforms[i * 2 + 1]);
 	}
-
-	if (weapon_) {
-		weaponTransform_ = transform_;
-		weaponTransform_.translate += {std::sin(transform_.rotate.y), 0, std::cos(transform_.rotate.y)}; // 前方に配置
-	}
 }
 
 void Player::Draw(Camera* camera) {
 	if (isUsingBoost_) {
-		context_->DrawInstancedModel(instancing_.get(), camera);
+		context_->DrawInstancedModel(instancing_.get(), camera, BlendMode::Add);
 	}
+
+	// 影描画
+	Transform shadowTransform = transform_;
+	shadowTransform.scale.y = 0.0f;
+	shadowTransform.translate.y = 0.01f;
+	shadowModel_->SetTransform(shadowTransform);
+	context_->DrawModel(shadowModel_.get(), camera);
 
 	model_->SetTransform(transform_);
 	context_->DrawModel(model_.get(), camera);
 
 	if (weapon_) {
+		// 影描画
+		shadowTransform = weaponTransform_;
+		shadowTransform.scale.y = 0.0f;
+		shadowTransform.translate.y = 0.01f;
+		weapon_->GetWeaponShadowModel()->SetTransform(shadowTransform);
+		context_->DrawModel(weapon_->GetWeaponShadowModel(), camera);
+
 		// 武器描画
 		weapon_->GetWeaponModel()->SetTransform(weaponTransform_);
 		context_->DrawModel(weapon_->GetWeaponModel(), camera);
@@ -331,9 +357,9 @@ void Player::Move(MapCheck* mapCheck) {
 	}
 }
 
-void Player::Shoot(BulletManager* bulletManager) {
+void Player::Shoot(BulletManager* bulletManager, Camera* camera) {
 	if (weapon_) {
-		shootCoolTime_ = weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+		shootCoolTime_ = weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, camera, false);
 
 		// 追加効果
 		for (auto enchant : weapon_->GetStatus().enchants) {
@@ -352,12 +378,12 @@ void Player::Shoot(BulletManager* bulletManager) {
 
 		if (canShootExtraBullet_) {
 			if (--extraBulletWaitTime_ <= 0) {
-				weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, false);
+				weapon_->Shoot(weaponTransform_.translate, attackDirection_, bulletManager, context_, camera, false);
 				canShootExtraBullet_ = false;
 			}
 		}
 
-		if (!weapon_->CanShoot() && context_->IsTriggerLeft()) { weapon_->StartReload(); }
+		if (!weapon_->CanShoot() && context_->IsTriggerLeftClick()) { weapon_->StartReload(); }
 	}
 }
 
@@ -403,4 +429,11 @@ void Player::Fall() {
 	}
 }
 
-void Player::SetWeapon(std::unique_ptr<Weapon> weapon) { weapon_ = std::move(weapon); }
+void Player::SetWeapon(std::unique_ptr<Weapon> weapon) { 
+	if(weapon_ && subWeapon_ == nullptr){
+		subWeapon_ = std::move(weapon);
+		return;
+	}
+
+	weapon_ = std::move(weapon); 
+}

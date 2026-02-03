@@ -70,9 +70,9 @@ public:
 	bool IsClickLeft();
 	bool IsClickRight();
 	bool IsClickWheel();
-	bool IsTriggerLeft();
-	bool IsTriggerRight();
-	bool IsTriggerWheel();
+	bool IsTriggerLeftClick();
+	bool IsTriggerRightClick();
+	bool IsTriggerMouseWheel();
 	Vector3 GetMouseMove();
 	Vector2 GetMousePosition();
 	bool IsControllerPress(uint8_t buttonNumber);

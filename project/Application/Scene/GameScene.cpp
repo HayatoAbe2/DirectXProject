@@ -25,12 +25,14 @@ void GameScene::Initialize() {
 	context_->SoundLoad(L"Resources/Sounds/SE/hit.mp3");
 
 	playerModel_ = context_->LoadModel("Resources/Player", "player.obj");
+	playerShadowModel_ = context_->LoadModel("Resources/Player", "player.obj");
 	MaterialData data = playerModel_->GetMaterial(0)->GetData();
 	data.color = { 1,1,1,0.7f };
 	playerModel_->GetMaterial(0)->SetData(data);
 
 	// マップ
 	wall_ = context_->LoadInstancedModel("Resources/Block", "block.obj", 500);
+	wallShadow_ = context_->LoadInstancedModel("Resources/Block", "block.obj", 500);
 	floor_ = context_->LoadInstancedModel("Resources/Floor", "floor.obj", 500);
 	goal_ = context_->LoadModel("Resources/Tiles", "sphere.obj");
 
@@ -55,7 +57,7 @@ void GameScene::Initialize() {
 
 	// プレイヤー
 	player_ = std::make_unique<Player>();
-	player_->Initialize(std::move(playerModel_), context_);
+	player_->Initialize(std::move(playerModel_), std::move(playerShadowModel_), context_);
 
 	// 敵
 	enemyManager_ = std::make_unique<EnemyManager>();
@@ -106,61 +108,108 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 	if (!isShowResult_) {
+		if (isPause_) {
+			// ポーズ中
+			if (context_->IsRelease(DIK_ESCAPE)) {
+				isPause_ = false;
+			}
 
-		MaterialData data = cloud_->GetMaterial(0)->GetData();
-		data.uvTransform.m[3][1] += 0.001f;
-		cloud_->GetMaterial(0)->SetData(data);
+		} else {
+			MaterialData data = cloud_->GetMaterial(0)->GetData();
+			data.uvTransform.m[3][1] += 0.001f;
+			cloud_->GetMaterial(0)->SetData(data);
 
-		// プレイヤー処理
-		if (!isFadeOut_) {
-			player_->Update(mapCheck_.get(), itemManager_.get(), camera_.get(), bulletManager_.get());
+			// プレイヤー処理
+			if (!isFadeOut_) {
+				player_->Update(mapCheck_.get(), itemManager_.get(), camera_.get(), bulletManager_.get());
+			}
+
+			// ゲームオーバー
+			if (player_->IsDead() && !isFadeOut_) {
+				isFadeOut_ = true;
+				fadeTimer_ = 0;
+			}
+
+			// ゴール判定
+			Vector2 pos = { player_->GetTransform().translate.x,player_->GetTransform().translate.z };
+			if (mapCheck_->IsGoal(pos, player_->GetRadius(), enemyManager_->GetEnemies().size() == 0) && !isFadeOut_) {
+				isFadeOut_ = true;
+				fadeTimer_ = 0;
+				context_->SoundPlay(L"Resources/Sounds/SE/warp.mp3", false);
+			}
+
+			// カメラ追従
+			camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,30,-19 };
+			camera_->UpdateCamera(context_, *debugCamera_);
+			debugCamera_->Update();
+
+			// 敵
+			enemyManager_->Update(context_, mapCheck_.get(), player_.get(), bulletManager_.get(), camera_.get());
+
+			// 弾の処理
+			bulletManager_->Update(mapCheck_.get());
+			for (const auto& bullet : bulletManager_->GetBullets()) {
+
+				// 当たり判定
+				collisionChecker_->Check(player_.get(), bullet, camera_.get());
+
+				for (auto enemy : enemyManager_->GetEnemies()) {
+					collisionChecker_->Check(enemy, bullet, camera_.get());
+				}
+			}
+
+			// アイテム
+			itemManager_->Update(player_.get());
+
+			// マップ
+			mapTile_->Update(enemyManager_->GetEnemies().size() == 0);
+
+			effectManager_->Update();
+
+			uiDrawer_->Update();
 		}
 
-		// ゲームオーバー
-		if (player_->IsDead() && !isFadeOut_) {
-			isFadeOut_ = true;
-			fadeTimer_ = 0;
-		}
+		if (isFadeIn_) {
+			fadeTimer_++;
+			fade_->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
+			if (fadeTimer_ >= kMaxFadeinTimer_) {
+				isFadeIn_ = false;
+				fadeTimer_ = 0;
+			}
+		} else if (isFadeOut_) {
+			fadeTimer_++;
+			fade_->SetColor({ 1.0f,1.0f,1.0f,(float)fadeTimer_ / (float)kMaxFadeoutTimer_ });
+			if (fadeTimer_ >= kMaxFadeoutTimer_) {
+				isFadeOut_ = false;
 
-		// ゴール判定
-		Vector2 pos = { player_->GetTransform().translate.x,player_->GetTransform().translate.z };
-		if (mapCheck_->IsGoal(pos, player_->GetRadius(), enemyManager_->GetEnemies().size() == 0) && !isFadeOut_) {
-			isFadeOut_ = true;
-			fadeTimer_ = 0;
-			context_->SoundPlay(L"Resources/Sounds/SE/warp.mp3", false);
-		}
+				if (player_->IsDead() || currentFloor_ == 3) {
+					if (isShowResult_) {
+						isScenefinished_ = true;
+					} else {
+						// ゲームオーバーまたはクリア
+						isShowResult_ = true;
 
-		// カメラ追従
-		camera_->transform_.translate = player_->GetTransform().translate + Vector3{ 0,30,-19 };
-		camera_->UpdateCamera(context_, *debugCamera_);
-		debugCamera_->Update();
+						fadeTimer_ = 0;
+						isFadeIn_ = true;
+					}
+				} else {
+					fadeTimer_ = 0;
+					isFadeIn_ = true;
+					// 次のフロア
+					currentFloor_++;
+					Reset();
+				}
+			}
 
-		// 敵
-		enemyManager_->Update(context_, mapCheck_.get(), player_.get(), bulletManager_.get());
-
-		// 弾の処理
-		bulletManager_->Update(mapCheck_.get());
-		for (const auto& bullet : bulletManager_->GetBullets()) {
-
-			// 当たり判定
-			collisionChecker_->Check(player_.get(), bullet, camera_.get());
-
-			for (auto enemy : enemyManager_->GetEnemies()) {
-				collisionChecker_->Check(enemy, bullet, camera_.get());
+		} else {
+			// ポーズ(フェード中不可)
+			if (context_->IsRelease(DIK_ESCAPE)) {
+				isPause_ = true;
 			}
 		}
 
-		// アイテム
-		itemManager_->Update(player_.get());
-
-		// マップ
-		mapTile_->Update(enemyManager_->GetEnemies().size() == 0);
-
-		effectManager_->Update();
-
-		uiDrawer_->Update();
-
 	} else {
+		// リザルト
 		if (resultArrowMove_ < 1.0f) {
 			resultArrowMove_ += 1.0f / 60.0f;
 		}
@@ -192,39 +241,6 @@ void GameScene::Update() {
 			fadeTimer_ = 0;
 		}
 	}
-
-	if (isFadeIn_) {
-		fadeTimer_++;
-		fade_->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
-		if (fadeTimer_ >= kMaxFadeinTimer_) {
-			isFadeIn_ = false;
-			fadeTimer_ = 0;
-		}
-	} else if (isFadeOut_) {
-		fadeTimer_++;
-		fade_->SetColor({ 1.0f,1.0f,1.0f,(float)fadeTimer_ / (float)kMaxFadeoutTimer_ });
-		if (fadeTimer_ >= kMaxFadeoutTimer_) {
-			isFadeOut_ = false;
-
-			if (player_->IsDead() || currentFloor_ == 3) {
-				if (isShowResult_) {
-					isScenefinished_ = true;
-				} else {
-					// ゲームオーバーまたはクリア
-					isShowResult_ = true;
-
-					fadeTimer_ = 0;
-					isFadeIn_ = true;
-				}
-			} else {
-				fadeTimer_ = 0;
-				isFadeIn_ = true;
-				// 次のフロア
-				currentFloor_++;
-				Reset();
-			}
-		}
-	}
 }
 
 void GameScene::Draw() {
@@ -236,8 +252,15 @@ void GameScene::Draw() {
 	bulletManager_->Draw(context_, camera_.get());
 	itemManager_->Draw(camera_.get());
 	effectManager_->Draw(context_, camera_.get());
+
+	if (currentFloor_ == 0) {
+		// チュートリアル表示
+	}
+
+	// ui
 	uiDrawer_->Draw();
 
+	// 結果(プレイ画面の上から)
 	if (isShowResult_) {
 		context_->DrawSprite(resultBG_.get());
 		context_->DrawSprite(resultCursor_.get());
@@ -266,6 +289,23 @@ void GameScene::Reset() {
 	std::string itemPath;
 	std::string enemyPath;
 	switch (currentFloor_) {
+	case 0:
+		// チュートリアルステージ
+		floorType = 0;
+
+		// マップを構築
+		tilePath = "Resources/MapData/Floor" + std::to_string(floorType) + ".csv";
+		mapTile_->LoadCSV(tilePath);
+
+		// プレイヤー位置
+		player_->SetTransform({ { 1,1,1 }, { 0,0,0 }, {3,0,3} });
+
+		// その階の敵とアイテム
+		itemPath = "Resources/MapData/Item" + std::to_string(floorType) + ".csv";
+		itemManager_->LoadCSV(itemPath, mapTile_->GetTileSize());
+		enemyPath = "Resources/MapData/Enemy" + std::to_string(floorType) + ".csv";
+		enemyManager_->LoadCSV(enemyPath, mapTile_->GetTileSize(), context_, weaponManager_.get());
+
 	case 1:
 		floorType = context_->RandomInt(1, 2);
 

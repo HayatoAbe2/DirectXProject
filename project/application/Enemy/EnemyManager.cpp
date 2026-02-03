@@ -16,9 +16,9 @@
 void EnemyManager::Initialize(GameContext* context) {
 }
 
-void EnemyManager::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager) {
+void EnemyManager::Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager, Camera* camera) {
 	for (const auto& enemy : enemies_) {
-		enemy->Update(context, mapCheck, player, bulletManager);
+		enemy->Update(context, mapCheck, player, bulletManager, camera);
 	}
 
 	enemies_.erase(
@@ -41,6 +41,8 @@ void EnemyManager::Draw(GameContext* context, Camera* camera) {
 void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weaponManager, int enemyType){
    auto enemyModel = std::make_unique<Model>();
    enemyModel->SetTranslate(pos);
+   auto enemyShadowModel = std::make_unique<Model>();
+   enemyShadowModel->SetTranslate(pos);
 
    std::unique_ptr<Weapon> weapon = nullptr;
    std::vector<std::unique_ptr<Weapon>> weapons;
@@ -49,6 +51,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
    switch (enemyType) {
    case 1:
        enemyModel = context->LoadModel("Resources/Enemy", "bat.obj");
+       enemyShadowModel = context->LoadModel("Resources/Enemy", "bat.obj");
        weapon = weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall));
        status.hp = 10;
        status.radius = 0.5f;
@@ -59,11 +62,12 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 0;
        status.canFly = true;
 
-       enemies_.push_back(std::make_unique<Bat>(std::move(enemyModel), pos, status, std::move(weapon)));
+       enemies_.push_back(std::make_unique<Bat>(std::move(enemyModel),std::move(enemyShadowModel), pos, status, std::move(weapon)));
        break;
 
    case 2:
        enemyModel = context->LoadModel("Resources/Enemy", "knight.obj");
+       enemyShadowModel = context->LoadModel("Resources/Enemy", "knight.obj");
        weapon = weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle));
        status.hp = 20;
        status.radius = 0.9f;
@@ -74,11 +78,12 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 2;
        status.canFly = false;
 
-       enemies_.push_back(std::make_unique<Knight>(std::move(enemyModel), pos, status, std::move(weapon)));
+       enemies_.push_back(std::make_unique<Knight>(std::move(enemyModel), std::move(enemyShadowModel), pos, status, std::move(weapon)));
        break;
 
    case 3:
        enemyModel = context->LoadModel("Resources/Enemy", "knight2.obj");
+       enemyShadowModel = context->LoadModel("Resources/Enemy", "knight2.obj");
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::AssaultRifle)));
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall)));
@@ -91,11 +96,12 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 30;
        status.canFly = false;
 
-       enemies_.push_back(std::make_unique<HeavyKnight>(std::move(enemyModel), pos, status, std::move(weapons)));
+       enemies_.push_back(std::make_unique<HeavyKnight>(std::move(enemyModel), std::move(enemyShadowModel), pos, status, std::move(weapons)));
        break;
 
    default:
        enemyModel = context->LoadModel("Resources/Enemy", "bat2.obj");
+       enemyShadowModel = context->LoadModel("Resources/Enemy", "bat2.obj");
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::FireBall)));
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::Pistol)));
        weapons.push_back(weaponManager->GetWeapon(int(WeaponManager::WEAPON::Wavegun)));
@@ -108,7 +114,7 @@ void EnemyManager::Spawn(Vector3 pos, GameContext* context, WeaponManager* weapo
        status.stunResist = 30;
        status.canFly = true;
 
-       enemies_.push_back(std::make_unique<RedBat>(std::move(enemyModel), pos, status, std::move(weapons)));
+       enemies_.push_back(std::make_unique<RedBat>(std::move(enemyModel), std::move(enemyShadowModel), pos, status, std::move(weapons)));
        break;
    }
 }

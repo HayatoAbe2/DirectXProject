@@ -103,16 +103,16 @@ bool GameContext::IsClickWheel() {
 	return input_->IsClickWheel();
 }
 
-bool GameContext::IsTriggerLeft() {
-	return input_->IsTriggerLeft();
+bool GameContext::IsTriggerLeftClick() {
+	return input_->IsTriggerLeftClick();
 }
 
-bool GameContext::IsTriggerRight() {
-	return input_->IsTriggerRight();
+bool GameContext::IsTriggerRightClick() {
+	return input_->IsTriggerRightClick();
 }
 
-bool GameContext::IsTriggerWheel() {
-	return input_->IsTriggerWheel();
+bool GameContext::IsTriggerMouseWheel() {
+	return input_->IsTriggerMouseWheel();
 }
 
 Vector3 GameContext::GetMouseMove() {

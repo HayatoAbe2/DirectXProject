@@ -6,5 +6,6 @@
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Lerp.h"
-#include "AABB.h"
+#include "CollisionShape/AABB.h"
+#include "CollisionShape/Ray.h"
 #include "Sphere.h"

@@ -93,7 +93,7 @@
     <ClCompile Include="Engine\Math\Lerp.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Math\AABB.cpp">
+    <ClCompile Include="Engine\Math\CollisionShape\AABB.cpp">
       <Filter>Engine\Math</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\ShaderCompiler.cpp">
@@ -291,6 +291,7 @@
     </ClCompile>
     <ClCompile Include="Application\Effect\SoulEffect.cpp" />
     <ClCompile Include="Application\UIDrawer.cpp" />
+    <ClCompile Include="Engine\Math\CollisionShape\Ray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -364,7 +365,7 @@
     <ClInclude Include="Engine\Math\Lerp.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Math\AABB.h">
+    <ClInclude Include="Engine\Math\CollisionShape\AABB.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\ShaderCompiler.h">
@@ -612,6 +613,7 @@
     </ClInclude>
     <ClInclude Include="Application\Effect\SoulEffect.h" />
     <ClInclude Include="Application\UIDrawer.h" />
+    <ClInclude Include="Engine\Math\CollisionShape\Ray.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\imgui\LICENSE.txt">

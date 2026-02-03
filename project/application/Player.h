@@ -20,7 +20,7 @@ public:
 	/// 初期化
 	/// </summary>
 	/// <param name="playerModel">モデル</param>
-	void Initialize(std::unique_ptr<Model> playerModel, GameContext* context);
+	void Initialize(std::unique_ptr<Model> playerModel, std::unique_ptr<Model> playerShadow, GameContext* context);
 
 	/// <summary>
 	/// 更新
@@ -39,7 +39,7 @@ public:
 	void Hit(float damage, Vector3 from);
 
 	void Move(MapCheck* mapCheck);
-	void Shoot(BulletManager* bulletManager);
+	void Shoot(BulletManager* bulletManager, Camera* camera);
 	void Boost(MapCheck* mapCheck);
 	void Fall();
 
@@ -47,11 +47,13 @@ public:
 	float GetRadius() const { return radius_; }
 	float GetInteractRadius() const { return interactRadius_; }
 	Weapon* GetWeapon() { return weapon_.get(); }
+	Weapon* GetSubWeapon() { return subWeapon_.get(); }
 	float GetHP() { return hp_; }
 	float GetMaxHP() { return maxHp_; }
+	bool IsBoosting() { return isUsingBoost_; }
 
 	void SetTransform(const Transform& transform) { transform_ = transform; }
-	std::unique_ptr<Weapon> DropWeapon() { return std::move(weapon_); };
+	std::unique_ptr<Weapon> DropWeapon() { if (weapon_ && subWeapon_) { return std::move(weapon_); } else { return nullptr; } };
 	void SetWeapon(std::unique_ptr<Weapon> weapon);
 	bool IsDead() { return hp_ <= 0; }
 
@@ -97,6 +99,7 @@ private:
 
 	// モデル
 	std::unique_ptr<Model> model_ = nullptr;
+	std::unique_ptr<Model> shadowModel_ = nullptr;
 	std::unique_ptr<InstancedModel> instancing_ = nullptr;
 	Transform instancingTransforms[4]{};
 
@@ -116,6 +119,7 @@ private:
 
 	// 所持武器
 	std::unique_ptr<Weapon> weapon_ = nullptr;
+	std::unique_ptr<Weapon> subWeapon_ = nullptr;
 
 	// 移動パーティクル
 	std::unique_ptr<ParticleSystem> moveParticle_;

@@ -46,15 +46,15 @@ public:
 	bool IsClickLeft() { return (mouseState_.rgbButtons[0] & 0x80); }
 	bool IsClickRight() { return (mouseState_.rgbButtons[1] & 0x80); }
 	bool IsClickWheel() { return (mouseState_.rgbButtons[2] & 0x80); }
-	bool IsTriggerLeft() {
+	bool IsTriggerLeftClick() {
 		return !(preMouseState_.rgbButtons[0] & 0x80) &&
 			(mouseState_.rgbButtons[0] & 0x80);
 	}
-	bool IsTriggerRight() {
+	bool IsTriggerRightClick() {
 		return !(preMouseState_.rgbButtons[1] & 0x80) &&
 			(mouseState_.rgbButtons[1] & 0x80);
 	}
-	bool IsTriggerWheel() {
+	bool IsTriggerMouseWheel() {
 		return !(preMouseState_.rgbButtons[2] & 0x80) &&
 			(mouseState_.rgbButtons[2] & 0x80);
 	}

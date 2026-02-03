@@ -15,7 +15,7 @@ class WeaponManager;
 class EnemyManager {
 public:
 	void Initialize(GameContext* context);
-	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager);
+	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager, Camera* camera);
 	void Draw(GameContext* context, Camera* camera);
 	void Spawn(Vector3 pos,GameContext* context,WeaponManager* weaponManager, int enemyType);
 	void Reset();

@@ -8,8 +8,8 @@ class BulletManager;
 
 class Shotgun : public Weapon {
 public:
-	Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context);
-	int Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) override;
+	Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, GameContext* context);
+	int Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) override;
 	void Update() override;
 
 private:

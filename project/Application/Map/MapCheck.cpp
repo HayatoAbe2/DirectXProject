@@ -2,6 +2,8 @@
 #include "MapTile.h"
 #include "Player.h"
 #include <algorithm>
+#include "Engine/Math/CollisionShape/AABB.h"
+#include "Engine/Math/CollisionShape/Ray.h"
 
 void MapCheck::Initialize(std::vector<std::vector<MapTile::Tile>> map, float tileSize) {
 	map_ = map;
@@ -241,5 +243,62 @@ bool MapCheck::IsGoal(const Vector2& pos, float radius, bool canGoal) {
 	return false;
 }
 
+bool MapCheck::EnemyCanSeePlayer(const Vector3& enemyPos, const Vector3& playerPos) {
+	Ray ray = { enemyPos, enemyPos - playerPos };
+	ray.diff.y = 0.0001f;
 
+	int mapH = static_cast<int>(map_.size());
+	int mapW = static_cast<int>(map_[0].size());
+	int startY = 0;
+	int endY = mapH - 1;
+	int startX = 0;
+	int endX = mapW - 1;
 
+	for (int y = startY; y <= endY; ++y) {
+		for (int x = startX; x <= endX; ++x) {
+			if (map_[y][x] == MapTile::Tile::Floor) { continue; }
+			if (map_[y][x] == MapTile::Tile::None) { continue; }
+			AABB aabb;
+			aabb.min = { x * tileSize_,0,y * tileSize_ };
+			aabb.max = { (x + 1) * tileSize_,0,(y + 1) * tileSize_ };
+
+			Vector3 tMin =
+			{
+				(aabb.min.x - ray.origin.x) / ray.diff.x,
+				(aabb.min.y - ray.origin.y) / ray.diff.y,
+				(aabb.min.z - ray.origin.z) / ray.diff.z
+			};
+
+			Vector3 tMax =
+			{
+				(aabb.max.x - ray.origin.x) / ray.diff.x,
+				(aabb.max.y - ray.origin.y) / ray.diff.y,
+				(aabb.max.z - ray.origin.z) / ray.diff.z
+			};
+
+			Vector3 tNear =
+			{
+				std::min(tMin.x , tMax.x),
+				std::min(tMin.y , tMax.y),
+				std::min(tMin.z , tMax.z)
+			};
+
+			Vector3 tFar =
+			{
+				std::max(tMin.x , tMax.x),
+				std::max(tMin.y , tMax.y),
+				std::max(tMin.z , tMax.z)
+			};
+
+			float tmin = std::max(std::max(tNear.x, tNear.y), tNear.z);
+			float tmax = std::min(std::min(tFar.x, tFar.y), tFar.z);
+
+			if (tmax >= 0.0f) {
+				if (tmin <= tmax) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}

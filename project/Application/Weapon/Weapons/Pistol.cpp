@@ -4,13 +4,14 @@
 #include "GameContext.h"
 #include "RapidBullet.h"
 
-Pistol::Pistol(const WeaponStatus& status, std::unique_ptr<Model> model, GameContext* context) {
+Pistol::Pistol(const WeaponStatus& status, std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, GameContext* context) {
 	status_ = status;
 	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
+	shadowModel_ = std::move(shadowModel);
 }
 
-int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
 	if (ammoLeft_ == 0) {
 		// 弾切れ
 		return 0;
@@ -28,6 +29,7 @@ int Pistol::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameCo
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		camera->StartShake(0.2f, 2);
 		ammoLeft_--;
 		return status_.shootCoolTime;
 	}

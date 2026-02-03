@@ -36,7 +36,7 @@ void TitleScene::Update() {
 	camera_->UpdateCamera(context_, *debugCamera_);
 	debugCamera_->Update();
 
-	if (context_->IsTriggerLeft() && !isFadeIn_ && !isFadeOut_) {
+	if (context_->IsTriggerLeftClick() && !isFadeIn_ && !isFadeOut_) {
 		isFadeOut_ = true;
 		fadeTimer_ = 0;
 		context_->SoundPlay(L"Resources/Sounds/SE/press.mp3", false);

@@ -19,6 +19,7 @@ public:
 		Shotgun,
 		FireBall,
 		Wavegun,
+		//SMG,
 	};
 private:
 	GameContext* context_ = nullptr;

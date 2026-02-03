@@ -15,7 +15,11 @@ void WeaponManager::Initialize(GameContext* context) {
 
 std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 	auto model = std::make_unique<Model>();
-	WeaponStatus status;
+	auto shadowModel = std::make_unique<Model>();
+	/*auto matData = shadowModel->GetMaterial(0)->GetData();
+	matData.color = { 0,0,0,1 };
+	shadowModel->GetMaterial(0)->SetData(matData);
+	*/WeaponStatus status;
 
 	// エンチャント付与
 	status.rarity = rarity;
@@ -36,7 +40,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 10;
 		status.reloadTime = 30;
 		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
-		return std::make_unique<Pistol>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "Pistol.obj");
+		return std::make_unique<Pistol>(status, std::move(model), std::move(shadowModel),context_);
 		break;
 
 	case static_cast<int>(WEAPON::AssaultRifle):
@@ -47,15 +52,16 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.shootCoolTime = 6;
 		status.bulletLifeTime = 60;
 		status.knockback = 0.1f;
-		status.magazineSize = 30;
+		status.magazineSize = 16;
 		status.reloadTime = 75;
 		model = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
-		return std::make_unique<AssaultRifle>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
+		return std::make_unique<AssaultRifle>(status, std::move(model), std::move(shadowModel), context_);
 		break;
 
 	case static_cast<int>(WEAPON::Shotgun):
 		status.damage = 3.0f;
-		status.weight = 0.3f;
+		status.weight = 0.5f;
 		status.bulletSize = 0.4f;
 		status.bulletSpeed = 0.9f;
 		status.shootCoolTime = 40;
@@ -64,7 +70,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 7;
 		status.reloadTime = 90;
 		model = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
-		return std::make_unique<Shotgun>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
+		return std::make_unique<Shotgun>(status, std::move(model), std::move(shadowModel), context_);
 		break;
 
 	case static_cast<int>(WEAPON::FireBall):
@@ -78,7 +85,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = -1;
 		status.reloadTime = 0;
 		model = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
-		return std::make_unique<FireBall>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
+		return std::make_unique<FireBall>(status, std::move(model), std::move(shadowModel), context_);
 		break;
 
 	case static_cast<int>(WEAPON::Wavegun):
@@ -92,7 +100,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 9;
 		status.reloadTime = 50;
 		model = context_->LoadModel("Resources/Weapons", "Wavegun.obj");
-		return std::make_unique<Wavegun>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "Wavegun.obj");
+		return std::make_unique<Wavegun>(status, std::move(model), std::move(shadowModel), context_);
 		break;
 
 	default:
@@ -104,7 +113,8 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.bulletLifeTime = 60;
 		status.knockback = 0.3f;
 		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
-		return std::make_unique<Pistol>(status, std::move(model), context_);
+		shadowModel = context_->LoadModel("Resources/Weapons", "Pistol.obj");
+		return std::make_unique<Pistol>(status, std::move(model), std::move(shadowModel), context_);
 		break;
 	}
 }

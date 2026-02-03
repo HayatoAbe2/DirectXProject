@@ -14,6 +14,7 @@ public:
 	bool IsHitWall(const Vector2& pos, float radius);
 	bool IsFall(const Vector2& pos);
 	bool IsGoal(const Vector2& pos, float radius, bool canGoal);
+	bool EnemyCanSeePlayer(const Vector3& enemyPos, const Vector3& playerPos);
 
 private:	
 	std::vector<std::vector<MapTile::Tile>> map_;

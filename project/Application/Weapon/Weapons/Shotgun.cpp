@@ -5,13 +5,14 @@
 #include "SpreadBullet.h"
 #include "numbers"
 
-Shotgun::Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model,GameContext* context) {
+Shotgun::Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, GameContext* context) {
 	status_ = status;
 	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
+	shadowModel_ = std::move(shadowModel);
 }
 
-int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, bool isEnemyBullet) {
+int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
 	if (ammoLeft_ == 0) {
 		// 弾切れ
 		return 0;
@@ -32,6 +33,7 @@ int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameC
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
+		camera->StartShake(1.5f, 5);
 		ammoLeft_--;
 		return status_.shootCoolTime;
 	}

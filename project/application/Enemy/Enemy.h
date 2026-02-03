@@ -15,16 +15,16 @@ class Player;
 class Enemy {
 public:
 	virtual ~Enemy() = default;
-	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::unique_ptr<Weapon> rWeapon);
+	Enemy(std::unique_ptr<Model> model, std::unique_ptr<Model> shadow, Vector3 pos, EnemyStatus status,std::unique_ptr<Weapon> rWeapon);
 	// ボス敵
-	Enemy(std::unique_ptr<Model> model,Vector3 pos,EnemyStatus status,std::vector<std::unique_ptr<Weapon>> rWeapons);
+	Enemy(std::unique_ptr<Model> model, std::unique_ptr<Model> shadow, Vector3 pos, EnemyStatus status,std::vector<std::unique_ptr<Weapon>> rWeapons);
 
 
 	/// <summary>
 	/// 更新
 	/// </summary>
 	/// <param name="context">コンテキスト</param>
-	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager);
+	void Update(GameContext* context, MapCheck* mapCheck, Player* player, BulletManager* bulletManager, Camera* camera);
 
 	// Update内関数
 	void Wait(GameContext* context);
@@ -42,7 +42,7 @@ public:
 	void Hit(float damage,Vector3 from, const float knockback);
 
 	// 敵ごとの関数
-	virtual void Attack(Weapon* weapon, BulletManager* bulletManager, GameContext* context) = 0;
+	virtual void Attack(Weapon* weapon, BulletManager* bulletManager, GameContext* context, Camera* camera) = 0;
 
 	Transform GetTransform() const { return model_->GetTransform(); }
 	float GetRadius() const { return status_.radius; }
@@ -61,6 +61,7 @@ protected:
 
 	// モデル
 	std::unique_ptr<Model> model_ = nullptr;
+	std::unique_ptr<Model> shadowModel_ = nullptr;
 
 	// 武器
 	std::unique_ptr<Weapon> weapon_ = nullptr;
@@ -108,6 +109,10 @@ protected:
 	int attackMotionStart_ = 30;
 	float EaseIn(float start, float end, float t);
 
+	// プレイヤーに近づく最小距離
 	float minDistance_ = 2.5f;
+
+	// 自動発見
+	bool targetAutoFound_ = false;
 };
 

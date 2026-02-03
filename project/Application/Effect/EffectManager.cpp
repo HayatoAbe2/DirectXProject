@@ -1,4 +1,4 @@
-#include "EffectManager.h"
+ #include "EffectManager.h"
 #include "GameContext.h"
 #include "Camera.h"
 #include "Sprite.h"
