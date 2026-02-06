@@ -15,6 +15,7 @@ void LightManager::Initialize(ResourceManager* rm) {
 	for (int i = 0; i < maxSpotLights; i++) {
 		isSpotFree[i] = true;
 	}
+	directionalLightData_.color = { 0.7f, 0.9f,1.0f,1.0f };
 }
 
 void LightManager::Update() {

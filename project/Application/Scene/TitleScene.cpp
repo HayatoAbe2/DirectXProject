@@ -21,7 +21,7 @@ void TitleScene::Initialize() {
 	fade_->SetColor({ 1.0f,1.0f,1.0f,0.0f });
 
 	control_ = context_->LoadSprite("Resources/Control/gamestart.png");
-	control_->SetSize({ 270,39 });
+	control_->SetSize({ 270,50 });
 	control_->SetPosition({ 640 - 135,710 - 200 });
 
 	logo_ = context_->LoadSprite("Resources/Control/title.png");

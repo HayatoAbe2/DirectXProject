@@ -33,9 +33,24 @@ private:
 	float whiteGaugeSpeed_ = 0.5f;
 
 	// 装備
-	std::unique_ptr<Sprite> equipment_ = nullptr;
-	std::unique_ptr<Sprite> equipment2_ = nullptr;
-	std::vector<std::unique_ptr<Sprite>> enchants_[3]{};
+	std::unique_ptr<Sprite> equipAssaultRifle_ = nullptr;
+	std::unique_ptr<Sprite> equipPistol_ = nullptr;
+	std::unique_ptr<Sprite> equipShotgun_ = nullptr;
+	std::unique_ptr<Sprite> equipFireBall_ = nullptr;
+	std::unique_ptr<Sprite> equipWavegun_ = nullptr;
+
+	std::unique_ptr<Sprite> enchantDamage_[3]{};
+	std::unique_ptr<Sprite> enchantBulletSize_[3]{};
+	std::unique_ptr<Sprite> enchantBulletSpeed_[3]{};
+	std::unique_ptr<Sprite> enchantFireRate_[3]{};
+	std::unique_ptr<Sprite> enchantKnockback_[3]{};
+	std::unique_ptr<Sprite> enchantExtraBullet_[3]{};
+	std::unique_ptr<Sprite> enchantMoveSpeed_[3]{};
+	std::unique_ptr<Sprite> enchantResist_[3]{};
+
+	Sprite* equipment_ = nullptr;
+	Sprite* equipment2_ = nullptr;
+	Sprite* enchants_[3]{};
 	// 弾数(〇とかで表示,8個*2色目とか)
 	std::unique_ptr<Sprite> ammo_ = nullptr;
 	std::unique_ptr<Sprite> magazine_ = nullptr;

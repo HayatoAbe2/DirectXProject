@@ -31,8 +31,8 @@ void GameScene::Initialize() {
 	playerModel_->GetMaterial(0)->SetData(data);
 
 	// マップ
-	wall_ = context_->LoadInstancedModel("Resources/Block", "block.obj", 500);
-	wallShadow_ = context_->LoadInstancedModel("Resources/Block", "block.obj", 500);
+	wall_ = context_->LoadInstancedModel("Resources/Floor", "floor.obj", 500);
+	wallShadow_ = context_->LoadInstancedModel("Resources/Floor", "floor.obj", 500);
 	floor_ = context_->LoadInstancedModel("Resources/Floor", "floor.obj", 500);
 	goal_ = context_->LoadModel("Resources/Tiles", "sphere.obj");
 
@@ -203,9 +203,9 @@ void GameScene::Update() {
 
 		} else {
 			// ポーズ(フェード中不可)
-			if (context_->IsRelease(DIK_ESCAPE)) {
+		/*	if (context_->IsRelease(DIK_ESCAPE)) {
 				isPause_ = true;
-			}
+			}*/
 		}
 
 	} else {
@@ -239,6 +239,40 @@ void GameScene::Update() {
 		if (context_->IsTrigger(DIK_SPACE)) {
 			isFadeOut_ = true;
 			fadeTimer_ = 0;
+		}
+
+		if (isFadeIn_) {
+			fadeTimer_++;
+			fade_->SetColor({ 1.0f,1.0f,1.0f,1.0f - (float)fadeTimer_ / (float)kMaxFadeinTimer_ });
+			if (fadeTimer_ >= kMaxFadeinTimer_) {
+				isFadeIn_ = false;
+				fadeTimer_ = 0;
+			}
+		} else if (isFadeOut_) {
+			fadeTimer_++;
+			fade_->SetColor({ 1.0f,1.0f,1.0f,(float)fadeTimer_ / (float)kMaxFadeoutTimer_ });
+			if (fadeTimer_ >= kMaxFadeoutTimer_) {
+				isFadeOut_ = false;
+
+				if (player_->IsDead() || currentFloor_ == 3) {
+					if (isShowResult_) {
+						isScenefinished_ = true;
+					} else {
+						// ゲームオーバーまたはクリア
+						isShowResult_ = true;
+
+						fadeTimer_ = 0;
+						isFadeIn_ = true;
+					}
+				} else {
+					fadeTimer_ = 0;
+					isFadeIn_ = true;
+					// 次のフロア
+					currentFloor_++;
+					Reset();
+				}
+			}
+
 		}
 	}
 }

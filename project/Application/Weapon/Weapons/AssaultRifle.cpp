@@ -12,10 +12,6 @@ AssaultRifle::AssaultRifle(const WeaponStatus& status, std::unique_ptr<Model> mo
 }
 
 int AssaultRifle::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
-	if (ammoLeft_ == 0) {
-		// 弾切れ
-		return 0;
-	}
 
 	auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 	bullet->SetTranslate(pos);

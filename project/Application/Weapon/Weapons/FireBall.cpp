@@ -8,7 +8,7 @@ FireBall::FireBall(const WeaponStatus& status, std::unique_ptr<Model> model, std
 	status_ = status;
 	ammoLeft_ = status.magazineSize;
 	model_ = std::move(model);
-	shadowModel_ = std::move(shadowModel_);
+	shadowModel_ = std::move(shadowModel);
 }
 
 int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
@@ -24,8 +24,6 @@ int FireBall::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, Game
 	if (isEnemyBullet) {
 		return status_.shootCoolTime * 2;
 	} else {
-		// 弾は減らない
-
 		return status_.shootCoolTime;
 	}
 }

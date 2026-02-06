@@ -16,8 +16,6 @@
 #include <iostream>
 #include <format>
 
-
-
 ResourceManager::~ResourceManager() {
 	// キャッシュしているリソースを解放
 	texturesCache_.clear();

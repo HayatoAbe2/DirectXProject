@@ -110,7 +110,7 @@ protected:
 	float EaseIn(float start, float end, float t);
 
 	// プレイヤーに近づく最小距離
-	float minDistance_ = 2.5f;
+	float minDistance_ = 10.0f;
 
 	// 自動発見
 	bool targetAutoFound_ = false;

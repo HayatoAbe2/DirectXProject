@@ -12,10 +12,8 @@ SceneManager::SceneManager(GameContext* context) {
 }
 
 void SceneManager::Initialize() {
-	//currentScene_ = std::make_unique<TitleScene>();
-	//currentSceneType_ = Scene::kTitle;
-	currentScene_ = std::make_unique<GameScene>();
-	currentSceneType_ = Scene::kGame;
+	currentScene_ = std::make_unique<TitleScene>();
+	currentSceneType_ = Scene::kTitle;
 
 	currentScene_->SetGameContext(gameContext_); // 初期化より前
 	currentScene_->Initialize();

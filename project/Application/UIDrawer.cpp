@@ -22,17 +22,35 @@ void UIDrawer::Initialize(GameContext* context, Player* player) {
 	lifeBack_->SetPosition({ 10,10 });
 	lifeBack_->SetColor({ 0.2f,0.2f,0.2f,1 });
 
-	equipment_ = context->LoadSprite("Resources/Control/equipmentPistol.png");
-	equipment_->SetSize({ 120,120 });
-	equipment_->SetPosition({ 640 - 60,710 - 160 });
-	equipment2_ = context->LoadSprite("Resources/Control/equipmentPistol.png");
-	equipment2_->SetSize({ 80,80 });
-	equipment2_->SetPosition({ 640 - 200,710 - 100 });
+	equipAssaultRifle_ = context_->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
+	equipPistol_ = context_->LoadSprite("Resources/Control/equipmentPistol.png");
+	equipShotgun_ = context_->LoadSprite("Resources/Control/equipmentShotgun.png");
+	equipFireBall_ = context_->LoadSprite("Resources/Control/equipmentSpellbook.png");
+	equipWavegun_ = context_->LoadSprite("Resources/Control/equipmentWavegun.png");
 
 	for (int i = 0; i < 3; ++i) {
-		enchants_->push_back(context->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));
-		enchants_->at(i)->SetSize({ 240,40 });
-		enchants_->at(i)->SetPosition({ 640 + 80,float(710 - 180 + i * 40) });
+		enchantDamage_[i] = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));
+		enchantBulletSize_[i] = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSize.png"));
+		enchantBulletSpeed_[i] = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSpeed.png"));
+		enchantBulletSpeed_[i] = (context_->LoadSprite("Resources/UI/Enchants/increaseFireRate.png"));
+		enchantFireRate_[i] = (context_->LoadSprite("Resources/UI/Enchants/increaseKnockback.png"));
+		enchantKnockback_[i] = (context_->LoadSprite("Resources/UI/Enchants/extraBullet.png"));
+		enchantExtraBullet_[i] = (context_->LoadSprite("Resources/UI/Enchants/IncreaseMovespeed.png"));
+		enchantMoveSpeed_[i] = (context_->LoadSprite("Resources/UI/Enchants/damageResist.png"));
+		enchantResist_[i] = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));// 未使用
+	}
+
+	equipment_ = equipPistol_.get();
+	equipment_->SetSize({ 120,120 });
+	equipment_->SetPosition({ 640 - 60,710 - 160 });
+	/*equipment2_ = context->LoadSprite("Resources/Control/equipmentPistol.png");
+	equipment2_->SetSize({ 80,80 });
+	equipment2_->SetPosition({ 640 - 200,710 - 100 });*/
+
+	for (int i = 0; i < 3; ++i) {
+		enchants_[i] = enchantDamage_[i].get();
+		enchants_[i]->SetSize({ 240,40 });
+		enchants_[i]->SetPosition({ 640 + 80,float(710 - 180 + i * 40) });
 	}
 
 #pragma endregion
@@ -55,6 +73,9 @@ void UIDrawer::Initialize(GameContext* context, Player* player) {
 }
 
 void UIDrawer::Update() {
+
+	if (context_->IsRelease(DIK_F)) { UpdatePlayerUI(); }
+
 	// hp
 	float hpRate = player_->GetHP() / player_->GetMaxHP();
 	life_->SetTextureRect(0, 0, hpRate * 290, 68);
@@ -84,22 +105,18 @@ void UIDrawer::Draw() {
 	auto weapon = player_->GetWeapon();
 	if (weapon != nullptr) {
 		context_->DrawSprite(control_.get());
-		if (weapon->IsReloading()) {
-			context_->DrawSprite(reloadBarBack_.get());
-			context_->DrawSprite(reloadBar_.get());
-		}
 
 		// エンチャント
 		for (int i = 0; i < static_cast<int>(weapon->GetStatus().rarity); ++i) {
-			context_->DrawSprite(enchants_->at(i).get());
+			context_->DrawSprite(enchants_[i]);
 		}
 
-		context_->DrawSprite(equipment_.get());
+		context_->DrawSprite(equipment_);
 	}
 
 	auto subWeapon = player_->GetSubWeapon();
 	if (subWeapon != nullptr) {
-		context_->DrawSprite(equipment2_.get());
+		context_->DrawSprite(equipment2_);
 	}
 
 	// hp
@@ -131,27 +148,15 @@ void UIDrawer::UpdatePlayerUI() {
 
 		// 武器アイコン
 		if (dynamic_cast<AssaultRifle*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
+			equipment_ = equipAssaultRifle_.get();
 		} else if (dynamic_cast<Pistol*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentPistol.png");
+			equipment_ = equipPistol_.get();
 		} else if (dynamic_cast<Shotgun*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentShotgun.png");
+			equipment_ = equipShotgun_.get();
 		} else if (dynamic_cast<FireBall*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentSpellbook.png");
+			equipment_ = equipFireBall_.get();
 		} else if (dynamic_cast<Wavegun*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentWavegun.png");
-		}
-
-		if (dynamic_cast<AssaultRifle*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentAssaultRifle.png");
-		} else if (dynamic_cast<Pistol*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentPistol.png");
-		} else if (dynamic_cast<Shotgun*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentShotgun.png");
-		} else if (dynamic_cast<FireBall*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentSpellbook.png");
-		} else if (dynamic_cast<Wavegun*>(weapon)) {
-			equipment_ = context_->LoadSprite("Resources/Control/equipmentWavegun.png");
+			equipment_ = equipWavegun_.get();
 		}
 		equipment_->SetSize({ 120, 120 });
 		equipment_->SetPosition({ 640 - 60, 710 - 160 });
@@ -161,35 +166,35 @@ void UIDrawer::UpdatePlayerUI() {
 			auto enchant = weapon->GetStatus().enchants[i];
 			switch (enchant) {
 			case static_cast<int>(Enchants::increaseDamage):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));
+				enchants_[i] = enchantDamage_[i].get();
 				break;
 			case static_cast<int>(Enchants::bigBullet):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSize.png"));
+				enchants_[i] = enchantBulletSize_[i].get();
 				break;
 			case static_cast<int>(Enchants::fastBullet):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseBulletSpeed.png"));
+				enchants_[i] = enchantBulletSpeed_[i].get();
 				break;
 			case static_cast<int>(Enchants::shortCooldown):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseFireRate.png"));
+				enchants_[i] = enchantFireRate_[i].get();
 				break;
 			case static_cast<int>(Enchants::hardKnockback):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/increaseKnockback.png"));
+				enchants_[i] = enchantKnockback_[i].get();
 				break;
 			case static_cast<int>(Enchants::extraBullet):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/extraBullet.png"));
+				enchants_[i] = enchantExtraBullet_[i].get();
 				break;
 			case static_cast<int>(Enchants::moveSpeed):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/IncreaseMovespeed.png"));
+				enchants_[i] = enchantMoveSpeed_[i].get();
 				break;
 			case static_cast<int>(Enchants::resist):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageResist.png"));
+				enchants_[i] = enchantResist_[i].get();
 				break;
 			case static_cast<int>(Enchants::avoid):
-				enchants_->at(i) = (context_->LoadSprite("Resources/UI/Enchants/damageIncrease.png"));// 未使用
+				enchants_[i] = enchantDamage_[i].get();
 				break;
 			}
-			enchants_->at(i)->SetSize({ 240,40 });
-			enchants_->at(i)->SetPosition({ 640 + 80,float(710 - 180 + i * 40) });
+			enchants_[i]->SetSize({240,40});
+			enchants_[i]->SetPosition({640 + 80,float(710 - 180 + i * 40)});
 		}
 
 		// 再装填ゲージ
@@ -198,52 +203,52 @@ void UIDrawer::UpdatePlayerUI() {
 
 		// 二個目
 
-		if (player_->GetSubWeapon() != nullptr) {
-			auto subWeapon = player_->GetSubWeapon();
-			// 所持武器レア度
-			switch (subWeapon->GetStatus().rarity) {
-			case static_cast<int>(Rarity::Common):
-				equipment2_->SetColor({ 0.5f,0.5f,0.5f,1.0f });
-				break;
-			case static_cast<int>(Rarity::Rare):
-				equipment2_->SetColor({ 0.1f,0.1f,0.7f,1.0f });
-				break;
-			case static_cast<int>(Rarity::Epic):
-				equipment2_->SetColor({ 0.8f,0.1f,0.8f,1.0f });
-				break;
-			case static_cast<int>(Rarity::Legendary):
-				equipment2_->SetColor({ 1.0f,0.8f,0.0f,1.0f });
-				break;
-			}
+		//if (player_->GetSubWeapon() != nullptr) {
+		//	auto subWeapon = player_->GetSubWeapon();
+		//	// 所持武器レア度
+		//	switch (subWeapon->GetStatus().rarity) {
+		//	case static_cast<int>(Rarity::Common):
+		//		equipment2_->SetColor({ 0.5f,0.5f,0.5f,1.0f });
+		//		break;
+		//	case static_cast<int>(Rarity::Rare):
+		//		equipment2_->SetColor({ 0.1f,0.1f,0.7f,1.0f });
+		//		break;
+		//	case static_cast<int>(Rarity::Epic):
+		//		equipment2_->SetColor({ 0.8f,0.1f,0.8f,1.0f });
+		//		break;
+		//	case static_cast<int>(Rarity::Legendary):
+		//		equipment2_->SetColor({ 1.0f,0.8f,0.0f,1.0f });
+		//		break;
+		//	}
 
-			// 武器アイコン
-			if (dynamic_cast<AssaultRifle*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2AssaultRifle.png");
-			} else if (dynamic_cast<Pistol*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Pistol.png");
-			} else if (dynamic_cast<Shotgun*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Shotgun.png");
-			} else if (dynamic_cast<FireBall*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Spellbook.png");
-			} else if (dynamic_cast<Wavegun*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Wavegun.png");
-			}
+		//	// 武器アイコン
+		//	if (dynamic_cast<AssaultRifle*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2AssaultRifle.png");
+		//	} else if (dynamic_cast<Pistol*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Pistol.png");
+		//	} else if (dynamic_cast<Shotgun*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Shotgun.png");
+		//	} else if (dynamic_cast<FireBall*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Spellbook.png");
+		//	} else if (dynamic_cast<Wavegun*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Wavegun.png");
+		//	}
 
-			if (dynamic_cast<AssaultRifle*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2AssaultRifle.png");
-			} else if (dynamic_cast<Pistol*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Pistol.png");
-			} else if (dynamic_cast<Shotgun*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Shotgun.png");
-			} else if (dynamic_cast<FireBall*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Spellbook.png");
-			} else if (dynamic_cast<Wavegun*>(subWeapon)) {
-				equipment2_ = context_->LoadSprite("Resources/Control/equipment2Wavegun.png");
-			}
+		//	if (dynamic_cast<AssaultRifle*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2AssaultRifle.png");
+		//	} else if (dynamic_cast<Pistol*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Pistol.png");
+		//	} else if (dynamic_cast<Shotgun*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Shotgun.png");
+		//	} else if (dynamic_cast<FireBall*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Spellbook.png");
+		//	} else if (dynamic_cast<Wavegun*>(subWeapon)) {
+		//		equipment2_ = context_->LoadSprite("Resources/Control/equipment2Wavegun.png");
+		//	}
 
-			equipment2_->SetSize({ 120, 120 });
-			equipment2_->SetPosition({ 640 - 60, 710 - 160 });
-		}
+		//	equipment2_->SetSize({ 120, 120 });
+		//	equipment2_->SetPosition({ 640 - 60, 710 - 160 });
+		//}
 	}
 }
 

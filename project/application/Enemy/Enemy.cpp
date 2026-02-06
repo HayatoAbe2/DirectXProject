@@ -25,6 +25,10 @@ Enemy::Enemy(std::unique_ptr<Model> model, std::unique_ptr<Model> shadowModel, V
 	model_ = std::move(model);
 	model_->SetTranslate(pos);
 	status_ = status;
+	shadowModel_ = std::move(shadowModel);
+	auto matData = shadowModel_->GetMaterial(0)->GetData();
+	matData.color = { 0,0,0,1 };
+	shadowModel_->GetMaterial(0)->SetData(matData);
 
 	bossWeapons_ = std::move(rWeapons);
 	weapon_ = std::move(bossWeapons_[0]);
@@ -38,6 +42,7 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 				auto data = model_->GetMaterial(0)->GetData();
 				data.color = { 1.0f,1.0f,1.0f,1.0f };
 				model_->GetMaterial(0)->SetData(data);
+				model_->GetMaterial(1)->SetData(data);
 			}
 		}
 	}
@@ -47,18 +52,24 @@ void Enemy::Update(GameContext* context, MapCheck* mapCheck, Player* player, Bul
 		if (stunTimer_ <= 0) {
 			// 移動
 			if (target_) { // 発見中
-				float length = Length(target_->GetTransform().translate - model_->GetTransform().translate);
-
-				if (length > minDistance_) {
-					// プレイヤー方向に移動
-					Vector3 targetDir = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
-					velocity_ = Vector3{ targetDir.x,0,targetDir.z } * status_.moveSpeed;
-				}
 
 				if (rotateTimer_ >= rotateTime_) {
 					// 方向転換の間隔
 					rotateTimer_ = 0;
 					rotateTime_ = context->RandomInt(minRotateTimer_, maxRotateTimer_);
+
+					float length = Length(target_->GetTransform().translate - model_->GetTransform().translate);
+
+					if (length > minDistance_) {
+						// プレイヤー方向に移動
+						Vector3 targetDir = Normalize(target_->GetTransform().translate - model_->GetTransform().translate);
+						velocity_ = Vector3{ targetDir.x,0,targetDir.z } *status_.moveSpeed;
+					} else {
+
+						Vector2 direction = Normalize(Vector2{ context->RandomFloat(-1,1),context->RandomFloat(-1,1) });
+						velocity_.x = direction.x * status_.moveSpeed;
+						velocity_.z = direction.y * status_.moveSpeed;
+					}
 				}
 
 			} else {
@@ -189,12 +200,13 @@ void Enemy::Fall() {
 
 void Enemy::Draw(GameContext* context, Camera* camera) {
 	// 影描画
-	Transform shadowTransform = model_->GetTransform();
-	shadowTransform.scale.y = 0.0f;
-	shadowTransform.translate.y = 0.01f;
-	shadowModel_->SetTransform(shadowTransform);
-	context->DrawModel(shadowModel_.get(), camera);
-
+	if (!isFall_) {
+		Transform shadowTransform = model_->GetTransform();
+		shadowTransform.scale.y = 0.0f;
+		shadowTransform.translate.y = 0.01f;
+		shadowModel_->SetTransform(shadowTransform);
+		context->DrawModel(shadowModel_.get(), camera);
+	}
 	context->DrawModel(model_.get(), camera);
 }
 
@@ -220,6 +232,7 @@ void Enemy::Hit(float damage, Vector3 from, const float knockback) {
 	auto data = model_->GetMaterial(0)->GetData();
 	data.color = { 1.0f,0.2f,0.2f,1.0f };
 	model_->GetMaterial(0)->SetData(data);
+	model_->GetMaterial(1)->SetData(data);
 	hitColorTime_ = 3;
 }
 

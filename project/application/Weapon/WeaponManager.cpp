@@ -15,6 +15,7 @@ void WeaponManager::Initialize(GameContext* context) {
 
 std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 	auto model = std::make_unique<Model>();
+
 	auto shadowModel = std::make_unique<Model>();
 	/*auto matData = shadowModel->GetMaterial(0)->GetData();
 	matData.color = { 0,0,0,1 };
@@ -28,6 +29,7 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 	}
 
 	if (index == -1) { index = context_->RandomInt(0, int(WEAPON::Wavegun)); }
+	MaterialData matData = {};
 	switch (index) {
 	case static_cast<int>(WEAPON::Pistol):
 		status.damage = 3.0f;
@@ -40,6 +42,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 10;
 		status.reloadTime = 30;
 		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "Pistol.obj");
 		return std::make_unique<Pistol>(status, std::move(model), std::move(shadowModel),context_);
 		break;
@@ -55,6 +61,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 16;
 		status.reloadTime = 75;
 		model = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "AssaultRifle.obj");
 		return std::make_unique<AssaultRifle>(status, std::move(model), std::move(shadowModel), context_);
 		break;
@@ -70,6 +80,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 7;
 		status.reloadTime = 90;
 		model = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "Shotgun.obj");
 		return std::make_unique<Shotgun>(status, std::move(model), std::move(shadowModel), context_);
 		break;
@@ -85,6 +99,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = -1;
 		status.reloadTime = 0;
 		model = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "Spellbook.obj");
 		return std::make_unique<FireBall>(status, std::move(model), std::move(shadowModel), context_);
 		break;
@@ -100,6 +118,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.magazineSize = 9;
 		status.reloadTime = 50;
 		model = context_->LoadModel("Resources/Weapons", "Wavegun.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "Wavegun.obj");
 		return std::make_unique<Wavegun>(status, std::move(model), std::move(shadowModel), context_);
 		break;
@@ -113,6 +135,10 @@ std::unique_ptr<Weapon> WeaponManager::GetWeapon(int index, Rarity rarity) {
 		status.bulletLifeTime = 60;
 		status.knockback = 0.3f;
 		model = context_->LoadModel("Resources/Weapons", "Pistol.obj");
+		matData = model->GetMaterial(0)->GetData();
+		matData.color = { 0.2f,0.2f,0.2f,1 };
+		model->GetMaterial(0)->SetData(matData);
+		model->GetMaterial(1)->SetData(matData);
 		shadowModel = context_->LoadModel("Resources/Weapons", "Pistol.obj");
 		return std::make_unique<Pistol>(status, std::move(model), std::move(shadowModel), context_);
 		break;

@@ -53,7 +53,7 @@ public:
 	bool IsBoosting() { return isUsingBoost_; }
 
 	void SetTransform(const Transform& transform) { transform_ = transform; }
-	std::unique_ptr<Weapon> DropWeapon() { if (weapon_ && subWeapon_) { return std::move(weapon_); } else { return nullptr; } };
+	std::unique_ptr<Weapon> DropWeapon() { if (weapon_) { return std::move(weapon_); } else { return nullptr; } };
 	void SetWeapon(std::unique_ptr<Weapon> weapon);
 	bool IsDead() { return hp_ <= 0; }
 

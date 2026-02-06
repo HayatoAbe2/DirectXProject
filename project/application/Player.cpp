@@ -29,8 +29,11 @@ Player::~Player() {
 void Player::Initialize(std::unique_ptr<Model> playerModel, std::unique_ptr<Model> playerShadow, GameContext* context) {
 	context_ = context;
 	model_ = std::move(playerModel);
+	auto matData = model_->GetMaterial(0)->GetData();
+	matData.color = { 0.5f,0.5f,1,1 };
+	model_->GetMaterial(0)->SetData(matData);
 	shadowModel_ = std::move(playerShadow);
-	auto matData = shadowModel_->GetMaterial(0)->GetData();
+	matData = shadowModel_->GetMaterial(0)->GetData();
 	matData.color = { 0,0,0,1 };
 	shadowModel_->GetMaterial(0)->SetData(matData);
 	transform_.translate.x = 1;
@@ -186,11 +189,14 @@ void Player::Draw(Camera* camera) {
 	}
 
 	// 影描画
-	Transform shadowTransform = transform_;
-	shadowTransform.scale.y = 0.0f;
-	shadowTransform.translate.y = 0.01f;
-	shadowModel_->SetTransform(shadowTransform);
-	context_->DrawModel(shadowModel_.get(), camera);
+	Transform shadowTransform;
+	if (!isFall_) {
+		shadowTransform = transform_;
+		shadowTransform.scale.y = 0.0f;
+		shadowTransform.translate.y = 0.01f;
+		shadowModel_->SetTransform(shadowTransform);
+		context_->DrawModel(shadowModel_.get(), camera);
+	}
 
 	model_->SetTransform(transform_);
 	context_->DrawModel(model_.get(), camera);
@@ -430,10 +436,10 @@ void Player::Fall() {
 }
 
 void Player::SetWeapon(std::unique_ptr<Weapon> weapon) { 
-	if(weapon_ && subWeapon_ == nullptr){
+	/*if(weapon_ && subWeapon_ == nullptr){
 		subWeapon_ = std::move(weapon);
 		return;
-	}
+	}*/
 
 	weapon_ = std::move(weapon); 
 }

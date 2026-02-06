@@ -19,6 +19,15 @@ void MapTile::Initialize(std::unique_ptr<InstancedModel> wall, std::unique_ptr<I
 	goal_ = std::move(goal);
 	context_ = context;
 
+	auto matData = wall_->GetMaterial(0)->GetData();
+	matData.color = { 0.3f,0.3f,0.3f,1 };
+	wall_->GetMaterial(0)->SetData(matData);
+
+	matData = floor_->GetMaterial(0)->GetData();
+	matData.color = { 0.5f,0.5f,0.5f,1 };
+	wall_->GetMaterial(0)->SetData(matData);
+
+
 	particle_ = std::make_unique<ParticleSystem>();
 	particle_->Initialize(context->LoadInstancedModel("Resources/Particle/Goal", "goalEffect.obj", particleNum_));
 	particle_->SetLifeTime(40);

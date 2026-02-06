@@ -13,11 +13,6 @@ Shotgun::Shotgun(const WeaponStatus& status, std::unique_ptr<Model> model, std::
 }
 
 int Shotgun::Shoot(Vector3 pos, Vector3 dir, BulletManager* bulletManager, GameContext* context, Camera* camera, bool isEnemyBullet) {
-	if (ammoLeft_ == 0) {
-		// 弾切れ
-		return 0;
-	}
-
 	for (int i = -2; i <= 2; ++i) {
 		auto bullet = context->LoadModel("Resources/Bullets", "gunBullet.obj");
 		bullet->SetTranslate(pos);
