@@ -1,13 +1,13 @@
 #pragma once
+#include "Graphics/GPUData/LightsForGPU.h"
 #include <wrl.h>
 #include <d3d12.h>
-#include "Lights/LightsForGPU.h"
-#include "vector"
+#include <vector>
 
-class ResourceManager;
+class BufferManager;
 class LightManager {
 public:
-	void Initialize(ResourceManager* rm);
+	void Initialize(BufferManager* bufferManager);
 	
 	void Update();
 

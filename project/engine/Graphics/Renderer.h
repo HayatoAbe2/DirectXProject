@@ -1,16 +1,17 @@
 #pragma once
-#include "../Io/Logger.h"
-#include "../Scene/DebugCamera.h"
-#include "../Object/Material.h"
-#include "../Object/Transform.h"
-#include "../Object/TransformationMatrix.h"
-#include "../Object/VertexData.h"
-#include "../Object/LightManager.h"
+#include "Io/Logger.h"
+#include "Scene/DebugCamera.h"
+#include "Asset/Material.h"
+#include "Object/Transform.h"
+#include "Graphics/GPUData/TransformationMatrix.h"
+#include "Graphics/GPUData/VertexData.h"
+#include "Graphics/GPUData/LightsForGPU.h"
+#include "Object/LightManager.h"
 #include "BlendMode.h"
 #include "SRVManager.h"
 #include "CameraForGPU.h"
-#include "Node.h"
-#include "Mesh.h"
+#include "Asset/Model/Node.h"
+#include "Asset/Model/Mesh.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -58,13 +59,13 @@ public:
 	void DrawSprite(Sprite* sprite, int blendMode);
 
 	// ノードごとに描画
-	void DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parent);
+	void DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, ModelNode* node, const Matrix4x4& parent);
 
 	// メッシュを描画
 	void DrawMesh(Model* model, Mesh* mesh);
 
 	// インスタンシング描画版
-	void DrawNodeInstance(InstancedModel* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parentWorld);
+	void DrawNodeInstance(InstancedModel* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, ModelNode* node, const Matrix4x4& parentWorld);
 	void DrawMeshInstance(InstancedModel* model, Mesh* mesh);
 
 	/// <summary>
@@ -79,14 +80,6 @@ public:
 
 private:
 	DirectXContext* dxContext_ = nullptr;
-
-	// transform
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformBuffer_;
-	UINT8* mappedTransformData_ = nullptr;
-
-	// CBサイズ
-	static constexpr UINT kCBSize = (sizeof(TransformationMatrix) + 255) & ~255;
-	const UINT kMaxObjects = 4096; // 最大数。もし足りなかったら増やす
 
 	// カメラ位置(GPU転送)
 	CameraForGPU* cameraData_;

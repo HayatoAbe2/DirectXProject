@@ -1,6 +1,6 @@
 #include "ParticleSystem.h"
-#include "Camera.h"
-#include "InstancedModel.h"
+#include "Scene/Camera.h"
+#include "Asset/Model/InstancedModel.h"
 #include <numbers>
 
 void ParticleSystem::Initialize(std::unique_ptr<InstancedModel> model) {

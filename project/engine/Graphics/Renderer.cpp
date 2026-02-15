@@ -5,12 +5,13 @@
 #include "RootSignatureManager.h"
 #include "DescriptorHeapManager.h"
 #include "DeviceManager.h"
-#include "../Object/Model.h"
-#include "../Object/InstancedModel.h"
-#include "../Object/Sprite.h"
-#include "../Object/ParticleSystem.h"
-#include "../Scene/Camera.h"
-#include "../Graphics/DirectXContext.h"
+#include "Asset/Model/Model.h"
+#include "Asset/Model/InstancedModel.h"
+#include "Asset/Sprite.h"
+#include "Object/ParticleSystem.h"
+#include "Scene/Camera.h"
+#include "Graphics/DirectXContext.h"
+#include "Graphics/BufferManager.h"
 
 #include <cassert>
 #include <format>
@@ -23,31 +24,15 @@
 void Renderer::Initialize(DirectXContext* dxContext) {
 	dxContext_ = dxContext;
 
-	// エンティティtransformバッファ初期化
-	UINT bufferSize = kCBSize * kMaxObjects;
-
-	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_UPLOAD);
-	CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
-	dxContext_->GetDeviceManager()->GetDevice()->CreateCommittedResource(
-		&heapProps,
-		D3D12_HEAP_FLAG_NONE,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&transformBuffer_)
-	);
-
-	// 一度だけMapして保持
-	HRESULT hr = transformBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&mappedTransformData_));
-	assert(SUCCEEDED(hr));
+	// デバイス
+	auto device = dxContext_->GetDeviceManager()->GetDevice();
 
 	// カメラバッファ作成
-	cameraBuffer_ = dxContext_->CreateBufferResource(sizeof(CameraForGPU));
+	cameraBuffer_ = dxContext_->GetBufferManager()->CreateUploadBuffer(sizeof(CameraForGPU));
 	cameraBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
 
 	// ライト非使用時のダミー
-	dummyLightBuffer_ = dxContext_->CreateBufferResource(sizeof(LightsForGPU));
+	dummyLightBuffer_ = dxContext_->GetBufferManager()->CreateUploadBuffer(sizeof(LightsForGPU));
 	dummyLightBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&dummyLight_));
 }
 
@@ -67,9 +52,8 @@ void Renderer::UpdateSpriteTransform(Sprite* sprite) {
 	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, windowSize.x, windowSize.y, 0.0f, 100.0f);
 	data.WVP = Multiply(data.World, projectionMatrix);
 	data.WorldInverseTranspose = Transpose(Inverse(data.World));
-
-	// コピー
-	memcpy(mappedTransformData_ + kCBSize * sprite->GetTransformCBHandle(), &data, kCBSize);
+	auto ptr = dxContext_->GetConstantBufferManager()->GetTransformPtr(sprite->GetTransformCBHandle());
+	memcpy(ptr, &data, sizeof(data));
 }
 
 void Renderer::DrawModel(Model* model, Camera* camera, LightManager* lightManager, int blendMode) {
@@ -185,9 +169,8 @@ void Renderer::DrawSprite(Sprite* sprite, int blendMode) {
 	// Spriteの描画。変更が必要なものだけ変更する
 	cmdList->IASetIndexBuffer(&sprite->GetIBV());	// IBVを設定
 	cmdList->IASetVertexBuffers(0, 1, &sprite->GetVBV());	// VBVを設定
-	// WVPのCBV
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
-		transformBuffer_->GetGPUVirtualAddress() + kCBSize * sprite->GetTransformCBHandle();
+	// トランスフォームCBV
+	auto cbAddress = dxContext_->GetConstantBufferManager()->GetTransformCBAddress(sprite->GetTransformCBHandle());
 	cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
 	// SRVの設定
 	cmdList->SetGraphicsRootDescriptorTable(2, sprite->GetTextureSRVHandle());
@@ -195,7 +178,7 @@ void Renderer::DrawSprite(Sprite* sprite, int blendMode) {
 	cmdList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 }
 
-void Renderer::DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parentWorld) {
+void Renderer::DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, ModelNode* node, const Matrix4x4& parentWorld) {
 	Matrix4x4 modelWorld = MakeAffineMatrix(model->GetTransform());
 	Matrix4x4 nodeWorld = parentWorld * node->localMatrix;
 
@@ -206,16 +189,11 @@ void Renderer::DrawNode(Model* model, Camera* camera, Microsoft::WRL::ComPtr<ID3
 		* camera->viewMatrix_
 		* camera->projectionMatrix_;
 	data.WorldInverseTranspose = Transpose(Inverse(data.World));
-	UINT index = model->GetTransformCBHandle();
-	memcpy(mappedTransformData_ + index * kCBSize,
-		&data,
-		sizeof(data)
-	);
+	auto ptr = dxContext_->GetConstantBufferManager()->GetTransformPtr(model->GetTransformCBHandle());
+	memcpy(ptr, &data, sizeof(data));
 
 	// cbアドレス
-	D3D12_GPU_VIRTUAL_ADDRESS cbAddress =
-		transformBuffer_->GetGPUVirtualAddress() +
-		index * kCBSize;
+	auto cbAddress = dxContext_->GetConstantBufferManager()->GetTransformCBAddress(model->GetTransformCBHandle());
 	cmdList->SetGraphicsRootConstantBufferView(1, cbAddress);
 
 	// メッシュを描画
@@ -251,9 +229,9 @@ void Renderer::DrawMesh(Model* model, Mesh* mesh) {
 	}
 }
 
-void Renderer::DrawNodeInstance(InstancedModel* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, Node* node, const Matrix4x4& parentWorld) {
+void Renderer::DrawNodeInstance(InstancedModel* model, Camera* camera, Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> cmdList, ModelNode* node, const Matrix4x4& parentWorld) {
 	Matrix4x4 nodeWorld = parentWorld * node->localMatrix;
-	
+
 	// トランスフォーム更新
 	std::vector<Vector4> colors;
 	colors.resize(model->GetNumInstance());

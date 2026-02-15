@@ -1,14 +1,14 @@
 #include "App.h"
-#include "../App/Window.h"
-#include "../Graphics/DeviceManager.h"
-#include "../Io/DumpExporter.h"
-#include "../Io/Logger.h"
-#include "../Io/Audio.h"
-#include "../Io/Input.h"
-#include "../Object/ResourceManager.h"
-#include "../Object/LightManager.h"
-#include "../Scene/SceneManager.h"
-#include "../Scene/GameContext.h"
+#include "App/Window.h"
+#include "Graphics/DeviceManager.h"
+#include "Io/DumpExporter.h"
+#include "Io/Logger.h"
+#include "Io/Audio.h"
+#include "Io/Input.h"
+#include "Asset/Manager/AssetManager.h"
+#include "Object/LightManager.h"
+#include "Scene/SceneManager.h"
+#include "Scene/GameContext.h"
 
 #include <format>
 #include <cassert>
@@ -67,25 +67,20 @@ void App::Initialize() {
 	logger_->Log(logger_->GetStream(), std::format("[Renderer] Initialization complete.\n"));
 
 	// リソース
-	resourceManager_ = std::make_unique<ResourceManager>();
-	resourceManager_->Initialize(dxContext_->GetDeviceManager()->GetDevice(), dxContext_->GetCommandListManager(), dxContext_->GetDescriptorHeapManager(), dxContext_->GetSRVManager(), logger_.get());
-	logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Initialization complete.\n"));
+	assetManager_ = std::make_unique<AssetManager>(dxContext_.get(), logger_.get());
+	logger_->Log(logger_->GetStream(), std::format("[AssetManager] Initialization complete.\n"));
 
 	// ライト
 	lightManager_ = std::make_unique<LightManager>();
-	lightManager_->Initialize(resourceManager_.get());
+	lightManager_->Initialize(dxContext_->GetBufferManager());
 
 	// コンテキスト
-	gameContext_ = std::make_unique<GameContext>(renderer_.get(), audio_.get(), input_.get(), resourceManager_.get(), lightManager_.get());
+	gameContext_ = std::make_unique<GameContext>(renderer_.get(), audio_.get(), input_.get(), assetManager_.get(), lightManager_.get());
 
 	// シーンマネージャー
 	sceneManager_ = std::make_unique<SceneManager>(gameContext_.get());
 	sceneManager_->Initialize();
 	logger_->Log(logger_->GetStream(), std::format("[SceneManager] Initialization complete.\n"));
-
-	// 音声データの読み込み
-	audio_->SoundLoad(L"Resources/Sounds/BGM/field.mp3");
-	audio_->SoundPlay(L"Resources/Sounds/BGM/field.mp3", true,0.5f);
 }
 
 void App::Run() {
@@ -139,21 +134,13 @@ void App::Finalize() {
 		lightManager_.reset();
 		logger_->Log(logger_->GetStream(), std::format("[LightManager] Shutdown complete.\n"));
 
-		resourceManager_.reset();
+		assetManager_.reset();
 		logger_->Log(logger_->GetStream(), std::format("[ResourceManager] Shutdown complete.\n"));
 
 		gameContext_.reset();
 
 		// Audio
 		audio_->StopAll();
-		audio_->SoundUnload(L"Resources/Sounds/SE/press.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/explosion.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/shoot.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/fire.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/floorClear.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/fall.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/warp.mp3");
-		audio_->SoundUnload(L"Resources/Sounds/SE/hit.mp3");
 		audio_->Finalize();
 		audio_.reset();
 		logger_->Log(logger_->GetStream(), std::format("[Audio] Shutdown complete.\n"));
@@ -165,7 +152,6 @@ void App::Finalize() {
 		// dx
 		dxContext_->Finalize();
 		dxContext_.reset();
-
 
 		// ウィンドウ終了
 		CloseWindow(window_->GetHwnd());

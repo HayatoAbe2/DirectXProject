@@ -1,15 +1,15 @@
 #pragma once
 #include "Window.h"
-#include "../Io/DumpExporter.h"
-#include "../Io/Logger.h"
-#include "../Io/Audio.h"
-#include "../Io/Input.h"
-#include "../Graphics/directXContext.h"
-#include "../Graphics/Renderer.h"
-#include "../Object/ResourceManager.h"
-#include "../Object/LightManager.h"
-#include "../Scene/SceneManager.h"
-#include "../Scene/GameContext.h"
+#include "Io/DumpExporter.h"
+#include "Io/Logger.h"
+#include "Io/Audio.h"
+#include "Io/Input.h"
+#include "Graphics/directXContext.h"
+#include "Graphics/Renderer.h"
+#include "Asset/Manager/AssetManager.h"
+#include "Object/LightManager.h"
+#include "Scene/SceneManager.h"
+#include "Scene/GameContext.h"
 
 #include <memory>
 #include <Windows.h>
@@ -94,7 +94,7 @@ private:
 	std::unique_ptr<Renderer> renderer_ = nullptr;
 
 	// リソース管理
-	std::unique_ptr<ResourceManager> resourceManager_ = nullptr;
+	std::unique_ptr<AssetManager> assetManager_ = nullptr;
 
 	// ライト管理
 	std::unique_ptr<LightManager> lightManager_ = nullptr;

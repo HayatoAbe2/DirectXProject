@@ -1,10 +1,11 @@
 #include "LightManager.h"
-#include "ResourceManager.h"
-#include "ImGuiManager.h"
+#include "Graphics/BufferManager.h"
+#include "Graphics/ImGuiManager.h"
+#include "Math/MathUtils.h"
 
-void LightManager::Initialize(ResourceManager* rm) {
+void LightManager::Initialize(BufferManager* bufferManager) {
 	UINT cbSize = (sizeof(LightsForGPU) + 255) & ~255; // 256 の倍数に丸める
-	lightResource_ = rm->CreateBufferResource(cbSize);
+	lightResource_ = bufferManager->CreateUploadBuffer(cbSize);
 	lightResource_->Map(0, nullptr, reinterpret_cast<void**>(&lightData_));
 	
 	pointLightsData_.resize(maxPointLights);

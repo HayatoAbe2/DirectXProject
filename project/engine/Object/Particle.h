@@ -1,6 +1,6 @@
 #pragma once
 #include "Transform.h"
-#include "MathUtils.h"
+#include "Math/MathUtils.h"
 
 struct Particle {
     Transform transform;

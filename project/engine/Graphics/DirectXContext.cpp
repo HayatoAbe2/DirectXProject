@@ -10,8 +10,8 @@
 #include "PipelineStateManager.h"
 #include "FixFPS.h"
 #include "ImGuiManager.h"
-#include "../Object/Sprite.h"
-#include "../Object/ResourceManager.h"
+#include "Asset/Sprite.h"
+#include "Asset/Manager/AssetManager.h"
 
 #include <cassert>
 #include <format>
@@ -38,6 +38,10 @@ void DirectXContext::Initialize(int32_t clientWidth, int32_t clientHeight, HWND 
 	// デバイスマネージャー初期化
 	deviceManager_ = std::make_unique<DeviceManager>();
 	deviceManager_->Initialize(dxgiFactory_.Get(), logger_);
+
+	// バッファ管理クラス
+	bufferManager_ = std::make_unique<BufferManager>(deviceManager_->GetDevice().Get());
+	constantBufferManager_ = std::make_unique<ConstantBufferManager>(deviceManager_->GetDevice().Get());
 
 	// コマンドリストマネージャー初期化
 	commandListManager_ = std::make_unique<CommandListManager>();
@@ -230,32 +234,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXContext::CreateDepthStencilTexture
 	assert(SUCCEEDED(hr));
 
 	return resource_;
-}
-
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXContext::CreateBufferResource(size_t sizeInBytes) {
-	// 頂点リソース用のヒープの設定
-	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
-	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;		// uploadHeapを使う
-	// 頂点リソースの設定
-	D3D12_RESOURCE_DESC vertexResourceDesc{};
-	// バッファリソース。テクスチャの場合はまた別の設定をする
-	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	vertexResourceDesc.Alignment = 0;
-	vertexResourceDesc.Width = sizeInBytes;					// リソースのサイズ
-	// バッファの場合はこれらは1にする決まり
-	vertexResourceDesc.Height = 1;
-	vertexResourceDesc.DepthOrArraySize = 1;
-	vertexResourceDesc.MipLevels = 1;
-	vertexResourceDesc.SampleDesc.Count = 1;
-	// バッファの場合はこれにする決まり
-	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	// 実際にリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
-	HRESULT hr = deviceManager_->GetDevice()->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
-		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-		IID_PPV_ARGS(&vertexResource));
-	assert(SUCCEEDED(hr));
-	return vertexResource;
 }
 
 void DirectXContext::SetViewportAndScissor() {

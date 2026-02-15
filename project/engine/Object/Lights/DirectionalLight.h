@@ -1,5 +1,5 @@
 #pragma once
-#include "MathUtils.h"
+#include "Math/MathUtils.h"
 
 struct DirectionalLight {
 	Vector4 color = {1.0f,1.0f,1.0f,1.0f};

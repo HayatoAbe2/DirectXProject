@@ -1,6 +1,6 @@
 #include "RootSignatureManager.h"
 #include "DeviceManager.h"
-#include "Logger.h"
+#include "Io/Logger.h"
 
 #include <cassert>
 #include <dxcapi.h>

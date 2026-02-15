@@ -81,7 +81,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,7 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine/Graphics;$(ProjectDir)Engine/Object;$(ProjectDir)Engine/Math;$(ProjectDir)Engine/Io;$(ProjectDir)Engine/App;$(ProjectDir)Engine/Scene;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals\assimp\include;$(ProjectDir);$(ProjectDir)Engine;$(ProjectDir)application;$(ProjectDir)application\Weapon;$(ProjectDir)application\Weapon\Weapons;$(ProjectDir)application\Enemy;$(ProjectDir)application\Enemy\Enemies;$(ProjectDir)application\Item;$(ProjectDir)application\Map;$(ProjectDir)application\Scene;$(ProjectDir)application\Effect;$(ProjectDir)application\Bullet</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -162,13 +162,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Application\Enemy\Enemies\Bat.cpp" />
-    <ClCompile Include="Application\Enemy\Enemy.cpp" />
-    <ClCompile Include="Application\Enemy\EnemyManager.cpp" />
-    <ClCompile Include="Application\CollisionChecker.cpp" />
-    <ClCompile Include="Application\Effect\EffectManager.cpp" />
-    <ClCompile Include="Application\Bullet\BulletManager.cpp" />
-    <ClCompile Include="Application\Weapon\Weapons\AssaultRifle.cpp" />
+    <ClCompile Include="Engine\Graphics\BufferManager.cpp" />
+    <ClCompile Include="Engine\Graphics\ConstantBufferManager.cpp" />
+    <ClCompile Include="Engine\Asset\Manager\AssetManager.cpp" />
     <ClCompile Include="Engine\Graphics\DirectXContext.cpp" />
     <ClCompile Include="Engine\Graphics\CommandListManager.cpp" />
     <ClCompile Include="Engine\Graphics\DeviceManager.cpp" />
@@ -179,8 +175,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Io\Audio.cpp" />
     <ClCompile Include="Engine\Math\Sphere.cpp" />
     <ClCompile Include="Engine\Math\Vector2.cpp" />
-    <ClCompile Include="Engine\Object\Material.cpp" />
-    <ClCompile Include="Engine\Object\ResourceManager.cpp" />
+    <ClCompile Include="Engine\Asset\Material.cpp" />
     <ClCompile Include="Engine\Scene\BaseScene.cpp" />
     <ClCompile Include="Engine\Scene\Camera.cpp" />
     <ClCompile Include="Engine\Scene\DebugCamera.cpp" />
@@ -214,47 +209,25 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Math\Lerp.cpp" />
     <ClCompile Include="Engine\Io\Logger.cpp" />
     <ClCompile Include="Engine\Graphics\FixFPS.cpp" />
-    <ClCompile Include="Engine\Object\InstancedModel.cpp" />
-    <ClCompile Include="Application\Weapon\Weapons\FireBall.cpp" />
-    <ClCompile Include="Application\Item\ItemManager.cpp" />
+    <ClCompile Include="Engine\Asset\Model\InstancedModel.cpp" />
     <ClCompile Include="Engine\Graphics\ImGuiManager.cpp" />
-    <ClCompile Include="Application\Item\Item.cpp" />
     <ClCompile Include="Engine\Object\LightManager.cpp" />
-    <ClCompile Include="Application\Bullet\FireBullet.cpp" />
-    <ClCompile Include="Application\Enemy\Enemies\Knight.cpp" />
-    <ClCompile Include="Application\Enemy\Enemies\HeavyKnight.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Engine\Math\Matrix4x4.cpp" />
-    <ClCompile Include="Engine\Object\Model.cpp" />
+    <ClCompile Include="Engine\Asset\Model\Model.cpp" />
     <ClCompile Include="Engine\Graphics\RenderTargetManager.cpp" />
     <ClCompile Include="Engine\Scene\SceneManager.cpp" />
     <ClCompile Include="Engine\Graphics\ShaderCompiler.cpp" />
-    <ClCompile Include="Engine\Object\Sprite.cpp" />
+    <ClCompile Include="Engine\Asset\Sprite.cpp" />
     <ClCompile Include="Engine\Math\Vector3.cpp" />
     <ClCompile Include="Engine\Math\Vector4.cpp" />
     <ClCompile Include="Engine\App\Window.cpp" />
-    <ClCompile Include="Application\Player.cpp" />
-    <ClCompile Include="Application\Bullet\Bullet.cpp" />
-    <ClCompile Include="Engine\Object\Mesh.cpp" />
     <ClCompile Include="Engine\Graphics\SRVManager.cpp" />
     <ClCompile Include="Engine\Object\ParticleSystem.cpp" />
-    <ClCompile Include="Application\Map\MapTile.cpp" />
-    <ClCompile Include="Application\Map\MapCheck.cpp" />
-    <ClCompile Include="Application\Weapon\Weapon.cpp" />
-    <ClCompile Include="Application\Weapon\WeaponManager.cpp" />
-    <ClCompile Include="Application\Scene\TitleScene.cpp" />
     <ClCompile Include="Engine\Object\ParticleField.cpp" />
-    <ClCompile Include="Application\Bullet\NormalBullet.cpp" />
-    <ClCompile Include="Application\Bullet\SpreadBullet.cpp" />
-    <ClCompile Include="Application\Weapon\Weapons\Shotgun.cpp" />
-    <ClCompile Include="Application\Bullet\RapidBullet.cpp" />
-    <ClCompile Include="Application\Weapon\Weapons\Pistol.cpp" />
-    <ClCompile Include="Application\Bullet\WaveBullet.cpp" />
-    <ClCompile Include="Application\Weapon\Weapons\Wavegun.cpp" />
-    <ClCompile Include="Application\Enemy\Enemies\RedBat.cpp" />
-    <ClCompile Include="Application\Effect\SoulEffect.cpp" />
-    <ClCompile Include="Application\UIDrawer.cpp" />
     <ClCompile Include="Engine\Math\CollisionShape\Ray.cpp" />
+    <ClCompile Include="Engine\Asset\Manager\ModelManager.cpp" />
+    <ClCompile Include="Engine\Asset\Manager\TextureManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\shaders\Grid.PS.hlsl">
@@ -299,35 +272,29 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application\Enemy\Enemies\Bat.h" />
-    <ClInclude Include="Application\Enemy\Enemy.h" />
-    <ClInclude Include="Application\Enemy\EnemyManager.h" />
-    <ClInclude Include="Application\CollisionChecker.h" />
-    <ClInclude Include="Application\Effect\EffectManager.h" />
-    <ClInclude Include="Application\Bullet\BulletManager.h" />
-    <ClInclude Include="Application\Enemy\EnemyStatus.h" />
-    <ClInclude Include="Application\Weapon\Weapons\AssaultRifle.h" />
+    <ClInclude Include="Engine\Graphics\BufferManager.h" />
+    <ClInclude Include="Engine\Graphics\ConstantBufferManager.h" />
+    <ClInclude Include="Engine\Asset\Manager\AssetManager.h" />
     <ClInclude Include="Engine\Graphics\CameraForGPU.h" />
     <ClInclude Include="Engine\Graphics\DirectXContext.h" />
     <ClInclude Include="Engine\Graphics\BlendMode.h" />
     <ClInclude Include="Engine\Graphics\CommandListManager.h" />
     <ClInclude Include="Engine\Graphics\DeviceManager.h" />
-    <ClInclude Include="Engine\Object\Node.h" />
+    <ClInclude Include="Engine\Asset\Model\Node.h" />
     <ClInclude Include="Engine\Graphics\PipelineStateManager.h" />
     <ClInclude Include="Engine\Graphics\RootSignatureManager.h" />
     <ClInclude Include="Engine\Math\CollisionShape\AABB.h" />
     <ClInclude Include="Engine\App\App.h" />
     <ClInclude Include="Engine\Io\Audio.h" />
     <ClInclude Include="Engine\Math\Sphere.h" />
-    <ClInclude Include="Engine\Object\Lights\LightsForGPU.h" />
+    <ClInclude Include="Engine\Graphics\GPUData\LightsForGPU.h" />
     <ClInclude Include="Engine\Object\Lights\SpotLight.h" />
-    <ClInclude Include="Engine\Object\MaterialData.h" />
+    <ClInclude Include="Engine\Graphics\GPUData\MaterialData.h" />
     <ClInclude Include="Engine\Object\Particle.h" />
     <ClInclude Include="Engine\Object\Lights\PointLight.h" />
-    <ClInclude Include="Engine\Object\InstanceGPUData.h" />
-    <ClInclude Include="Engine\Object\ResourceManager.h" />
-    <ClInclude Include="Engine\Object\SubMesh.h" />
-    <ClInclude Include="Engine\Object\Texture.h" />
+    <ClInclude Include="Engine\Graphics\GPUData\InstanceGPUData.h" />
+    <ClInclude Include="Engine\Asset\Model\SubMesh.h" />
+    <ClInclude Include="Engine\Asset\Texture.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Scene\DebugCamera.h" />
@@ -348,57 +315,34 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Io\Input.h" />
     <ClInclude Include="Engine\Math\Lerp.h" />
     <ClInclude Include="Engine\Io\Logger.h" />
-    <ClInclude Include="Engine\Object\Material.h" />
+    <ClInclude Include="Engine\Asset\Material.h" />
     <ClInclude Include="Engine\Math\MathUtils.h" />
     <ClInclude Include="Engine\Math\Matrix3x3.h" />
     <ClInclude Include="Engine\Math\Matrix4x4.h" />
-    <ClInclude Include="Engine\Object\Model.h" />
+    <ClInclude Include="Engine\Asset\Model\Model.h" />
     <ClInclude Include="Engine\Graphics\RenderTargetManager.h" />
     <ClInclude Include="Engine\Scene\SceneManager.h" />
     <ClInclude Include="Engine\Graphics\ShaderCompiler.h" />
-    <ClInclude Include="Engine\Object\Sprite.h" />
+    <ClInclude Include="Engine\Asset\Sprite.h" />
     <ClInclude Include="Engine\Object\Transform.h" />
-    <ClInclude Include="Engine\Object\TransformationMatrix.h" />
+    <ClInclude Include="Engine\Graphics\GPUData\TransformationMatrix.h" />
     <ClInclude Include="Engine\Math\Vector2.h" />
     <ClInclude Include="Engine\Math\Vector3.h" />
     <ClInclude Include="Engine\Math\Vector4.h" />
-    <ClInclude Include="Engine\Object\VertexData.h" />
+    <ClInclude Include="Engine\Graphics\GPUData\VertexData.h" />
     <ClInclude Include="Engine\App\Window.h" />
-    <ClInclude Include="Application\Player.h" />
     <ClInclude Include="Engine\Graphics\FixFPS.h" />
-    <ClInclude Include="Application\Bullet\Bullet.h" />
-    <ClInclude Include="Engine\Object\Mesh.h" />
+    <ClInclude Include="Engine\Asset\Model\Mesh.h" />
     <ClInclude Include="Engine\Graphics\SRVManager.h" />
-    <ClInclude Include="Engine\Object\InstancedModel.h" />
+    <ClInclude Include="Engine\Asset\Model\InstancedModel.h" />
     <ClInclude Include="Engine\Object\ParticleSystem.h" />
-    <ClInclude Include="Application\Map\MapTile.h" />
-    <ClInclude Include="Application\Map\MapCheck.h" />
-    <ClInclude Include="Application\Weapon\Weapon.h" />
-    <ClInclude Include="Application\Weapon\Weapons\FireBall.h" />
-    <ClInclude Include="Application\Weapon\WeaponManager.h" />
-    <ClInclude Include="Application\Item\ItemManager.h" />
-    <ClInclude Include="Application\Weapon\WeaponStatus.h" />
     <ClInclude Include="Engine\Graphics\ImGuiManager.h" />
-    <ClInclude Include="Application\Scene\TitleScene.h" />
-    <ClInclude Include="Application\Item\Item.h" />
     <ClInclude Include="Engine\Object\ParticleField.h" />
     <ClInclude Include="Engine\Object\LightManager.h" />
-    <ClInclude Include="Application\Bullet\FireBullet.h" />
-    <ClInclude Include="Application\Bullet\NormalBullet.h" />
-    <ClInclude Include="Application\Bullet\SpreadBullet.h" />
-    <ClInclude Include="Application\Weapon\Weapons\Shotgun.h" />
-    <ClInclude Include="Application\Bullet\RapidBullet.h" />
-    <ClInclude Include="Application\Weapon\Weapons\Pistol.h" />
-    <ClInclude Include="Application\Enemy\Enemies\Knight.h" />
-    <ClInclude Include="Application\Enemy\Enemies\HeavyKnight.h" />
-    <ClInclude Include="Engine\Object\Data\ModelData.h" />
-    <ClInclude Include="Application\Bullet\WaveBullet.h" />
-    <ClInclude Include="Application\Weapon\Weapons\Wavegun.h" />
-    <ClInclude Include="Application\Rarity.h" />
-    <ClInclude Include="Application\Enemy\Enemies\RedBat.h" />
-    <ClInclude Include="Application\Effect\SoulEffect.h" />
-    <ClInclude Include="Application\UIDrawer.h" />
+    <ClInclude Include="Engine\Asset\Model\ModelData.h" />
     <ClInclude Include="Engine\Math\CollisionShape\Ray.h" />
+    <ClInclude Include="Engine\Asset\Manager\ModelManager.h" />
+    <ClInclude Include="Engine\Asset\Manager\TextureManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Externals\imgui\LICENSE.txt" />

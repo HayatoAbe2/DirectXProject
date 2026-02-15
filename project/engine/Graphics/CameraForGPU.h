@@ -1,5 +1,5 @@
 #pragma once
-#include "MathUtils.h"
+#include "Math/MathUtils.h"
 
 struct CameraForGPU {
 	Vector3 position;

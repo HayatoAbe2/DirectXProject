@@ -1,26 +1,26 @@
 #pragma once
-#pragma once
-#include "../Io/Logger.h"
-#include "../Scene/DebugCamera.h"
-#include "../Object/Material.h"
-#include "../Object/Model.h"
-#include "../Object/Transform.h"
-#include "../Object/TransformationMatrix.h"
-#include "../Object/LightManager.h"
-#include "../Object/VertexData.h"
-#include "../Object/Sprite.h"
-#include "../Graphics/DeviceManager.h"
-#include "../Graphics/CommandListManager.h"
-#include "../Graphics/RootSignatureManager.h"
-#include "../Graphics/ShaderCompiler.h"
-#include "../Graphics/RenderTargetManager.h"
-#include "../Graphics/DescriptorHeapManager.h"
-#include "../Graphics/SRVManager.h"
-#include "../Graphics/PipelineStateManager.h"
-#include "../Graphics/FixFPS.h"
-#include "../Object/ResourceManager.h"
-#include "../Graphics/ImGuiManager.h"
-#include "../Graphics/BlendMode.h"
+#include "Io/Logger.h"
+#include "Scene/DebugCamera.h"
+#include "Asset/Material.h"
+#include "Asset/Model/Model.h"
+#include "Object/Transform.h"
+#include "Graphics/GPUData/TransformationMatrix.h"
+#include "Object/LightManager.h"
+#include "Graphics/GPUData/VertexData.h"
+#include "Asset/Sprite.h"
+#include "Graphics/DeviceManager.h"
+#include "Graphics/BufferManager.h"
+#include "Graphics/ConstantBufferManager.h"
+#include "Graphics/CommandListManager.h"
+#include "Graphics/RootSignatureManager.h"
+#include "Graphics/ShaderCompiler.h"
+#include "Graphics/RenderTargetManager.h"
+#include "Graphics/DescriptorHeapManager.h"
+#include "Graphics/SRVManager.h"
+#include "Graphics/PipelineStateManager.h"
+#include "Graphics/FixFPS.h"
+#include "Graphics/ImGuiManager.h"
+#include "Graphics/BlendMode.h"
 
 #include <wrl.h>
 #include <dxgi1_6.h>
@@ -52,14 +52,6 @@ public:
 	/// </summary>
 	void EndFrame();
 
-	/// <summary>
-	/// バッファリソース作成
-	/// </summary>
-	/// <param name="device"></param>
-	/// <param name="sizeInBytes">バッファサイズ</param>
-	/// <returns>作成したリソース</returns>
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
-
 	// アクセサ
 	int32_t GetWindowWidth() { return clientWidth_; }
 	int32_t GetWindowHeight() { return clientHeight_; }
@@ -69,9 +61,11 @@ public:
 	SRVManager* GetSRVManager() { return srvManager_.get(); }
 	PipelineStateManager* GetPipelineStateManager() { return pipelineStateManager_.get(); }
 	RootSignatureManager* GetRootSignatureManager() { return rootSignatureManager_.get(); }
+	BufferManager* GetBufferManager() { return bufferManager_.get(); }
+	ConstantBufferManager* GetConstantBufferManager() { return constantBufferManager_.get(); }
+
 
 private:
-
 
 	/// <summary>
 	/// SwapChain初期化
@@ -132,9 +126,6 @@ private:
 	// SRVマネージャー
 	std::unique_ptr<SRVManager> srvManager_ = nullptr;
 
-	// リソース管理クラス
-	std::unique_ptr<ResourceManager> resourceManager_ = nullptr;
-
 	// コマンド関連
 	std::unique_ptr<CommandListManager> commandListManager_ = nullptr;
 
@@ -148,6 +139,10 @@ private:
 	std::unique_ptr<FixFPS> fixFPS_ = nullptr;
 
 	// ImGui管理クラス
-	std::unique_ptr<ImGuiManager > imGuiManager_ = nullptr;
+	std::unique_ptr<ImGuiManager> imGuiManager_ = nullptr;
+
+	// バッファ管理クラス
+	std::unique_ptr<BufferManager> bufferManager_ = nullptr;
+	std::unique_ptr<ConstantBufferManager> constantBufferManager_ = nullptr;
 };
 

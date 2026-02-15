@@ -2,11 +2,11 @@
 #include "DebugCamera.h"
 #include "GameContext.h"
 
-void Camera::UpdateCamera(GameContext* context, DebugCamera& debugCamera) {
+void Camera::Update(GameContext* context, DebugCamera* debugCamera) {
 	// デバッグカメラがONならそちらを使う
-	if (debugCamera.IsEnable()) {
+	if (debugCamera && debugCamera->IsEnable()) {
 		// デバッグカメラのビュー行列を使う
-		viewMatrix_ = debugCamera.GetViewMatrix();
+		viewMatrix_ = debugCamera->GetViewMatrix();
 	} else {
 		// カメラシェイク
 		if (shakeFrame_ > 0) {

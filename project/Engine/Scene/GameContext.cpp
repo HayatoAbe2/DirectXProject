@@ -1,20 +1,19 @@
 #include "GameContext.h"
-#include "../Graphics/Renderer.h"
-#include "../Io/Audio.h"
-#include "../Io/Input.h"
-#include "../Object/ResourceManager.h"
-#include "../Object/LightManager.h"
+#include "Graphics/Renderer.h"
+#include "Io/Audio.h"
+#include "Io/Input.h"
+#include "Asset/Manager/AssetManager.h"
+#include "Object/LightManager.h"
 
-GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input, ResourceManager* resourceManager, LightManager* lightManager) {
+GameContext::GameContext(Renderer* renderer, Audio* audio, Input* input, AssetManager* assetManager, LightManager* lightManager) {
 	renderer_ = renderer;
 	audio_ = audio;
 	input_ = input;
-	resourceManager_ = resourceManager;
+	assetManager_ = assetManager;
 	lightManager_ = lightManager;
 
 	std::mt19937 randomEngine(randomDevice_());
 	randomEngine_ = randomEngine;
-
 }
 
 Vector2 GameContext::GetWindowSize() const {
@@ -24,15 +23,16 @@ Vector2 GameContext::GetWindowSize() const {
 }
 
 std::unique_ptr<Model> GameContext::LoadModel(const std::string& directoryPath, const std::string& filename, bool enableLighting) {
-	return std::move(resourceManager_->LoadModelFile(directoryPath, filename, enableLighting));
+	return std::move(assetManager_->LoadModelFile(directoryPath, filename, enableLighting));
 }
 
 std::unique_ptr<InstancedModel> GameContext::LoadInstancedModel(const std::string& directoryPath, const std::string& filename, const int num) {
-	return std::move(resourceManager_->LoadModelFile(directoryPath, filename, num));
+	return std::move(assetManager_->LoadModelFile(directoryPath, filename, num));
 }
 
 std::unique_ptr<Sprite> GameContext::LoadSprite(std::string texturePath) {
-	return std::move(resourceManager_->LoadSprite(texturePath));
+	//return std::move(assetManager_->LoadSprite(texturePath));
+	return nullptr;
 }
 
 int GameContext::AddPointLight() {

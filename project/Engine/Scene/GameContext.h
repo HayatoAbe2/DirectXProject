@@ -1,21 +1,21 @@
 #pragma once
 
 // ゲームシーンにデフォルトで入れておくインクルード
-#include "MathUtils.h"
+#include "Math/MathUtils.h"
 #include "Camera.h"
-#include "../Object/Model.h"
-#include "../Object/InstancedModel.h"
-#include "../Object/Sprite.h"
-#include "../Object/ParticleSystem.h"
-#include "../Object/Lights/LightsForGPU.h"
-#include "../Graphics/BlendMode.h"
+#include "Asset/Model/Model.h"
+#include "Asset/Model/InstancedModel.h"
+#include "Asset/Sprite.h"
+#include "Object/ParticleSystem.h"
+#include "Graphics/GPUData/LightsForGPU.h"
+#include "Graphics/BlendMode.h"
 
 #include <cstdint>
 #include <string>
 #include <memory>
 #include <random>
 
-class ResourceManager;
+class AssetManager;
 class LightManager;
 class Input;
 class Audio;
@@ -23,7 +23,7 @@ class Renderer;
 
 class GameContext {
 public:
-	GameContext(Renderer* renderer, Audio* audio, Input* input, ResourceManager* resourceManager, LightManager* lightManager);
+	GameContext(Renderer* renderer, Audio* audio, Input* input, AssetManager* assetManager, LightManager* lightManager);
 
 	///
 	/// ウィンドウ情報
@@ -99,7 +99,7 @@ private:
 	Renderer* renderer_ = nullptr;
 	Audio* audio_ = nullptr;
 	Input* input_ = nullptr;
-	ResourceManager* resourceManager_ = nullptr;
+	AssetManager* assetManager_ = nullptr;
 	LightManager* lightManager_ = nullptr;
 	std::random_device randomDevice_;
 	std::mt19937 randomEngine_;

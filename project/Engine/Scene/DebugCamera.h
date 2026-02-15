@@ -1,8 +1,8 @@
 #pragma once
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
-#include "../Math/MathUtils.h"
-#include "../Io/Input.h"
+#include "Math/MathUtils.h"
+#include "Io/Input.h"
 /// <summary>
 /// デバッグカメラ
 /// </summary>

@@ -1,6 +1,6 @@
 #pragma once
-#include "../Object/Transform.h"
-#include "../Math/MathUtils.h"
+#include "Object/Transform.h"
+#include "Math/MathUtils.h"
 class Renderer;
 class DebugCamera;
 class GameContext;
@@ -17,7 +17,7 @@ public:
 	/// </summary>
 	/// <param name="graphics"></param>
 	/// <param name="debugCamera"></param>
-	void UpdateCamera(GameContext* context, DebugCamera& debugCamera);
+	void Update(GameContext* context, DebugCamera* debugCamera = nullptr);
 
 	void StartShake(float amplitude, int frame);
 private:
