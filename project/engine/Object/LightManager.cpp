@@ -7,7 +7,7 @@ void LightManager::Initialize(BufferManager* bufferManager) {
 	UINT cbSize = (sizeof(LightsForGPU) + 255) & ~255; // 256 の倍数に丸める
 	lightResource_ = bufferManager->CreateUploadBuffer(cbSize);
 	lightResource_->Map(0, nullptr, reinterpret_cast<void**>(&lightData_));
-	
+
 	pointLightsData_.resize(maxPointLights);
 	spotLightsData_.resize(maxSpotLights);
 	for (int i = 0; i < maxPointLights; i++) {
@@ -16,7 +16,7 @@ void LightManager::Initialize(BufferManager* bufferManager) {
 	for (int i = 0; i < maxSpotLights; i++) {
 		isSpotFree[i] = true;
 	}
-	directionalLightData_.color = { 0.7f, 0.9f,1.0f,1.0f };
+	directionalLightData_.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void LightManager::Update() {
@@ -57,8 +57,7 @@ void LightManager::DrawImGui() {
 		for (int i = 0; i < pointLightsData_.size(); i++) {
 			ImGui::PushID(i);  // 同じ UI 名でもIDを変える
 
-			if (ImGui::TreeNode(("PointLight " + std::to_string(i)).c_str()))
-			{
+			if (ImGui::TreeNode(("PointLight " + std::to_string(i)).c_str())) {
 				auto& pl = pointLightsData_[i];
 
 				ImGui::DragFloat3("Position", &pl.position.x, 0.1f);
@@ -78,8 +77,7 @@ void LightManager::DrawImGui() {
 		for (int i = 0; i < spotLightsData_.size(); i++) {
 			ImGui::PushID(int(pointLightsData_.size()) + i);
 
-			if (ImGui::TreeNode(("Spot Light " + std::to_string(i)).c_str()))
-			{
+			if (ImGui::TreeNode(("Spot Light " + std::to_string(i)).c_str())) {
 				auto& sl = spotLightsData_[i];
 
 				ImGui::DragFloat3("Position", &sl.position.x, 0.1f);

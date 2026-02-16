@@ -10,7 +10,7 @@ void GameScene::Initialize() {
 	camera_->transform_.rotate = { 0,0,0 };
 	camera_->transform_.translate = { 0,0,-cameraDistance_ };
 
-	playerModel_ = context_->LoadModel("Resources/Player", "player.obj");
+	playerModel_ = context_->LoadModel("Resources", "suzanne.obj");
 }
 
 void GameScene::Update() {
